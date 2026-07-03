@@ -1,7 +1,7 @@
+import type { SwapProvider } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
 import Decimal from "decimal.js";
-import { PrismaService } from "../../core/prisma.service";
-import type { SwapProvider } from "@egofi/types";
+import type { PrismaService } from "../../core/prisma.service";
 
 const LOOKBACK_HOURS = 24;
 // A provider whose recent success rate drops below this is demoted behind
@@ -57,9 +57,7 @@ export class ProviderHealthService {
 
     const finished = txs.filter((t) => t.status === "finished");
     const frozen = txs.filter((t) => t.status === "verifying");
-    const failed = txs.filter(
-      (t) => t.status === "failed" || t.status === "refunded",
-    );
+    const failed = txs.filter((t) => t.status === "failed" || t.status === "refunded");
     const settled = finished.length + failed.length;
 
     const settleTimes = finished
@@ -79,8 +77,7 @@ export class ProviderHealthService {
           .mul(100)
           .toNumber();
       });
-    const meanDrift =
-      drifts.length > 0 ? drifts.reduce((a, b) => a + b, 0) / drifts.length : 0;
+    const meanDrift = drifts.length > 0 ? drifts.reduce((a, b) => a + b, 0) / drifts.length : 0;
 
     return {
       provider,
@@ -97,9 +94,7 @@ export class ProviderHealthService {
    * their configured priority; a degraded provider is pushed to the back.
    */
   async rankProviders(providers: SwapProvider[]): Promise<SwapProvider[]> {
-    const healths = await Promise.all(
-      providers.map((p) => this.computeHealth(p.name)),
-    );
+    const healths = await Promise.all(providers.map((p) => this.computeHealth(p.name)));
     const byName = new Map(healths.map((h) => [h.provider, h]));
 
     const healthy: SwapProvider[] = [];
@@ -111,10 +106,7 @@ export class ProviderHealthService {
         health.sampleSize >= MIN_SAMPLE_SIZE &&
         health.successRate < DEMOTION_SUCCESS_RATE;
       if (isDegraded) {
-        this.logger.warn(
-          { provider: provider.name, health },
-          "provider demoted by health score",
-        );
+        this.logger.warn({ provider: provider.name, health }, "provider demoted by health score");
         degraded.push(provider);
       } else {
         healthy.push(provider);

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createApiClient } from "@egofi/sdk";
 import { Button, Input } from "@egofi/ui";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 
 const api = createApiClient();
 
@@ -52,9 +52,7 @@ export default function RegisterPage() {
   return (
     <div>
       <header className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-navy-950">
-          Create your account
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-navy-950">Create your account</h1>
         <p className="mt-1.5 text-sm text-navy-500">
           Accept crypto payments, settle in your chosen stablecoin.
         </p>
@@ -89,10 +87,7 @@ export default function RegisterPage() {
           error={error}
         />
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="settlement-asset"
-            className="text-sm font-medium text-navy-800"
-          >
+          <label htmlFor="settlement-asset" className="text-sm font-medium text-navy-800">
             Settlement asset
           </label>
           <select
@@ -108,8 +103,8 @@ export default function RegisterPage() {
             ))}
           </select>
           <p className="text-sm text-navy-400">
-            What you receive, regardless of what customers pay with. Add your
-            receiving addresses after signing in.
+            What you receive, regardless of what customers pay with. Add your receiving addresses
+            after signing in.
           </p>
         </div>
         <Button type="submit" loading={loading} size="lg" className="w-full">

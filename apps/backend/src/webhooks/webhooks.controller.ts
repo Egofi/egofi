@@ -5,13 +5,13 @@ import {
   HttpCode,
   Param,
   Post,
-  RawBodyRequest,
+  type RawBodyRequest,
   Req,
 } from "@nestjs/common";
-import type { FastifyRequest } from "fastify";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { WebhooksService } from "./webhooks.service";
+import type { FastifyRequest } from "fastify";
 import { SkipIdempotency } from "../shared";
+import type { WebhooksService } from "./webhooks.service";
 
 @ApiTags("webhooks")
 @SkipIdempotency() // inbound events dedupe on (txHash, leg); third parties don't send our header

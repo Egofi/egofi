@@ -1,6 +1,6 @@
+import { InvoiceState } from "@egofi/types";
 import type { BadgeVariant } from "@egofi/ui";
 import { Badge } from "@egofi/ui";
-import { InvoiceState } from "@egofi/types";
 
 const STATE_LABELS: Record<string, string> = {
   [InvoiceState.AwaitingPayment]: "Awaiting payment",

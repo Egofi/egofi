@@ -11,9 +11,7 @@ function formatDuration(ms: number): string {
 }
 
 export function CountdownTimer({ expiresAt }: { expiresAt: string }) {
-  const [remaining, setRemaining] = useState(
-    () => new Date(expiresAt).getTime() - Date.now(),
-  );
+  const [remaining, setRemaining] = useState(() => new Date(expiresAt).getTime() - Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {

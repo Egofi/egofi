@@ -4,8 +4,7 @@ import * as bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 const DEFAULT_ADMIN_EMAIL = process.env["SEED_ADMIN_EMAIL"] ?? "admin@egofi.io";
-const DEFAULT_ADMIN_PASSWORD =
-  process.env["SEED_ADMIN_PASSWORD"] ?? "egofi-admin-dev";
+const DEFAULT_ADMIN_PASSWORD = process.env["SEED_ADMIN_PASSWORD"] ?? "egofi-admin-dev";
 
 async function main(): Promise<void> {
   // Default operator account — override credentials via SEED_ADMIN_EMAIL /

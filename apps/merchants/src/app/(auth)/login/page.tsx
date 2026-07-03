@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createApiClient } from "@egofi/sdk";
 import { Button, Input } from "@egofi/ui";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 
 const api = createApiClient();
 
@@ -32,12 +32,8 @@ export default function LoginPage() {
   return (
     <div>
       <header className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-navy-950">
-          Welcome back
-        </h1>
-        <p className="mt-1.5 text-sm text-navy-500">
-          Sign in to your merchant dashboard.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-navy-950">Welcome back</h1>
+        <p className="mt-1.5 text-sm text-navy-500">Sign in to your merchant dashboard.</p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-5">

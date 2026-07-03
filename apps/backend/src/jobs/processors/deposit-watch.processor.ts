@@ -1,8 +1,8 @@
 ﻿import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import { QUEUES } from "../queues";
 import { BaseProcessor } from "../base.processor";
+import { QUEUES } from "../queues";
 
 interface DepositWatchJobData {
   invoiceId: string;

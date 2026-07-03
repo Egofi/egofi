@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  addMoney,
-  compareMoney,
-  formatMoney,
-  money,
-  parseMoney,
-  subtractMoney,
-} from "./money";
+import { addMoney, compareMoney, formatMoney, money, parseMoney, subtractMoney } from "./money";
 
 describe("parseMoney", () => {
   it("parses whole amounts into base units", () => {

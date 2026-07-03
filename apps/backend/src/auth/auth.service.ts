@@ -1,14 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
-import * as bcrypt from "bcryptjs";
-import type { Prisma } from "@prisma/client";
-import { PrismaService } from "../core/prisma.service";
 import type { CreateMerchantDto } from "@egofi/types";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
+import type { JwtService } from "@nestjs/jwt";
+import type { Prisma } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
+import type { PrismaService } from "../core/prisma.service";
 
 @Injectable()
 export class AuthService {
@@ -47,15 +43,14 @@ export class AuthService {
     const valid = await bcrypt.compare(password, merchant.passwordHash);
     if (!valid) throw new UnauthorizedException("Invalid credentials");
 
-    if (merchant.status === "SUSPENDED")
-      throw new UnauthorizedException("Account suspended");
+    if (merchant.status === "SUSPENDED") throw new UnauthorizedException("Account suspended");
 
     const token = this.jwt.sign({ sub: merchant.id, role: "merchant" });
     return { accessToken: token, merchant };
   }
 
   async validateApiKey(rawKey: string) {
-    const { createHash } = await import("crypto");
+    const { createHash } = await import("node:crypto");
     const keyHash = createHash("sha256").update(rawKey).digest("hex");
     const apiKey = await this.prisma.apiKey.findUnique({
       where: { keyHash },

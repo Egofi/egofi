@@ -6,9 +6,7 @@ import { z } from "zod";
  * environments (local / staging / prod).
  */
 export const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "test", "staging", "production"])
-    .default("development"),
+  NODE_ENV: z.enum(["development", "test", "staging", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3000),
   ROLE: z.enum(["api", "worker", "webhook"]).default("api"),
 
@@ -42,9 +40,7 @@ export const envSchema = z.object({
   MERCHANTS_BASE_URL: z.string().url().optional(),
   ADMIN_BASE_URL: z.string().url().optional(),
 
-  LOG_LEVEL: z
-    .enum(["fatal", "error", "warn", "info", "debug", "trace"])
-    .default("info"),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -53,9 +49,7 @@ export type Env = z.infer<typeof envSchema>;
 export function validateEnv(config: Record<string, unknown>): Env {
   const parsed = envSchema.safeParse(config);
   if (!parsed.success) {
-    const report = parsed.error.issues
-      .map((i) => `  ${i.path.join(".")}: ${i.message}`)
-      .join("\n");
+    const report = parsed.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid environment configuration:\n${report}`);
   }
   return parsed.data;

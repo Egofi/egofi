@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
 import { createApiClient } from "@egofi/sdk";
 import type { MerchantProfile } from "@egofi/types";
 import { cn } from "@egofi/ui";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const api = createApiClient();
 
@@ -61,9 +61,7 @@ const SettingsIcon = (
 function pageTitle(pathname: string): string {
   if (pathname.startsWith("/settings")) return "Settings";
   if (pathname.startsWith("/developers")) return "Developers";
-  const item = NAV_ITEMS.find(
-    (n) => pathname === n.href || pathname.startsWith(`${n.href}/`),
-  );
+  const item = NAV_ITEMS.find((n) => pathname === n.href || pathname.startsWith(`${n.href}/`));
   return item?.label ?? "Home";
 }
 
@@ -79,8 +77,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   return (
     <>
       {NAV_ITEMS.map((item) => {
-        const active =
-          pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <a
             key={item.href}
@@ -97,7 +94,12 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
             {active && (
               <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent" />
             )}
-            <span className={cn("transition-colors", active ? "text-accent" : "text-navy-300/70 group-hover:text-navy-100")}>
+            <span
+              className={cn(
+                "transition-colors",
+                active ? "text-accent" : "text-navy-300/70 group-hover:text-navy-100",
+              )}
+            >
               {item.icon}
             </span>
             {item.label}
@@ -141,8 +143,17 @@ function UserMenu({
         <span className="hidden max-w-[9rem] truncate text-sm font-medium text-navy-800 sm:block">
           {merchant?.business ?? "Account"}
         </span>
-        <svg viewBox="0 0 20 20" fill="currentColor" className={cn("size-4 text-navy-400 transition-transform", open && "rotate-180")} aria-hidden>
-          <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clipRule="evenodd" />
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className={cn("size-4 text-navy-400 transition-transform", open && "rotate-180")}
+          aria-hidden
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z"
+            clipRule="evenodd"
+          />
         </svg>
       </button>
 
@@ -182,8 +193,16 @@ function UserMenu({
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-danger-600 transition-colors hover:bg-danger-50"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="size-4" aria-hidden>
-                <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25z" clipRule="evenodd" />
-                <path fillRule="evenodd" d="M19 10a.75.75 0 0 0-.75-.75H8.704l1.048-.943a.75.75 0 1 0-1.004-1.114l-2.5 2.25a.75.75 0 0 0 0 1.114l2.5 2.25a.75.75 0 1 0 1.004-1.114l-1.048-.943h9.546A.75.75 0 0 0 19 10z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25z"
+                  clipRule="evenodd"
+                />
+                <path
+                  fillRule="evenodd"
+                  d="M19 10a.75.75 0 0 0-.75-.75H8.704l1.048-.943a.75.75 0 1 0-1.004-1.114l-2.5 2.25a.75.75 0 0 0 0 1.114l2.5 2.25a.75.75 0 1 0 1.004-1.114l-1.048-.943h9.546A.75.75 0 0 0 19 10z"
+                  clipRule="evenodd"
+                />
               </svg>
               Sign out
             </button>
@@ -203,7 +222,11 @@ function MenuLink({ href, label }: { href: string; label: string }) {
     >
       {label}
       <svg viewBox="0 0 20 20" fill="currentColor" className="size-4 text-navy-300" aria-hidden>
-        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02z"
+          clipRule="evenodd"
+        />
       </svg>
     </a>
   );
@@ -219,7 +242,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const token = localStorage.getItem("egofi_token");
     if (!token) return;
     api.setAuthToken(token);
-    void api.merchant.getProfile().then(setMerchant).catch(() => {});
+    void api.merchant
+      .getProfile()
+      .then(setMerchant)
+      .catch(() => {});
   }, [pathname]);
 
   const signOut = () => {
@@ -273,7 +299,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-navy-950/60 backdrop-blur-sm animate-fade-in" onClick={() => setMobileOpen(false)} />
+          <div
+            className="absolute inset-0 bg-navy-950/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setMobileOpen(false)}
+          />
           <aside className="absolute inset-y-0 left-0 flex w-72 flex-col bg-brand-gradient animate-slide-in-right">
             {SidebarBody}
           </aside>
@@ -290,7 +319,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             aria-label="Open menu"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
-              <path fillRule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75zm0 5A.75.75 0 0 1 2.75 9h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 9.75zm0 5A.75.75 0 0 1 2.75 14h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 14.75z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75zm0 5A.75.75 0 0 1 2.75 9h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 9.75zm0 5A.75.75 0 0 1 2.75 14h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 14.75z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
           <h1 className="text-sm font-semibold text-navy-900">{pageTitle(pathname)}</h1>

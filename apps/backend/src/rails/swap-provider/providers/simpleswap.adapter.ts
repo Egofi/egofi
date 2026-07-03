@@ -1,7 +1,7 @@
+import type { SwapExchange, SwapProvider, SwapQuote, SwapStatusResponse } from "@egofi/types";
+import { RateType, SwapProviderName } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import type { SwapProvider, SwapQuote, SwapExchange, SwapStatusResponse } from "@egofi/types";
-import { SwapProviderName, RateType } from "@egofi/types";
+import type { ConfigService } from "@nestjs/config";
 
 const BASE_URL = "https://api.simpleswap.io";
 
@@ -59,7 +59,9 @@ export class SimpleSwapAdapter implements SwapProvider {
       toChain: params.toChain,
       fromAmount: params.amount,
       toAmount: data.estimated_amount,
-      rate: (parseFloat(data.estimated_amount) / parseFloat(params.amount)).toString(),
+      rate: (
+        Number.parseFloat(data.estimated_amount) / Number.parseFloat(params.amount)
+      ).toString(),
       rateType: params.rateType,
       minAmount,
       estimatedDurationSeconds: 1200,

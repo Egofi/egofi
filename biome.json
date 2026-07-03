@@ -18,21 +18,33 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "complexity": {
+        "useLiteralKeys": "off"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useKeyWithClickEvents": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "useExhaustiveDependencies": "off"
+      },
       "suspicious": {
         "noExplicitAny": "warn",
         "noConsole": "warn"
       },
-      "correctness": {
-        "noUnusedVariables": "error",
-        "noUnusedImports": "error"
-      },
       "style": {
         "useConst": "error",
-        "noVar": "error"
+        "noVar": "error",
+        "noNonNullAssertion": "off"
       }
     }
   },
   "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
     "formatter": {
       "quoteStyle": "double",
       "trailingCommas": "all",
@@ -47,7 +59,7 @@
       "build/**",
       "coverage/**",
       "*.generated.ts",
-      "prisma/generated/**"
+      "**/prisma/**"
     ]
   }
 }

@@ -1,8 +1,8 @@
-import { Inject, Injectable, BadRequestException } from "@nestjs/common";
-import Decimal from "decimal.js";
-import type { SettlementRail, RouteQuery } from "./rail.interface";
-import { SETTLEMENT_RAIL_TOKEN } from "./rail.interface";
 import { RailType } from "@egofi/types";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import Decimal from "decimal.js";
+import type { RouteQuery, SettlementRail } from "./rail.interface";
+import { SETTLEMENT_RAIL_TOKEN } from "./rail.interface";
 
 const SWAP_MINIMUM_USD = 20;
 
@@ -19,9 +19,7 @@ export type RouteDecision = {
 
 @Injectable()
 export class RailRouter {
-  constructor(
-    @Inject(SETTLEMENT_RAIL_TOKEN) private readonly rails: SettlementRail[],
-  ) {}
+  constructor(@Inject(SETTLEMENT_RAIL_TOKEN) private readonly rails: SettlementRail[]) {}
 
   select(query: RouteQuery): SettlementRail {
     return this.route(query).rail;

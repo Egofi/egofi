@@ -1,3 +1,5 @@
+import { KybDocumentStatus, KybDocumentType, KybStatus } from "@egofi/types";
+import type { KybDocumentDto, KybOverview, KybReviewItem } from "@egofi/types";
 import {
   BadRequestException,
   ForbiddenException,
@@ -5,23 +7,10 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import type { KybDocument } from "@prisma/client";
-import { PrismaService } from "../core/prisma.service";
-import { OutboxService } from "../core/outbox.service";
-import { CloudinaryService } from "./cloudinary.service";
-import {
-  KYB_TIERS,
-  MINIMUM_SUBMISSION_DOCS,
-} from "./kyb.tiers";
-import {
-  KybDocumentStatus,
-  KybDocumentType,
-  KybStatus,
-} from "@egofi/types";
-import type {
-  KybDocumentDto,
-  KybOverview,
-  KybReviewItem,
-} from "@egofi/types";
+import type { OutboxService } from "../core/outbox.service";
+import type { PrismaService } from "../core/prisma.service";
+import type { CloudinaryService } from "./cloudinary.service";
+import { KYB_TIERS, MINIMUM_SUBMISSION_DOCS } from "./kyb.tiers";
 
 const ALLOWED_MIME = new Set([
   "image/jpeg",
@@ -117,10 +106,7 @@ export class KybService {
       where: { merchantId, type, status: { not: KybDocumentStatus.Approved } },
     });
     if (previous) {
-      await this.cloudinary.destroy(
-        previous.cloudinaryPublicId,
-        previous.cloudinaryResourceType,
-      );
+      await this.cloudinary.destroy(previous.cloudinaryPublicId, previous.cloudinaryResourceType);
       await this.prisma.kybDocument.delete({ where: { id: previous.id } });
     }
 

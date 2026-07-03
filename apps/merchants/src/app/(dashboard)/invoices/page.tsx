@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createApiClient } from "@egofi/sdk";
 import type { InvoiceDto } from "@egofi/types";
 import { Button, Card, Spinner, cn } from "@egofi/ui";
+import { useEffect, useState } from "react";
 import { InvoiceStateBadge } from "../../../lib/invoice-state";
 
 const api = createApiClient();
@@ -28,7 +28,10 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
-    if (!token) { window.location.href = "/login"; return; }
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
     api.setAuthToken(token);
     setLoading(true);
     void (async () => {
@@ -75,12 +78,13 @@ export default function InvoicesPage() {
             <button
               key={f.label}
               type="button"
-              onClick={() => { setFilter(f.value); setPage(1); }}
+              onClick={() => {
+                setFilter(f.value);
+                setPage(1);
+              }}
               className={cn(
                 "whitespace-nowrap rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors",
-                active
-                  ? "bg-navy-950 text-white shadow-sm"
-                  : "text-navy-500 hover:text-navy-800",
+                active ? "bg-navy-950 text-white shadow-sm" : "text-navy-500 hover:text-navy-800",
               )}
               aria-pressed={active}
             >
@@ -99,7 +103,9 @@ export default function InvoicesPage() {
           <div className="px-6 py-16 text-center">
             <p className="font-medium text-navy-800">No invoices here</p>
             <p className="mt-1 text-sm text-navy-500">
-              {filter ? "No invoices match this filter." : "Create your first payment link to get started."}
+              {filter
+                ? "No invoices match this filter."
+                : "Create your first payment link to get started."}
             </p>
           </div>
         ) : (
@@ -118,7 +124,9 @@ export default function InvoicesPage() {
                 {invoices.map((inv) => (
                   <tr
                     key={inv.id}
-                    onClick={() => { window.location.href = `/invoices/${inv.id}`; }}
+                    onClick={() => {
+                      window.location.href = `/invoices/${inv.id}`;
+                    }}
                     className="cursor-pointer transition-colors hover:bg-navy-50/50"
                   >
                     <td className="px-6 py-4 font-mono text-xs text-navy-700">

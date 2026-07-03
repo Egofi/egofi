@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
 import { createApiClient } from "@egofi/sdk";
 import type { InvoiceDto } from "@egofi/types";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@egofi/ui";
-import { checkoutUrl } from "../../../../lib/checkout-url";
+import { type FormEvent, useState } from "react";
 import { CopyButton } from "../../../../lib/CopyButton";
+import { checkoutUrl } from "../../../../lib/checkout-url";
 
 const api = createApiClient();
 
@@ -53,7 +53,10 @@ export default function NewInvoicePage() {
       return;
     }
     const token = localStorage.getItem("egofi_token");
-    if (!token) { window.location.href = "/login"; return; }
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
     api.setAuthToken(token);
     const opt = PAY_OPTIONS[payOptionIdx]!;
     setLoading(true);
@@ -90,8 +93,17 @@ export default function NewInvoicePage() {
             <CardContent className="p-8">
               <div className="flex flex-col items-center text-center">
                 <span className="flex size-14 items-center justify-center rounded-full bg-success-50">
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="size-7 text-success-500" aria-hidden>
-                    <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207z" clipRule="evenodd" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="size-7 text-success-500"
+                    aria-hidden
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </span>
                 <h1 className="mt-4 text-xl font-bold tracking-tight text-navy-950">
@@ -161,12 +173,10 @@ export default function NewInvoicePage() {
         <a href="/invoices" className="text-sm font-medium text-navy-400 hover:text-navy-700">
           ← Invoices
         </a>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-navy-950">
-          New payment link
-        </h1>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-navy-950">New payment link</h1>
         <p className="mt-1 text-sm text-navy-500">
-          Set the amount and what the customer pays with. We generate a hosted
-          checkout page you can share anywhere.
+          Set the amount and what the customer pays with. We generate a hosted checkout page you can
+          share anywhere.
         </p>
       </header>
 
@@ -201,7 +211,9 @@ export default function NewInvoicePage() {
                   className="h-[42px] rounded-lg border border-navy-200 bg-white px-3 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
                 >
                   {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -219,12 +231,14 @@ export default function NewInvoicePage() {
                 className="w-full rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
               >
                 {PAY_OPTIONS.map((o, i) => (
-                  <option key={o.label} value={i}>{o.label}</option>
+                  <option key={o.label} value={i}>
+                    {o.label}
+                  </option>
                 ))}
               </select>
               <p className="text-sm text-navy-400">
-                We convert this to your settlement asset automatically — you
-                always receive what's configured in Settings.
+                We convert this to your settlement asset automatically — you always receive what's
+                configured in Settings.
               </p>
             </div>
 
@@ -240,7 +254,9 @@ export default function NewInvoicePage() {
                 className="w-full rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
               >
                 {TTL_OPTIONS.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -262,7 +278,9 @@ export default function NewInvoicePage() {
             Create payment link
           </Button>
           <a href="/invoices">
-            <Button type="button" variant="ghost" size="lg">Cancel</Button>
+            <Button type="button" variant="ghost" size="lg">
+              Cancel
+            </Button>
           </a>
         </div>
       </form>

@@ -1,5 +1,5 @@
-import { BadRequestException } from "@nestjs/common";
 import { InvoiceState } from "@egofi/types";
+import { BadRequestException } from "@nestjs/common";
 
 type Transition = {
   from: InvoiceState[];
@@ -57,11 +57,7 @@ const TRANSITIONS: Record<string, Transition> = {
     to: InvoiceState.Failed,
   },
   refund: {
-    from: [
-      InvoiceState.Failed,
-      InvoiceState.Underpaid,
-      InvoiceState.ComplianceHold,
-    ],
+    from: [InvoiceState.Failed, InvoiceState.Underpaid, InvoiceState.ComplianceHold],
     to: InvoiceState.Refunded,
   },
   expire: {
@@ -74,10 +70,7 @@ const TRANSITIONS: Record<string, Transition> = {
   },
 };
 
-export function applyTransition(
-  current: string,
-  action: keyof typeof TRANSITIONS,
-): InvoiceState {
+export function applyTransition(current: string, action: keyof typeof TRANSITIONS): InvoiceState {
   const transition = TRANSITIONS[action];
   if (!transition) {
     throw new BadRequestException(`Unknown invoice action: ${action}`);
@@ -94,10 +87,7 @@ export function applyTransition(
   return transition.to;
 }
 
-export function canTransition(
-  current: string,
-  action: keyof typeof TRANSITIONS,
-): boolean {
+export function canTransition(current: string, action: keyof typeof TRANSITIONS): boolean {
   const transition = TRANSITIONS[action];
   if (!transition) return false;
   return transition.from.includes(current as InvoiceState);

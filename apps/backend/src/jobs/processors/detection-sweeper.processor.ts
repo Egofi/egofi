@@ -1,12 +1,12 @@
+import { InvoiceState, RailStatus, RailType } from "@egofi/types";
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import { PrismaService } from "../../core/prisma.service";
-import { SwapProviderRail } from "../../rails/swap-provider/swap-provider.rail";
-import { InvoicesService } from "../../invoices/invoices.service";
-import { InvoiceState, RailStatus, RailType } from "@egofi/types";
-import { QUEUES } from "../queues";
+import type { PrismaService } from "../../core/prisma.service";
+import type { InvoicesService } from "../../invoices/invoices.service";
+import type { SwapProviderRail } from "../../rails/swap-provider/swap-provider.rail";
 import { BaseProcessor } from "../base.processor";
+import { QUEUES } from "../queues";
 
 /**
  * Backup detection (§8 delivery-guarantee stance): inbound webhooks are
@@ -78,8 +78,7 @@ export class DetectionSweeperProcessor extends BaseProcessor {
       status === RailStatus.PayoutSent
     )
       return "payoutSent";
-    if (dbState === InvoiceState.PayoutSent && status === RailStatus.Settled)
-      return "confirm";
+    if (dbState === InvoiceState.PayoutSent && status === RailStatus.Settled) return "confirm";
     return null;
   }
 }

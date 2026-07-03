@@ -1,6 +1,6 @@
+import { CHAIN_CONFIGS, type Chain, ChainFamily } from "@egofi/types";
 import { Injectable } from "@nestjs/common";
 import Decimal from "decimal.js";
-import { Chain, ChainFamily, CHAIN_CONFIGS } from "@egofi/types";
 
 @Injectable()
 export class PaymentUriService {
@@ -83,9 +83,7 @@ export class PaymentUriService {
     amountBaseUnits: bigint;
     memo?: string;
   }): string {
-    const btcAmount = new Decimal(params.amountBaseUnits.toString())
-      .div(1e8)
-      .toString();
+    const btcAmount = new Decimal(params.amountBaseUnits.toString()).div(1e8).toString();
     const url = new URL(`bitcoin:${params.address}`);
     url.searchParams.set("amount", btcAmount);
     if (params.memo) url.searchParams.set("label", params.memo);

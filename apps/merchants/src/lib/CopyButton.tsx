@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { cn } from "@egofi/ui";
+import { useState } from "react";
 
 export function CopyButton({
   text,

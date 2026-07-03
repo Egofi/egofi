@@ -1,8 +1,8 @@
+import type { FeePolicy } from "@egofi/types";
 import { Injectable } from "@nestjs/common";
 import type { FeePolicy as FeePolicyRow, MerchantStatus, Prisma } from "@prisma/client";
-import { PrismaService } from "../core/prisma.service";
-import { LedgerService } from "../ledger/ledger.service";
-import type { FeePolicy } from "@egofi/types";
+import type { PrismaService } from "../core/prisma.service";
+import type { LedgerService } from "../ledger/ledger.service";
 
 // The DB stores fee config as flat columns; the API/UI use a nested DTO. Map
 // between them here so the two shapes never leak into each other.
@@ -44,9 +44,7 @@ export class AdminApiService {
   ) {}
 
   async listMerchants(status?: string, page = 1, limit = 20) {
-    const where: Prisma.MerchantWhereInput = status
-      ? { status: status as MerchantStatus }
-      : {};
+    const where: Prisma.MerchantWhereInput = status ? { status: status as MerchantStatus } : {};
     const [data, total] = await Promise.all([
       this.prisma.merchant.findMany({
         where,
@@ -74,7 +72,7 @@ export class AdminApiService {
     });
   }
 
-  async suspendMerchant(id: string, reason: string) {
+  async suspendMerchant(id: string, _reason: string) {
     return this.prisma.merchant.update({
       where: { id },
       data: { status: "SUSPENDED" },
@@ -101,8 +99,7 @@ export class AdminApiService {
     }
     if (dto.quoteMarkup) {
       if (dto.quoteMarkup.status) data.quoteMarkupStatus = dto.quoteMarkup.status;
-      if (dto.quoteMarkup.percent !== undefined)
-        data.quoteMarkupPercent = dto.quoteMarkup.percent;
+      if (dto.quoteMarkup.percent !== undefined) data.quoteMarkupPercent = dto.quoteMarkup.percent;
     }
     if (dto.merchantSaasFee) {
       if (dto.merchantSaasFee.status) data.saasStatus = dto.merchantSaasFee.status;

@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { KybService } from "./kyb.service";
 import { CloudinaryService } from "./cloudinary.service";
-import { KybController } from "./kyb.controller";
 import { KybAdminController } from "./kyb-admin.controller";
+import { KybController } from "./kyb.controller";
+import { KybService } from "./kyb.service";
 
 @Module({
   providers: [KybService, CloudinaryService],

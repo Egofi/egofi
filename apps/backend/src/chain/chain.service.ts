@@ -1,6 +1,6 @@
+import { CHAIN_CONFIGS, type Chain } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { CHAIN_CONFIGS, Chain } from "@egofi/types";
+import type { ConfigService } from "@nestjs/config";
 
 const TATUM_BASE = "https://api.tatum.io/v3";
 

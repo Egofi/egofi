@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { ChainFamily } from "@egofi/types";
+import { describe, expect, it } from "vitest";
 import { detectAddressFamily, isValidAddress } from "./address";
 
 const VALID = {

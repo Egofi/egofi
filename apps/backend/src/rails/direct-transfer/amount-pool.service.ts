@@ -1,7 +1,6 @@
-import { Injectable, ConflictException } from "@nestjs/common";
-import Decimal from "decimal.js";
-import { PrismaService } from "../../core/prisma.service";
-import { RedisService } from "../../core/redis.service";
+import { ConflictException, Injectable } from "@nestjs/common";
+import type { PrismaService } from "../../core/prisma.service";
+import type { RedisService } from "../../core/redis.service";
 
 const STEP_UNITS = 100n; // 0.0001 in 6-decimal stablecoins
 const LOCK_TTL_MS = 30_000;

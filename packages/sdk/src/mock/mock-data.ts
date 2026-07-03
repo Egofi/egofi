@@ -132,8 +132,18 @@ export const MOCK_INVOICES: InvoiceDto[] = [
 ];
 
 export const MOCK_API_KEYS = [
-  { id: "key_001", name: "Production API", createdAt: new Date(Date.now() - 7 * 86400_000).toISOString(), lastUsedAt: new Date(Date.now() - 3600_000).toISOString() },
-  { id: "key_002", name: "Staging API", createdAt: new Date(Date.now() - 3 * 86400_000).toISOString(), lastUsedAt: null },
+  {
+    id: "key_001",
+    name: "Production API",
+    createdAt: new Date(Date.now() - 7 * 86400_000).toISOString(),
+    lastUsedAt: new Date(Date.now() - 3600_000).toISOString(),
+  },
+  {
+    id: "key_002",
+    name: "Staging API",
+    createdAt: new Date(Date.now() - 3 * 86400_000).toISOString(),
+    lastUsedAt: null,
+  },
 ];
 
 // Simulates a checkout session that auto-progresses through states.
@@ -192,11 +202,11 @@ export function buildMockCheckoutSession(
         payChain === "TRON"
           ? "TJYeasTPa6gpR4vF4ycuPCRbXfRBXgqVXK"
           : payChain === "SOLANA"
-          ? "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
-          : payChain === "BITCOIN"
-          ? "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-          : "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-      exactAmount: (parseFloat(amount) * 1e6).toFixed(0),
+            ? "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+            : payChain === "BITCOIN"
+              ? "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+              : "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      exactAmount: (Number.parseFloat(amount) * 1e6).toFixed(0),
       asset: payAsset,
       chain: payChain,
       paymentUri: `tron:TJYeasTPa6gpR4vF4ycuPCRbXfRBXgqVXK?amount=${amount}`,
@@ -242,19 +252,13 @@ export const MOCK_KYB_TIERS: KybTierInfo[] = [
     label: "Verified Business",
     description: "Confirm your business is real and identify a director.",
     volumeCapUsd: 25_000,
-    requiredDocuments: [
-      KybDocumentType.BusinessRegistration,
-      KybDocumentType.DirectorId,
-    ],
+    requiredDocuments: [KybDocumentType.BusinessRegistration, KybDocumentType.DirectorId],
   },
   {
     tier: 2,
     label: "Full",
     description: "Enhanced review for unlimited settlement volume.",
     volumeCapUsd: null,
-    requiredDocuments: [
-      KybDocumentType.ProofOfAddress,
-      KybDocumentType.BankStatement,
-    ],
+    requiredDocuments: [KybDocumentType.ProofOfAddress, KybDocumentType.BankStatement],
   },
 ];

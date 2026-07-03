@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
-import { createApiClient } from "@egofi/sdk";
 import { CheckoutPageClient } from "@/components/CheckoutPageClient";
+import { createApiClient } from "@egofi/sdk";
+import { notFound } from "next/navigation";
 
 const api = createApiClient();
 

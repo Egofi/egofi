@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { RailRouter } from "./rail.router";
-import { SETTLEMENT_RAIL_TOKEN } from "./rail.interface";
 import { DirectTransferModule } from "./direct-transfer/direct-transfer.module";
 import { DirectTransferRail } from "./direct-transfer/direct-transfer.rail";
+import { SETTLEMENT_RAIL_TOKEN } from "./rail.interface";
+import { RailRouter } from "./rail.router";
 import { SwapProviderModule } from "./swap-provider/swap-provider.module";
 import { SwapProviderRail } from "./swap-provider/swap-provider.rail";
 
@@ -14,10 +14,7 @@ import { SwapProviderRail } from "./swap-provider/swap-provider.rail";
     {
       provide: SETTLEMENT_RAIL_TOKEN,
       inject: [DirectTransferRail, SwapProviderRail],
-      useFactory: (direct: DirectTransferRail, swap: SwapProviderRail) => [
-        direct,
-        swap,
-      ],
+      useFactory: (direct: DirectTransferRail, swap: SwapProviderRail) => [direct, swap],
     },
     RailRouter,
   ],

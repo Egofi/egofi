@@ -3,9 +3,7 @@
  * expired quote. No exceptions for control flow — throw only for the truly
  * exceptional.
  */
-export type Result<T, E = AppError> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+export type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 
 export type AppError = {
   code: string;
@@ -33,7 +31,5 @@ export function appError(
 /** Unwraps or throws — use at the boundary where a failure is a programmer error. */
 export function unwrap<T, E>(result: Result<T, E>): T {
   if (result.ok) return result.value;
-  throw new Error(
-    `Unwrapped an error Result: ${JSON.stringify(result.error)}`,
-  );
+  throw new Error(`Unwrapped an error Result: ${JSON.stringify(result.error)}`);
 }

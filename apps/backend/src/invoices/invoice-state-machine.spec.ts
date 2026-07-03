@@ -1,11 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { BadRequestException } from "@nestjs/common";
 import { InvoiceState } from "@egofi/types";
-import {
-  applyTransition,
-  canTransition,
-  isTerminalState,
-} from "./invoice-state-machine";
+import { BadRequestException } from "@nestjs/common";
+import { describe, expect, it } from "vitest";
+import { applyTransition, canTransition, isTerminalState } from "./invoice-state-machine";
 
 describe("applyTransition — happy paths", () => {
   it("walks the full swap lifecycle", () => {
@@ -54,15 +50,13 @@ describe("compliance hold branch (§10.3)", () => {
   });
 
   it("refunds when the customer declines KYC", () => {
-    expect(applyTransition(InvoiceState.ComplianceHold, "refund")).toBe(
-      InvoiceState.Refunded,
-    );
+    expect(applyTransition(InvoiceState.ComplianceHold, "refund")).toBe(InvoiceState.Refunded);
   });
 
   it("cannot be entered before a deposit exists", () => {
-    expect(() =>
-      applyTransition(InvoiceState.AwaitingPayment, "complianceHold"),
-    ).toThrow(BadRequestException);
+    expect(() => applyTransition(InvoiceState.AwaitingPayment, "complianceHold")).toThrow(
+      BadRequestException,
+    );
   });
 });
 
@@ -74,9 +68,9 @@ describe("reorg rule (§12)", () => {
   });
 
   it("never reverts a confirmed invoice", () => {
-    expect(() =>
-      applyTransition(InvoiceState.PaidConfirmed, "depositReorged"),
-    ).toThrow(BadRequestException);
+    expect(() => applyTransition(InvoiceState.PaidConfirmed, "depositReorged")).toThrow(
+      BadRequestException,
+    );
   });
 });
 
@@ -90,12 +84,12 @@ describe("guards", () => {
   it("rejects illegal transitions (idempotent retries surface as errors, not double-applies)", () => {
     // A duplicate "confirm" on an already-confirmed invoice must throw,
     // which is what makes at-least-once webhook delivery safe.
-    expect(() =>
-      applyTransition(InvoiceState.PaidConfirmed, "confirm"),
-    ).toThrow(BadRequestException);
-    expect(() =>
-      applyTransition(InvoiceState.Draft, "depositDetected"),
-    ).toThrow(BadRequestException);
+    expect(() => applyTransition(InvoiceState.PaidConfirmed, "confirm")).toThrow(
+      BadRequestException,
+    );
+    expect(() => applyTransition(InvoiceState.Draft, "depositDetected")).toThrow(
+      BadRequestException,
+    );
   });
 
   it("canTransition mirrors applyTransition without throwing", () => {

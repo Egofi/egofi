@@ -19,20 +19,14 @@ export const KYB_TIERS: KybTierInfo[] = [
     label: "Verified Business",
     description: "Confirm your business is real and identify a director.",
     volumeCapUsd: 25_000,
-    requiredDocuments: [
-      KybDocumentType.BusinessRegistration,
-      KybDocumentType.DirectorId,
-    ],
+    requiredDocuments: [KybDocumentType.BusinessRegistration, KybDocumentType.DirectorId],
   },
   {
     tier: 2,
     label: "Full",
     description: "Enhanced review for unlimited settlement volume.",
     volumeCapUsd: null, // unlimited
-    requiredDocuments: [
-      KybDocumentType.ProofOfAddress,
-      KybDocumentType.BankStatement,
-    ],
+    requiredDocuments: [KybDocumentType.ProofOfAddress, KybDocumentType.BankStatement],
   },
 ];
 
@@ -44,9 +38,7 @@ export function volumeCapForTier(tier: number): number {
 
 /** All documents required to hold a given tier (cumulative across lower tiers). */
 export function cumulativeDocsForTier(tier: number): KybDocumentType[] {
-  return KYB_TIERS.filter((t) => t.tier <= tier).flatMap(
-    (t) => t.requiredDocuments,
-  );
+  return KYB_TIERS.filter((t) => t.tier <= tier).flatMap((t) => t.requiredDocuments);
 }
 
 /** The minimum documents a merchant must provide to submit KYB for review. */

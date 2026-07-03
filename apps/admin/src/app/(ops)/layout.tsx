@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@egofi/ui";
+import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
   {
@@ -52,8 +52,7 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 space-y-1 px-3 py-4">
           {NAV_ITEMS.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <a
                 key={item.href}
@@ -66,9 +65,7 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
                     : "text-navy-200 hover:bg-white/5 hover:text-white",
                 )}
               >
-                <span className={cn(active ? "text-accent" : "text-navy-300")}>
-                  {item.icon}
-                </span>
+                <span className={cn(active ? "text-accent" : "text-navy-300")}>{item.icon}</span>
                 {item.label}
               </a>
             );
@@ -81,7 +78,12 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
             onClick={signOut}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-navy-200 transition-colors hover:bg-white/5 hover:text-white"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="size-5 text-navy-300" aria-hidden>
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="size-5 text-navy-300"
+              aria-hidden
+            >
               <path
                 fillRule="evenodd"
                 d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25z"
@@ -102,7 +104,10 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col md:pl-60">
         {/* Mobile topbar */}
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-navy-100 bg-white/90 px-4 backdrop-blur md:hidden">
-          <a href="/merchants" className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-navy-950">
+          <a
+            href="/merchants"
+            className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-navy-950"
+          >
             egofi<span className="text-primary">.</span>
             <span className="rounded bg-navy-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-navy-500">
               Ops

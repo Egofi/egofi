@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { BadRequestException } from "@nestjs/common";
 import { RailType } from "@egofi/types";
+import { BadRequestException } from "@nestjs/common";
+import { describe, expect, it } from "vitest";
 import type { RouteQuery, SettlementRail } from "./rail.interface";
 import { RailRouter } from "./rail.router";
 
@@ -32,9 +32,7 @@ describe("RailRouter", () => {
   const router = new RailRouter([direct, swap]);
 
   it("rule 1: same asset + same chain routes direct with no steering note", () => {
-    const decision = router.route(
-      query({ fromAsset: "USDT", fromChain: "TRON" }),
-    );
+    const decision = router.route(query({ fromAsset: "USDT", fromChain: "TRON" }));
     expect(decision.rail).toBe(direct);
     expect(decision.steeringNote).toBeUndefined();
   });
@@ -46,13 +44,8 @@ describe("RailRouter", () => {
   });
 
   it("rule 2: rejects sub-minimum swaps when no direct alternative exists", () => {
-    const swapOnly = new RailRouter([
-      fakeRail(RailType.DirectTransfer, false),
-      swap,
-    ]);
-    expect(() => swapOnly.route(query({ amountBaseUnits: usd(10) }))).toThrow(
-      BadRequestException,
-    );
+    const swapOnly = new RailRouter([fakeRail(RailType.DirectTransfer, false), swap]);
+    expect(() => swapOnly.route(query({ amountBaseUnits: usd(10) }))).toThrow(BadRequestException);
   });
 
   it("rule 3: tickets at/above the AML-attention band steer to direct with a customer-visible why", () => {
@@ -62,10 +55,7 @@ describe("RailRouter", () => {
   });
 
   it("rule 3: falls through to swap (flagged) when direct cannot serve the large ticket", () => {
-    const swapOnly = new RailRouter([
-      fakeRail(RailType.DirectTransfer, false),
-      swap,
-    ]);
+    const swapOnly = new RailRouter([fakeRail(RailType.DirectTransfer, false), swap]);
     const decision = swapOnly.route(query({ amountBaseUnits: usd(2_000) }));
     expect(decision.rail).toBe(swap);
     expect(decision.steeringNote).toContain("identity verification");

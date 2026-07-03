@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import Decimal from "decimal.js";
-import { RedisService } from "../core/redis.service";
+import type { RedisService } from "../core/redis.service";
 
 const RATE_CACHE_TTL = 60; // seconds
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
@@ -30,11 +30,7 @@ export class PricingService {
 
   constructor(private readonly redis: RedisService) {}
 
-  async getQuote(
-    fromAsset: string,
-    toCurrency: string,
-    displayAmount: string,
-  ): Promise<RateQuote> {
+  async getQuote(fromAsset: string, toCurrency: string, displayAmount: string): Promise<RateQuote> {
     const rate = await this.getRate(fromAsset, toCurrency);
     const quotedAmount = new Decimal(displayAmount).div(rate).toFixed(6);
     return { quotedAmount, rate: rate.toString() };
@@ -49,10 +45,9 @@ export class PricingService {
     const vs = currency.toLowerCase();
 
     try {
-      const res = await fetch(
-        `${COINGECKO_BASE}/simple/price?ids=${coinId}&vs_currencies=${vs}`,
-        { signal: AbortSignal.timeout(5_000) },
-      );
+      const res = await fetch(`${COINGECKO_BASE}/simple/price?ids=${coinId}&vs_currencies=${vs}`, {
+        signal: AbortSignal.timeout(5_000),
+      });
       if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
 
       const data = (await res.json()) as Record<string, Record<string, number>>;

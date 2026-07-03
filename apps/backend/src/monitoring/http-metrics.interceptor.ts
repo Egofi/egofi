@@ -1,12 +1,12 @@
 import {
-  CallHandler,
-  ExecutionContext,
+  type CallHandler,
+  type ExecutionContext,
   Injectable,
-  NestInterceptor,
+  type NestInterceptor,
 } from "@nestjs/common";
-import type { FastifyRequest, FastifyReply } from "fastify";
-import { Observable, tap } from "rxjs";
-import { MetricsService } from "./metrics.service";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import { type Observable, tap } from "rxjs";
+import type { MetricsService } from "./metrics.service";
 
 @Injectable()
 export class HttpMetricsInterceptor implements NestInterceptor {
@@ -24,11 +24,7 @@ export class HttpMetricsInterceptor implements NestInterceptor {
     );
   }
 
-  private record(
-    ctx: ExecutionContext,
-    req: FastifyRequest,
-    startMs: number,
-  ): void {
+  private record(ctx: ExecutionContext, req: FastifyRequest, startMs: number): void {
     const res = ctx.switchToHttp().getResponse<FastifyReply>();
     const duration = Date.now() - startMs;
 

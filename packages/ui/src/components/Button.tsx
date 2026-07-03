@@ -31,7 +31,10 @@ const sizeStyles: Record<ButtonSize, string> = {
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", loading = false, className, children, disabled, ...props }, ref) => {
+  (
+    { variant = "primary", size = "md", loading = false, className, children, disabled, ...props },
+    ref,
+  ) => {
     return (
       <button
         ref={ref}

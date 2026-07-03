@@ -1,9 +1,9 @@
+import { createHash, randomBytes } from "node:crypto";
+import type { UpdateProfileDto, UpdateSettlementDto } from "@egofi/types";
 import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
-import { PrismaService } from "../core/prisma.service";
-import { ComplianceService } from "../compliance/compliance.service";
-import { createHash, randomBytes } from "crypto";
-import type { UpdateProfileDto, UpdateSettlementDto } from "@egofi/types";
+import type { ComplianceService } from "../compliance/compliance.service";
+import type { PrismaService } from "../core/prisma.service";
 
 @Injectable()
 export class MerchantsService {

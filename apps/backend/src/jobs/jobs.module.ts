@@ -1,22 +1,22 @@
-import { Module } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { BullModule } from "@nestjs/bullmq";
-import { BullBoardModule } from "@bull-board/nestjs";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { FastifyAdapter as BullBoardFastifyAdapter } from "@bull-board/fastify";
+import { BullBoardModule } from "@bull-board/nestjs";
+import { BullModule } from "@nestjs/bullmq";
+import { Module } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { InvoicesModule } from "../invoices/invoices.module";
+import { RailsModule } from "../rails/rails.module";
+import { WebhooksModule } from "../webhooks/webhooks.module";
+import { JobsService } from "./jobs.service";
+import { ConfirmationWatchProcessor } from "./processors/confirmation-watch.processor";
 import { DepositWatchProcessor } from "./processors/deposit-watch.processor";
 import { DetectionSweeperProcessor } from "./processors/detection-sweeper.processor";
-import { SwapStatusPollProcessor } from "./processors/swap-status-poll.processor";
-import { ConfirmationWatchProcessor } from "./processors/confirmation-watch.processor";
-import { OutboxDispatchProcessor } from "./processors/outbox-dispatch.processor";
 import { MerchantWebhookProcessor } from "./processors/merchant-webhook.processor";
-import { RateLockExpiryProcessor } from "./processors/rate-lock-expiry.processor";
+import { OutboxDispatchProcessor } from "./processors/outbox-dispatch.processor";
 import { ProviderHealthProcessor } from "./processors/provider-health.processor";
-import { JobsService } from "./jobs.service";
+import { RateLockExpiryProcessor } from "./processors/rate-lock-expiry.processor";
+import { SwapStatusPollProcessor } from "./processors/swap-status-poll.processor";
 import { QUEUES } from "./queues";
-import { InvoicesModule } from "../invoices/invoices.module";
-import { WebhooksModule } from "../webhooks/webhooks.module";
-import { RailsModule } from "../rails/rails.module";
 
 export { QUEUES } from "./queues";
 

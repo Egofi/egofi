@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+﻿import type * as React from "react";
 import { cn } from "../lib/cn";
 
 export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> {

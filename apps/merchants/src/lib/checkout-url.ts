@@ -4,7 +4,6 @@
  * localhost default for dev.
  */
 export function checkoutUrl(invoiceId: string): string {
-  const base =
-    process.env["NEXT_PUBLIC_CHECKOUT_URL"] ?? "http://localhost:3001";
+  const base = process.env["NEXT_PUBLIC_CHECKOUT_URL"] ?? "http://localhost:3001";
   return `${base.replace(/\/$/, "")}/pay/${invoiceId}`;
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { cn } from "@egofi/ui";
+import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/settings", label: "Profile" },
@@ -25,9 +25,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <div className="mb-8 flex gap-1 overflow-x-auto border-b border-navy-100">
         {TABS.map((tab) => {
           const active =
-            tab.href === "/settings"
-              ? pathname === "/settings"
-              : pathname.startsWith(tab.href);
+            tab.href === "/settings" ? pathname === "/settings" : pathname.startsWith(tab.href);
           return (
             <a
               key={tab.href}

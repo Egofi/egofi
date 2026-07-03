@@ -9,11 +9,7 @@ const STEPS: Step[] = [
   { label: "Deposit detected", states: [InvoiceState.Received] },
   {
     label: "Converting",
-    states: [
-      InvoiceState.Converting,
-      InvoiceState.ComplianceHold,
-      InvoiceState.PayoutSent,
-    ],
+    states: [InvoiceState.Converting, InvoiceState.ComplianceHold, InvoiceState.PayoutSent],
   },
   { label: "Confirmed", states: [InvoiceState.PaidConfirmed] },
 ];
@@ -42,11 +38,7 @@ export function PaymentProgress({ state }: { state: string }) {
               {/* leading connector */}
               <div
                 className={`h-0.5 flex-1 rounded ${
-                  i === 0
-                    ? "opacity-0"
-                    : isComplete || isCurrent
-                      ? "bg-primary"
-                      : "bg-navy-100"
+                  i === 0 ? "opacity-0" : isComplete || isCurrent ? "bg-primary" : "bg-navy-100"
                 }`}
               />
               {/* node */}
@@ -76,21 +68,13 @@ export function PaymentProgress({ state }: { state: string }) {
               {/* trailing connector */}
               <div
                 className={`h-0.5 flex-1 rounded ${
-                  i === STEPS.length - 1
-                    ? "opacity-0"
-                    : isComplete
-                      ? "bg-primary"
-                      : "bg-navy-100"
+                  i === STEPS.length - 1 ? "opacity-0" : isComplete ? "bg-primary" : "bg-navy-100"
                 }`}
               />
             </div>
             <span
               className={`px-1 text-center text-[11px] font-medium leading-tight ${
-                isCurrent
-                  ? "text-primary"
-                  : isComplete
-                    ? "text-navy-700"
-                    : "text-navy-400"
+                isCurrent ? "text-primary" : isComplete ? "text-navy-700" : "text-navy-400"
               }`}
             >
               {step.label}

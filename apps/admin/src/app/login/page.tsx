@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createApiClient } from "@egofi/sdk";
 import { Button, Input } from "@egofi/ui";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
 
 const api = createApiClient();
 
@@ -42,12 +42,8 @@ export default function AdminLoginPage() {
         </div>
 
         <div className="rounded-2xl bg-white p-8 shadow-card">
-          <h1 className="text-lg font-bold tracking-tight text-navy-950">
-            Operator sign in
-          </h1>
-          <p className="mt-1 text-sm text-navy-500">
-            Restricted to egofi staff.
-          </p>
+          <h1 className="text-lg font-bold tracking-tight text-navy-950">Operator sign in</h1>
+          <p className="mt-1 text-sm text-navy-500">Restricted to egofi staff.</p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <Input

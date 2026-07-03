@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { createApiClient } from "@egofi/sdk";
 import type { CheckoutSessionDto, InvoiceStatusDto } from "@egofi/types";
 import { InvoiceState } from "@egofi/types";
-import { createApiClient } from "@egofi/sdk";
 import { Card, CardContent } from "@egofi/ui";
 import Decimal from "decimal.js";
-import { QRCodeCanvas } from "./QRCodeCanvas";
+import { useCallback, useEffect, useState } from "react";
+import { CopyButton } from "./CopyButton";
 import { CountdownTimer } from "./CountdownTimer";
 import { PaymentProgress } from "./PaymentProgress";
-import { CopyButton } from "./CopyButton";
+import { QRCodeCanvas } from "./QRCodeCanvas";
 
 const api = createApiClient();
 
@@ -22,11 +22,7 @@ const TERMINAL_STATES: string[] = [
 ];
 
 function formatAmount(baseUnits: string): string {
-  return new Decimal(baseUnits)
-    .div(1e6)
-    .toFixed(6)
-    .replace(/0+$/, "")
-    .replace(/\.$/, "");
+  return new Decimal(baseUnits).div(1e6).toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 export function CheckoutPageClient({ session }: { session: CheckoutSessionDto }) {
@@ -69,10 +65,11 @@ export function CheckoutPageClient({ session }: { session: CheckoutSessionDto })
       <Card className="w-full max-w-md overflow-hidden rounded-3xl shadow-lg animate-fade-in-up">
         {/* Amount hero */}
         <div className="relative border-b border-navy-100 bg-gradient-to-br from-navy-50 to-white px-6 py-6 text-center">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-          <p className="text-xs font-semibold uppercase tracking-wider text-navy-400">
-            Total due
-          </p>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+          />
+          <p className="text-xs font-semibold uppercase tracking-wider text-navy-400">Total due</p>
           <p className="mt-1.5 text-display-sm font-bold tabular-nums text-navy-950">
             {session.invoice.displayAmount}{" "}
             <span className="text-xl font-semibold text-navy-400">
@@ -94,15 +91,10 @@ export function CheckoutPageClient({ session }: { session: CheckoutSessionDto })
               title="This payment link expired"
               body="No funds were taken. Ask the merchant for a fresh payment link to try again."
             />
-          ) : currentState === InvoiceState.Failed ||
-            currentState === InvoiceState.Refunded ? (
+          ) : currentState === InvoiceState.Failed || currentState === InvoiceState.Refunded ? (
             <TerminalState
               tone="danger"
-              title={
-                currentState === InvoiceState.Refunded
-                  ? "Payment refunded"
-                  : "Payment failed"
-              }
+              title={currentState === InvoiceState.Refunded ? "Payment refunded" : "Payment failed"}
               body={
                 currentState === InvoiceState.Refunded
                   ? "Your funds were returned to your refund address. Contact the merchant to try again."
@@ -118,10 +110,9 @@ export function CheckoutPageClient({ session }: { session: CheckoutSessionDto })
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900">
                   <p className="font-semibold">Identity verification required</p>
                   <p className="mt-1">
-                    Our conversion partner has paused this payment for a routine
-                    compliance check. Check your email for a verification link —
-                    once completed, the payment resumes automatically. Your
-                    funds are safe either way: unverified payments are refunded.
+                    Our conversion partner has paused this payment for a routine compliance check.
+                    Check your email for a verification link — once completed, the payment resumes
+                    automatically. Your funds are safe either way: unverified payments are refunded.
                   </p>
                 </div>
               ) : currentState === InvoiceState.AwaitingPayment ? (
@@ -144,8 +135,7 @@ export function CheckoutPageClient({ session }: { session: CheckoutSessionDto })
                           Send exactly
                         </p>
                         <p className="mt-0.5 font-mono text-base font-semibold tabular-nums text-navy-950">
-                          {amount}{" "}
-                          <span className="text-navy-500">{instructions.asset}</span>
+                          {amount} <span className="text-navy-500">{instructions.asset}</span>
                         </p>
                       </div>
                       <CopyButton text={amount} label="amount" />
@@ -176,8 +166,8 @@ export function CheckoutPageClient({ session }: { session: CheckoutSessionDto })
                         clipRule="evenodd"
                       />
                     </svg>
-                    Send the exact amount shown — it's how we match your payment
-                    to this invoice. Small differences can delay confirmation.
+                    Send the exact amount shown — it's how we match your payment to this invoice.
+                    Small differences can delay confirmation.
                   </p>
                 </>
               ) : (
@@ -200,14 +190,12 @@ export function CheckoutPageClient({ session }: { session: CheckoutSessionDto })
                   <div>
                     <p className="font-semibold text-navy-900">
                       {currentState === InvoiceState.Received && "Deposit detected"}
-                      {currentState === InvoiceState.Converting &&
-                        "Converting your payment"}
-                      {currentState === InvoiceState.PayoutSent &&
-                        "Sending to the merchant"}
+                      {currentState === InvoiceState.Converting && "Converting your payment"}
+                      {currentState === InvoiceState.PayoutSent && "Sending to the merchant"}
                     </p>
                     <p className="mt-1 text-sm text-navy-500">
-                      This usually takes a few minutes. Keep this page open — it
-                      updates automatically.
+                      This usually takes a few minutes. Keep this page open — it updates
+                      automatically.
                     </p>
                   </div>
                 </div>
@@ -256,11 +244,14 @@ function TerminalState({
 
   return (
     <div className="flex flex-col items-center gap-4 py-8 text-center animate-scale-in">
-      <span
-        className={`flex size-16 items-center justify-center rounded-full ${styles.circle}`}
-      >
+      <span className={`flex size-16 items-center justify-center rounded-full ${styles.circle}`}>
         {tone === "success" ? (
-          <svg viewBox="0 0 24 24" fill="currentColor" className={`size-8 ${styles.icon}`} aria-hidden>
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className={`size-8 ${styles.icon}`}
+            aria-hidden
+          >
             <path
               fillRule="evenodd"
               d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207z"
@@ -268,7 +259,12 @@ function TerminalState({
             />
           </svg>
         ) : tone === "danger" ? (
-          <svg viewBox="0 0 24 24" fill="currentColor" className={`size-8 ${styles.icon}`} aria-hidden>
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className={`size-8 ${styles.icon}`}
+            aria-hidden
+          >
             <path
               fillRule="evenodd"
               d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06z"
@@ -276,7 +272,12 @@ function TerminalState({
             />
           </svg>
         ) : (
-          <svg viewBox="0 0 24 24" fill="currentColor" className={`size-8 ${styles.icon}`} aria-hidden>
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className={`size-8 ${styles.icon}`}
+            aria-hidden
+          >
             <path
               fillRule="evenodd"
               d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm.75-13.5a.75.75 0 0 0-1.5 0v5c0 .27.144.518.378.65l3.5 2a.75.75 0 0 0 .744-1.3L12.75 12.05V7.5z"
@@ -287,9 +288,7 @@ function TerminalState({
       </span>
       <div>
         <h2 className="text-lg font-bold tracking-tight text-navy-950">{title}</h2>
-        <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-navy-500">
-          {body}
-        </p>
+        <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-navy-500">{body}</p>
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
+import { randomUUID } from "node:crypto";
 import {
-  CallHandler,
-  ExecutionContext,
+  type CallHandler,
+  type ExecutionContext,
   Injectable,
-  NestInterceptor,
+  type NestInterceptor,
 } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { randomUUID } from "node:crypto";
 import type { Observable } from "rxjs";
 
 export const CORRELATION_HEADER = "x-correlation-id";
@@ -24,11 +24,9 @@ export class CorrelationIdInterceptor implements NestInterceptor {
     const reply = http.getResponse<FastifyReply>();
 
     const incoming = request.headers[CORRELATION_HEADER];
-    const correlationId =
-      (Array.isArray(incoming) ? incoming[0] : incoming) ?? randomUUID();
+    const correlationId = (Array.isArray(incoming) ? incoming[0] : incoming) ?? randomUUID();
 
-    (request as FastifyRequest & { correlationId: string }).correlationId =
-      correlationId;
+    (request as FastifyRequest & { correlationId: string }).correlationId = correlationId;
     void reply.header(CORRELATION_HEADER, correlationId);
 
     return next.handle();

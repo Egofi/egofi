@@ -1,3 +1,4 @@
+import type { KybDocumentType } from "@egofi/types";
 import {
   BadRequestException,
   Controller,
@@ -10,13 +11,12 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
-import type { FastifyRequest } from "fastify";
-import { KybService } from "./kyb.service";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
-import { SkipIdempotency } from "../shared";
 import type { Merchant } from "@prisma/client";
-import { KybDocumentType } from "@egofi/types";
+import type { FastifyRequest } from "fastify";
+import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SkipIdempotency } from "../shared";
+import type { KybService } from "./kyb.service";
 
 @ApiTags("kyb")
 @UseGuards(JwtAuthGuard)
@@ -56,10 +56,7 @@ export class KybController {
 
   @Delete("documents/:id")
   @ApiOperation({ summary: "Remove an uploaded KYB document" })
-  async deleteDocument(
-    @CurrentMerchant() merchant: Merchant,
-    @Param("id") id: string,
-  ) {
+  async deleteDocument(@CurrentMerchant() merchant: Merchant, @Param("id") id: string) {
     await this.kyb.deleteDocument(merchant.id, id);
     return { ok: true };
   }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createApiClient } from "@egofi/sdk";
-import type { MerchantProfile, InvoiceDto } from "@egofi/types";
+import type { InvoiceDto, MerchantProfile } from "@egofi/types";
 import { Button, Card, CardContent, Skeleton } from "@egofi/ui";
+import { useEffect, useState } from "react";
 import { InvoiceStateBadge } from "../../../lib/invoice-state";
 
 const api = createApiClient();
@@ -17,17 +17,29 @@ const PlusIcon = (
 const STAT_ICONS = {
   total: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
-      <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.6a1.5 1.5 0 0 0-.44-1.06l-3.6-3.6A1.5 1.5 0 0 0 11.4 2H4.5zm2.25 6a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5z" clipRule="evenodd" />
+      <path
+        fillRule="evenodd"
+        d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.6a1.5 1.5 0 0 0-.44-1.06l-3.6-3.6A1.5 1.5 0 0 0 11.4 2H4.5zm2.25 6a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5z"
+        clipRule="evenodd"
+      />
     </svg>
   ),
   paid: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
-      <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5z" clipRule="evenodd" />
+      <path
+        fillRule="evenodd"
+        d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5z"
+        clipRule="evenodd"
+      />
     </svg>
   ),
   flight: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
-      <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm.75-13a.75.75 0 0 0-1.5 0v5c0 .27.144.518.378.65l3.5 2a.75.75 0 0 0 .744-1.3L10.75 9.566V5z" clipRule="evenodd" />
+      <path
+        fillRule="evenodd"
+        d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm.75-13a.75.75 0 0 0-1.5 0v5c0 .27.144.518.378.65l3.5 2a.75.75 0 0 0 .744-1.3L10.75 9.566V5z"
+        clipRule="evenodd"
+      />
     </svg>
   ),
 };
@@ -40,7 +52,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
-    if (!token) { window.location.href = "/login"; return; }
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
     api.setAuthToken(token);
     void (async () => {
       try {
@@ -63,9 +78,27 @@ export default function DashboardPage() {
   ).length;
 
   const stats = [
-    { key: "total", label: "Total invoices", value: total, icon: STAT_ICONS.total, tint: "text-primary bg-primary-50" },
-    { key: "paid", label: "Paid & confirmed", value: confirmed, icon: STAT_ICONS.paid, tint: "text-success-700 bg-success-50" },
-    { key: "flight", label: "In flight", value: inflight, icon: STAT_ICONS.flight, tint: "text-info-700 bg-info-50" },
+    {
+      key: "total",
+      label: "Total invoices",
+      value: total,
+      icon: STAT_ICONS.total,
+      tint: "text-primary bg-primary-50",
+    },
+    {
+      key: "paid",
+      label: "Paid & confirmed",
+      value: confirmed,
+      icon: STAT_ICONS.paid,
+      tint: "text-success-700 bg-success-50",
+    },
+    {
+      key: "flight",
+      label: "In flight",
+      value: inflight,
+      icon: STAT_ICONS.flight,
+      tint: "text-info-700 bg-info-50",
+    },
   ];
 
   return (
@@ -89,17 +122,32 @@ export default function DashboardPage() {
           <div className="flex items-start gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
               <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
-                <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM8.94 6.94a1.5 1.5 0 1 1 2.12 2.12L10 10.06V11a.75.75 0 0 1-1.5 0v-1.19c0-.398.158-.78.44-1.06l.94-.94a.5.5 0 1 0-.707-.708.75.75 0 0 1-1.06-1.06z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM8.94 6.94a1.5 1.5 0 1 1 2.12 2.12L10 10.06V11a.75.75 0 0 1-1.5 0v-1.19c0-.398.158-.78.44-1.06l.94-.94a.5.5 0 1 0-.707-.708.75.75 0 0 1-1.06-1.06z"
+                  clipRule="evenodd"
+                />
               </svg>
             </span>
             <div>
               <p className="font-semibold text-amber-900">Your account is awaiting approval</p>
               <p className="mt-1 text-sm text-amber-800">
-                Explore freely now. Once approved, your payment links go live. Set your
-                receiving addresses in{" "}
-                <a href="/settings/settlement" className="font-semibold underline underline-offset-2">Settlement</a>{" "}
+                Explore freely now. Once approved, your payment links go live. Set your receiving
+                addresses in{" "}
+                <a
+                  href="/settings/settlement"
+                  className="font-semibold underline underline-offset-2"
+                >
+                  Settlement
+                </a>{" "}
                 and complete{" "}
-                <a href="/settings/verification" className="font-semibold underline underline-offset-2">Verification</a>.
+                <a
+                  href="/settings/verification"
+                  className="font-semibold underline underline-offset-2"
+                >
+                  Verification
+                </a>
+                .
               </p>
             </div>
           </div>
@@ -130,11 +178,12 @@ export default function DashboardPage() {
       {/* Invoices */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight text-navy-950">
-            Recent invoices
-          </h2>
+          <h2 className="text-lg font-semibold tracking-tight text-navy-950">Recent invoices</h2>
           {total > invoices.length && (
-            <a href="/invoices" className="text-sm font-medium text-primary hover:text-primary-700 hover:underline underline-offset-2">
+            <a
+              href="/invoices"
+              className="text-sm font-medium text-primary hover:text-primary-700 hover:underline underline-offset-2"
+            >
               View all →
             </a>
           )}
@@ -155,8 +204,19 @@ export default function DashboardPage() {
             <CardContent className="p-12 pt-12">
               <div className="text-center">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-navy-50">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-7 text-navy-400" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="size-7 text-navy-400"
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"
+                    />
                   </svg>
                 </div>
                 <p className="mt-4 font-semibold text-navy-900">No invoices yet</p>
@@ -173,18 +233,30 @@ export default function DashboardPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-navy-100 text-left">
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">Invoice</th>
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">Amount</th>
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">Pay asset</th>
-                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">Created</th>
-                    <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-navy-400">Status</th>
+                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Invoice
+                    </th>
+                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Pay asset
+                    </th>
+                    <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Created
+                    </th>
+                    <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-navy-50">
                   {invoices.map((inv) => (
                     <tr
                       key={inv.id}
-                      onClick={() => { window.location.href = `/invoices/${inv.id}`; }}
+                      onClick={() => {
+                        window.location.href = `/invoices/${inv.id}`;
+                      }}
                       className="cursor-pointer transition-colors hover:bg-navy-50/60"
                     >
                       <td className="px-6 py-4 font-mono text-xs text-navy-600">

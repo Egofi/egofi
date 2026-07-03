@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { MerchantsService } from "./merchants.service";
-import { MerchantsController } from "./merchants.controller";
 import { ComplianceModule } from "../compliance/compliance.module";
+import { MerchantsController } from "./merchants.controller";
+import { MerchantsService } from "./merchants.service";
 
 @Module({
   imports: [ComplianceModule],

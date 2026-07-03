@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
-import { Queue } from "bullmq";
+import { Injectable, type OnModuleInit } from "@nestjs/common";
+import type { Queue } from "bullmq";
 import { QUEUES } from "./queues";
 
 @Injectable()
@@ -76,12 +76,7 @@ export class JobsService implements OnModuleInit {
     });
   }
 
-  async scheduleConfirmationWatch(
-    invoiceId: string,
-    txHash: string,
-    chain: string,
-    leg: string,
-  ) {
+  async scheduleConfirmationWatch(invoiceId: string, txHash: string, chain: string, leg: string) {
     await this.confirmationWatchQueue.add(
       "watch",
       { invoiceId, txHash, chain, leg },

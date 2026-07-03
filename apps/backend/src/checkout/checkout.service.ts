@@ -1,9 +1,3 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InvoicesService } from "../invoices/invoices.service";
-import { RailRouter } from "../rails/rail.router";
-import { PricingService } from "../pricing/pricing.service";
-import { JobsService } from "../jobs/jobs.service";
-import { PrismaService } from "../core/prisma.service";
 import type {
   CheckoutSessionDto,
   CreateInvoiceDto,
@@ -12,6 +6,12 @@ import type {
   PaymentInstructions,
 } from "@egofi/types";
 import { InvoiceState, RailType } from "@egofi/types";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import type { PrismaService } from "../core/prisma.service";
+import type { InvoicesService } from "../invoices/invoices.service";
+import type { JobsService } from "../jobs/jobs.service";
+import type { PricingService } from "../pricing/pricing.service";
+import type { RailRouter } from "../rails/rail.router";
 
 // Maps a settlement asset label to the chain it settles on. Merchants configure
 // a single settlement asset (default USDT-TRC20); the payout chain is implied.
@@ -40,11 +40,7 @@ export class CheckoutService {
   async createSession(dto: CreateInvoiceDto): Promise<CheckoutSessionDto> {
     // Quote + create the invoice in DRAFT, then issue it (allocate the rail +
     // deposit address, move to AWAITING_PAYMENT).
-    const quote = await this.pricing.getQuote(
-      dto.payAsset,
-      dto.displayCurrency,
-      dto.displayAmount,
-    );
+    const quote = await this.pricing.getQuote(dto.payAsset, dto.displayCurrency, dto.displayAmount);
     const invoice = await this.invoices.create(dto, quote.quotedAmount, quote.rate);
     const instructions = await this.issueInvoice(invoice);
 
@@ -114,7 +110,7 @@ export class CheckoutService {
     // issue time) so the deposit amount is correct. Sessions created via the
     // checkout API already carry a live quote and skip the re-quote.
     let quotedAmount = invoice.quotedAmount;
-    if (!quotedAmount || parseFloat(quotedAmount) <= 0) {
+    if (!quotedAmount || Number.parseFloat(quotedAmount) <= 0) {
       const quote = await this.pricing.getQuote(
         invoice.payAsset,
         invoice.displayCurrency,
@@ -136,13 +132,13 @@ export class CheckoutService {
       fromChain: invoice.payChain,
       toAsset: merchant.settlementAsset,
       toChain: settlementChain(merchant.settlementAsset),
-      amountBaseUnits: BigInt(Math.round(parseFloat(quotedAmount) * 1e6)),
+      amountBaseUnits: BigInt(Math.round(Number.parseFloat(quotedAmount) * 1e6)),
     });
 
     const invoiceForRail = {
       ...invoice,
-      quotedAmount: BigInt(Math.round(parseFloat(quotedAmount) * 1e6)),
-      displayAmount: BigInt(Math.round(parseFloat(invoice.displayAmount) * 1e6)),
+      quotedAmount: BigInt(Math.round(Number.parseFloat(quotedAmount) * 1e6)),
+      displayAmount: BigInt(Math.round(Number.parseFloat(invoice.displayAmount) * 1e6)),
       rate: BigInt(0),
       rail: rail.railType,
       railRef: null,
@@ -165,19 +161,13 @@ export class CheckoutService {
     if (rail.railType === RailType.DirectTransfer) {
       await this.jobs.scheduleDepositWatch(invoice.id, instructions.depositAddress);
     } else if (rail.railType === RailType.SwapProvider && instructions.providerRef) {
-      await this.jobs.scheduleSwapStatusPoll(
-        invoice.id,
-        instructions.providerRef,
-        "changenow",
-      );
+      await this.jobs.scheduleSwapStatusPoll(invoice.id, instructions.providerRef, "changenow");
     }
 
     return instructions;
   }
 
-  private toInstructionsDto(
-    instructions: PaymentInstructions,
-  ): CheckoutSessionDto["instructions"] {
+  private toInstructionsDto(instructions: PaymentInstructions): CheckoutSessionDto["instructions"] {
     return {
       depositAddress: instructions.depositAddress,
       exactAmount: instructions.exactAmount.toString(),

@@ -1,6 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiExcludeController } from "@nestjs/swagger";
-import { PrismaService } from "./prisma.service";
+import type { PrismaService } from "./prisma.service";
 
 @ApiExcludeController()
 @Controller("health")

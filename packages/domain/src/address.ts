@@ -14,14 +14,12 @@ const PATTERNS: Record<ChainFamily, RegExp> = {
 
 export function isValidAddress(address: string, family: ChainFamily): boolean {
   const pattern = PATTERNS[family];
-  return pattern !== undefined && pattern.test(address.trim());
+  return pattern?.test(address.trim());
 }
 
 export function detectAddressFamily(address: string): ChainFamily | null {
   const trimmed = address.trim();
-  for (const [family, pattern] of Object.entries(PATTERNS) as Array<
-    [ChainFamily, RegExp]
-  >) {
+  for (const [family, pattern] of Object.entries(PATTERNS) as Array<[ChainFamily, RegExp]>) {
     if (pattern.test(trimmed)) return family;
   }
   return null;

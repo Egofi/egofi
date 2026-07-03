@@ -1,4 +1,4 @@
-import { RateType, SwapProviderName } from "@egofi/types";
+import { type RateType, SwapProviderName } from "@egofi/types";
 import type {
   SwapExchange,
   SwapProvider,

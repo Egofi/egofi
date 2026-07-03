@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import QRCode from "qrcode";
+import { useEffect, useRef } from "react";
 
 export function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -15,11 +15,5 @@ export function QRCodeCanvas({ value, size = 200 }: { value: string; size?: numb
     });
   }, [value, size]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="rounded-lg"
-      aria-label={`QR code for ${value}`}
-    />
-  );
+  return <canvas ref={canvasRef} className="rounded-lg" aria-label={`QR code for ${value}`} />;
 }

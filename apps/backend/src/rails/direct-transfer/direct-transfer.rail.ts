@@ -1,15 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
-import type {
-  Invoice,
-  PaymentInstructions,
-  RailEvent,
-  RouteQuery,
-} from "../rail.interface";
-import type { SettlementRail } from "../rail.interface";
 import { RailStatus, RailType } from "@egofi/types";
-import { AmountPoolService } from "./amount-pool.service";
-import { PaymentUriService } from "./payment-uri.service";
-import { PrismaService } from "../../core/prisma.service";
+import { Injectable, Logger } from "@nestjs/common";
+import type { PrismaService } from "../../core/prisma.service";
+import type { Invoice, PaymentInstructions, RailEvent, RouteQuery } from "../rail.interface";
+import type { SettlementRail } from "../rail.interface";
+import type { AmountPoolService } from "./amount-pool.service";
+import type { PaymentUriService } from "./payment-uri.service";
 
 const COOLDOWN_MULTIPLIER = 2;
 
@@ -24,7 +19,7 @@ export class DirectTransferRail implements SettlementRail {
     private readonly prisma: PrismaService,
   ) {}
 
-  supports(query: RouteQuery): boolean {
+  supports(_query: RouteQuery): boolean {
     // DirectTransferRail handles same-asset-same-chain, or when merchant
     // explicitly accepts the incoming asset (below swap minimum fallback).
     return true;
@@ -92,16 +87,13 @@ export class DirectTransferRail implements SettlementRail {
     return {
       type: "DEPOSIT_DETECTED",
       txHash: event.txId,
-      amount: BigInt(Math.round(parseFloat(event.amount) * 1e6)),
+      amount: BigInt(Math.round(Number.parseFloat(event.amount) * 1e6)),
       asset: event.asset,
       chain: "UNKNOWN",
     };
   }
 
-  private resolveAddress(
-    addresses: Record<string, string>,
-    chain: string,
-  ): string {
+  private resolveAddress(addresses: Record<string, string>, chain: string): string {
     const evmChains = ["ETHEREUM", "BSC", "POLYGON", "BASE"];
     if (evmChains.includes(chain.toUpperCase())) {
       if (!addresses["evm"]) throw new Error("Merchant has no EVM address configured");

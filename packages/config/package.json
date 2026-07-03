@@ -8,9 +8,5 @@
     "./tsconfig-nextjs": "./tsconfig.nextjs.json",
     "./vitest": "./vitest.base.ts"
   },
-  "files": [
-    "tsconfig.base.json",
-    "tsconfig.nextjs.json",
-    "vitest.base.ts"
-  ]
+  "files": ["tsconfig.base.json", "tsconfig.nextjs.json", "vitest.base.ts"]
 }

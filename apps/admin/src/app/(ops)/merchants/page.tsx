@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createApiClient } from "@egofi/sdk";
 import type { MerchantProfile } from "@egofi/types";
 import { Badge, Button, Card, Spinner, cn } from "@egofi/ui";
 import type { BadgeVariant } from "@egofi/ui";
+import { useEffect, useState } from "react";
 
 const api = createApiClient();
 
@@ -33,7 +33,10 @@ export default function MerchantsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("egofi_admin_token");
-      if (!token) { window.location.href = "/login"; return; }
+      if (!token) {
+        window.location.href = "/login";
+        return;
+      }
       api.setAuthToken(token);
       const res = await api.admin.listMerchants(status ? { status } : undefined);
       setMerchants(res.data);
@@ -43,7 +46,9 @@ export default function MerchantsPage() {
     }
   };
 
-  useEffect(() => { void load(filter); }, [filter]);
+  useEffect(() => {
+    void load(filter);
+  }, [filter]);
 
   const approve = async (id: string) => {
     setActingOn(id);
@@ -73,8 +78,8 @@ export default function MerchantsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-navy-950">Merchants</h1>
           <p className="mt-1 text-sm text-navy-500">
-            {total} {total === 1 ? "merchant" : "merchants"} on the platform —
-            review, approve, and suspend accounts.
+            {total} {total === 1 ? "merchant" : "merchants"} on the platform — review, approve, and
+            suspend accounts.
           </p>
         </div>
 
@@ -89,9 +94,7 @@ export default function MerchantsPage() {
                 onClick={() => setFilter(f.value)}
                 className={cn(
                   "rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-navy-950 text-white shadow-sm"
-                    : "text-navy-500 hover:text-navy-800",
+                  active ? "bg-navy-950 text-white shadow-sm" : "text-navy-500 hover:text-navy-800",
                 )}
                 aria-pressed={active}
               >
@@ -110,9 +113,7 @@ export default function MerchantsPage() {
         ) : merchants.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <p className="font-medium text-navy-800">Nothing here</p>
-            <p className="mt-1 text-sm text-navy-500">
-              No merchants match this filter.
-            </p>
+            <p className="mt-1 text-sm text-navy-500">No merchants match this filter.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -145,7 +146,9 @@ export default function MerchantsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={badge.variant} dot>{badge.label}</Badge>
+                        <Badge variant={badge.variant} dot>
+                          {badge.label}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-end gap-2">

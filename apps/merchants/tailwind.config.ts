@@ -1,5 +1,5 @@
-import type { Config } from "tailwindcss";
 import egofiPreset from "@egofi/ui/tailwind-preset";
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   presets: [egofiPreset as Config],

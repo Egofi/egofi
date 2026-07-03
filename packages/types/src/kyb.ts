@@ -1,8 +1,4 @@
-import type {
-  KybDocumentStatus,
-  KybDocumentType,
-  KybStatus,
-} from "./enums.js";
+import type { KybDocumentStatus, KybDocumentType, KybStatus } from "./enums.js";
 
 export interface KybDocumentDto {
   id: string;

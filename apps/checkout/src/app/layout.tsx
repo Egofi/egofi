@@ -1,6 +1,6 @@
+import { MockModeBanner } from "@egofi/ui";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { MockModeBanner } from "@egofi/ui";
 import "./globals.css";
 
 const inter = Inter({

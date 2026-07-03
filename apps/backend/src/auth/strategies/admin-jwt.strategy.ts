@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
-import { PrismaService } from "../../core/prisma.service";
+import type { PrismaService } from "../../core/prisma.service";
 
 interface AdminJwtPayload {
   sub: string;

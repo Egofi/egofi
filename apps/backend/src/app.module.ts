@@ -1,30 +1,30 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_FILTER, APP_INTERCEPTOR } from "@nestjs/core";
-import { ThrottlerModule } from "@nestjs/throttler";
 import { ScheduleModule } from "@nestjs/schedule";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { AdminApiModule } from "./admin-api/admin-api.module";
+import { AuthModule } from "./auth/auth.module";
+import { ChainModule } from "./chain/chain.module";
+import { CheckoutModule } from "./checkout/checkout.module";
+import { ComplianceModule } from "./compliance/compliance.module";
 import { CoreModule } from "./core/core.module";
+import { InvoicesModule } from "./invoices/invoices.module";
+import { JobsModule } from "./jobs/jobs.module";
+import { KybModule } from "./kyb/kyb.module";
+import { LedgerModule } from "./ledger/ledger.module";
+import { MerchantsModule } from "./merchants/merchants.module";
+import { MonitoringModule } from "./monitoring/monitoring.module";
+import { NotificationsModule } from "./notifications/notifications.module";
+import { PricingModule } from "./pricing/pricing.module";
+import { RailsModule } from "./rails/rails.module";
 import {
   CorrelationIdInterceptor,
   IdempotencyInterceptor,
   ProblemDetailsFilter,
   validateEnv,
 } from "./shared";
-import { AuthModule } from "./auth/auth.module";
-import { MerchantsModule } from "./merchants/merchants.module";
-import { InvoicesModule } from "./invoices/invoices.module";
-import { CheckoutModule } from "./checkout/checkout.module";
-import { RailsModule } from "./rails/rails.module";
-import { ChainModule } from "./chain/chain.module";
-import { PricingModule } from "./pricing/pricing.module";
 import { WebhooksModule } from "./webhooks/webhooks.module";
-import { LedgerModule } from "./ledger/ledger.module";
-import { JobsModule } from "./jobs/jobs.module";
-import { NotificationsModule } from "./notifications/notifications.module";
-import { ComplianceModule } from "./compliance/compliance.module";
-import { KybModule } from "./kyb/kyb.module";
-import { AdminApiModule } from "./admin-api/admin-api.module";
-import { MonitoringModule } from "./monitoring/monitoring.module";
 
 @Module({
   imports: [

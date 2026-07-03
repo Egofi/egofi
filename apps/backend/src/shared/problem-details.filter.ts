@@ -1,14 +1,14 @@
 import {
-  ArgumentsHost,
+  type ArgumentsHost,
   Catch,
-  ExceptionFilter,
+  type ExceptionFilter,
   HttpException,
   HttpStatus,
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { ZodError } from "zod";
 import pino from "pino";
+import { ZodError } from "zod";
 
 const logger = pino({ name: "problem-details" });
 
@@ -49,9 +49,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const reply = ctx.getResponse<FastifyReply>();
-    const request = ctx.getRequest<
-      FastifyRequest & { correlationId?: string }
-    >();
+    const request = ctx.getRequest<FastifyRequest & { correlationId?: string }>();
 
     const correlationId = request.correlationId ?? null;
 
@@ -108,10 +106,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         "zod boundary validation failed",
       );
     } else if (exception instanceof Error) {
-      logger.error(
-        { err: exception, correlationId, url: request.url },
-        "unhandled exception",
-      );
+      logger.error({ err: exception, correlationId, url: request.url }, "unhandled exception");
     } else {
       logger.error(
         { thrown: exception, correlationId, url: request.url },

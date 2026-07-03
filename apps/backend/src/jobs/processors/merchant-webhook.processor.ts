@@ -1,11 +1,11 @@
-﻿import { Processor } from "@nestjs/bullmq";
+﻿import { createHmac } from "node:crypto";
+import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
 import type { Job } from "bullmq";
-import { createHmac } from "crypto";
-import { ConfigService } from "@nestjs/config";
-import { PrismaService } from "../../core/prisma.service";
-import { QUEUES } from "../queues";
+import type { PrismaService } from "../../core/prisma.service";
 import { BaseProcessor } from "../base.processor";
+import { QUEUES } from "../queues";
 
 interface MerchantWebhookJobData {
   merchantId: string;

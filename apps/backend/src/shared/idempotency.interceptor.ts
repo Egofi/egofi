@@ -1,16 +1,16 @@
 import {
   BadRequestException,
-  CallHandler,
+  type CallHandler,
   ConflictException,
-  ExecutionContext,
+  type ExecutionContext,
   Injectable,
-  NestInterceptor,
+  type NestInterceptor,
   SetMetadata,
 } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+import type { Reflector } from "@nestjs/core";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { firstValueFrom, from, type Observable } from "rxjs";
-import { RedisService } from "../core/redis.service";
+import { type Observable, firstValueFrom, from } from "rxjs";
+import type { RedisService } from "../core/redis.service";
 
 export const SKIP_IDEMPOTENCY_KEY = "egofi:skip-idempotency";
 
@@ -41,20 +41,17 @@ export class IdempotencyInterceptor implements NestInterceptor {
     private readonly redis: RedisService,
   ) {}
 
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<unknown>> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const http = context.switchToHttp();
     const request = http.getRequest<FastifyRequest>();
     const reply = http.getResponse<FastifyReply>();
 
     if (!MUTATING_METHODS.has(request.method)) return next.handle();
 
-    const skipped = this.reflector.getAllAndOverride<boolean>(
-      SKIP_IDEMPOTENCY_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const skipped = this.reflector.getAllAndOverride<boolean>(SKIP_IDEMPOTENCY_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (skipped) return next.handle();
 
     const headerValue = request.headers[IDEMPOTENCY_HEADER];
@@ -68,20 +65,12 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const redisKey = `idem:${request.method}:${request.url}:${key}`;
 
     // Claim the key; if already claimed, replay or reject.
-    const claimed = await this.redis.set(
-      redisKey,
-      IN_FLIGHT,
-      "EX",
-      TTL_SECONDS,
-      "NX",
-    );
+    const claimed = await this.redis.set(redisKey, IN_FLIGHT, "EX", TTL_SECONDS, "NX");
 
     if (claimed !== "OK") {
       const stored = await this.redis.get(redisKey);
       if (stored === IN_FLIGHT || stored === null) {
-        throw new ConflictException(
-          "A request with this Idempotency-Key is still being processed",
-        );
+        throw new ConflictException("A request with this Idempotency-Key is still being processed");
       }
       const cached = JSON.parse(stored) as { status: number; body: unknown };
       void reply.status(cached.status).header("x-idempotent-replay", "true");

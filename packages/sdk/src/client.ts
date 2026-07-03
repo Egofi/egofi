@@ -144,11 +144,10 @@ export class EgofiClient {
   // Auth
   readonly auth = {
     login: (email: string, password: string) =>
-      this.request<{ accessToken: string; merchant: MerchantProfile }>(
-        "POST",
-        "/auth/login",
-        { email, password },
-      ),
+      this.request<{ accessToken: string; merchant: MerchantProfile }>("POST", "/auth/login", {
+        email,
+        password,
+      }),
     register: (dto: CreateMerchantDto) =>
       this.request<{ accessToken: string; merchant: MerchantProfile }>(
         "POST",
@@ -175,7 +174,9 @@ export class EgofiClient {
     list: (params?: { page?: number; limit?: number; state?: string }) => {
       const qs = new URLSearchParams(
         Object.fromEntries(
-          Object.entries(params ?? {}).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)]),
+          Object.entries(params ?? {})
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)]),
         ),
       ).toString();
       return this.request<{ data: InvoiceDto[]; total: number }>(
@@ -194,18 +195,15 @@ export class EgofiClient {
     updateSettlement: (dto: UpdateSettlementDto) =>
       this.request<MerchantProfile>("PATCH", "/merchant/settlement", dto),
     createApiKey: (name: string) =>
-      this.request<{ key: string; id: string; name: string }>(
-        "POST",
-        "/merchant/api-keys",
-        { name },
-      ),
+      this.request<{ key: string; id: string; name: string }>("POST", "/merchant/api-keys", {
+        name,
+      }),
     listApiKeys: () =>
       this.request<Array<{ id: string; name: string; createdAt: string }>>(
         "GET",
         "/merchant/api-keys",
       ),
-    deleteApiKey: (id: string) =>
-      this.request<void>("DELETE", `/merchant/api-keys/${id}`),
+    deleteApiKey: (id: string) => this.request<void>("DELETE", `/merchant/api-keys/${id}`),
   };
 
   // KYB (merchant)
@@ -234,7 +232,9 @@ export class EgofiClient {
     listMerchants: (params?: { status?: string; page?: number }) => {
       const qs = new URLSearchParams(
         Object.fromEntries(
-          Object.entries(params ?? {}).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)]),
+          Object.entries(params ?? {})
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)]),
         ),
       ).toString();
       return this.request<{ data: MerchantProfile[]; total: number }>(
@@ -251,8 +251,7 @@ export class EgofiClient {
       this.request<FeePolicy>("PATCH", "/admin/fee-policy", policy),
 
     // KYB review
-    listPendingKyb: () =>
-      this.request<KybReviewItem[]>("GET", "/admin/kyb/pending"),
+    listPendingKyb: () => this.request<KybReviewItem[]>("GET", "/admin/kyb/pending"),
     getKybDocumentUrl: (documentId: string) =>
       this.request<{ url: string }>("GET", `/admin/kyb/documents/${documentId}/url`),
     approveKyb: (merchantId: string, tier: number, note?: string) =>

@@ -1,10 +1,10 @@
-﻿import { Processor } from "@nestjs/bullmq";
+﻿import { RailType } from "@egofi/types";
+import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import { InvoicesService } from "../../invoices/invoices.service";
-import { QUEUES } from "../queues";
+import type { InvoicesService } from "../../invoices/invoices.service";
 import { BaseProcessor } from "../base.processor";
-import { RailType } from "@egofi/types";
+import { QUEUES } from "../queues";
 
 interface SwapPollJobData {
   invoiceId: string;

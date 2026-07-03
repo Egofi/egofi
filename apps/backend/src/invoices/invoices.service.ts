@@ -1,15 +1,11 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from "@nestjs/common";
-import Decimal from "decimal.js";
-import type { Prisma, InvoiceState as PrismaInvoiceState } from "@prisma/client";
-import { PrismaService } from "../core/prisma.service";
-import { OutboxService } from "../core/outbox.service";
-import { applyTransition, isTerminalState } from "./invoice-state-machine";
 import type { CreateInvoiceDto, InvoiceDto } from "@egofi/types";
 import { InvoiceState, WebhookEvent } from "@egofi/types";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import type { Prisma, InvoiceState as PrismaInvoiceState } from "@prisma/client";
+import Decimal from "decimal.js";
+import type { OutboxService } from "../core/outbox.service";
+import type { PrismaService } from "../core/prisma.service";
+import { applyTransition, isTerminalState } from "./invoice-state-machine";
 
 // States whose entry notifies the merchant, delivered via the transactional
 // outbox (§8) so a webhook is emitted iff the state actually changed.

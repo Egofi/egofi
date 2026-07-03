@@ -62,8 +62,6 @@ export function compareMoney(a: Money, b: Money): -1 | 0 | 1 {
 
 function assertSameUnit(a: Money, b: Money): void {
   if (a.asset !== b.asset || a.decimals !== b.decimals) {
-    throw new TypeError(
-      `Cannot combine ${a.asset}(${a.decimals}) with ${b.asset}(${b.decimals})`,
-    );
+    throw new TypeError(`Cannot combine ${a.asset}(${a.decimals}) with ${b.asset}(${b.decimals})`);
   }
 }

@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
 import { createApiClient } from "@egofi/sdk";
 import type { InvoiceDto } from "@egofi/types";
 import { InvoiceState } from "@egofi/types";
 import { Button, Card, CardContent, CardHeader, CardTitle, Spinner } from "@egofi/ui";
-import { InvoiceStateBadge } from "../../../../lib/invoice-state";
-import { checkoutUrl } from "../../../../lib/checkout-url";
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { CopyButton } from "../../../../lib/CopyButton";
+import { checkoutUrl } from "../../../../lib/checkout-url";
+import { InvoiceStateBadge } from "../../../../lib/invoice-state";
 
 const api = createApiClient();
 
@@ -42,7 +42,10 @@ export default function InvoiceDetailPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
-    if (!token) { window.location.href = "/login"; return; }
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
     api.setAuthToken(token);
 
     let timer: ReturnType<typeof setTimeout>;
@@ -107,7 +110,12 @@ export default function InvoiceDetailPage() {
       value: new Date(invoice.expiresAt).toLocaleString(),
     },
     ...(invoice.refundAddress
-      ? [{ label: "Refund address", value: <span className="font-mono text-xs break-all">{invoice.refundAddress}</span> }]
+      ? [
+          {
+            label: "Refund address",
+            value: <span className="font-mono text-xs break-all">{invoice.refundAddress}</span>,
+          },
+        ]
       : []),
   ];
 
@@ -142,14 +150,14 @@ export default function InvoiceDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2 rounded-xl border border-navy-100 bg-navy-50/50 p-3">
-              <span className="min-w-0 flex-1 truncate font-mono text-sm text-navy-800">
-                {url}
-              </span>
+              <span className="min-w-0 flex-1 truncate font-mono text-sm text-navy-800">{url}</span>
               <CopyButton text={url} label="payment link" />
             </div>
             <div className="mt-3">
               <a href={url} target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary" size="sm">Open checkout →</Button>
+                <Button variant="secondary" size="sm">
+                  Open checkout →
+                </Button>
               </a>
             </div>
           </CardContent>

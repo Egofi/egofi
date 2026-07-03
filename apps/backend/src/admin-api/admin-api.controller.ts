@@ -1,17 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from "@nestjs/common";
-import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { AdminApiService } from "./admin-api.service";
-import { AdminAuthGuard } from "../auth/guards/admin-auth.guard";
 import type { FeePolicy } from "@egofi/types";
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import { AdminAuthGuard } from "../auth/guards/admin-auth.guard";
+import type { AdminApiService } from "./admin-api.service";
 
 @ApiTags("admin")
 @UseGuards(AdminAuthGuard)
@@ -26,11 +17,7 @@ export class AdminApiController {
     @Query("page") page?: string,
     @Query("limit") limit?: string,
   ) {
-    return this.admin.listMerchants(
-      status,
-      page ? Number(page) : 1,
-      limit ? Number(limit) : 20,
-    );
+    return this.admin.listMerchants(status, page ? Number(page) : 1, limit ? Number(limit) : 20);
   }
 
   @Post("merchants/:id/approve")

@@ -1,9 +1,5 @@
-import {
-  Injectable,
-  Logger,
-  ServiceUnavailableException,
-} from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import { Injectable, Logger, ServiceUnavailableException } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
 import { v2 as cloudinary } from "cloudinary";
 
 export type CloudinaryUpload = {
@@ -65,9 +61,10 @@ export class CloudinaryService {
 
     // PDFs and images both go through the upload API; Cloudinary treats PDFs as
     // "image" resources. Anything else (rare) uploads as "raw".
-    const resourceType = params.mimeType === "application/pdf" || params.mimeType.startsWith("image/")
-      ? "image"
-      : "raw";
+    const resourceType =
+      params.mimeType === "application/pdf" || params.mimeType.startsWith("image/")
+        ? "image"
+        : "raw";
 
     return new Promise<CloudinaryUpload>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(

@@ -1,19 +1,10 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { MerchantsService } from "./merchants.service";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import type { Merchant } from "@prisma/client";
 import { IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import type { MerchantsService } from "./merchants.service";
 
 class UpdateProfileBodyDto {
   @IsString()
@@ -37,10 +28,7 @@ export class MerchantsController {
 
   @Patch("profile")
   @ApiOperation({ summary: "Update merchant profile" })
-  updateProfile(
-    @CurrentMerchant() merchant: Merchant,
-    @Body() body: UpdateProfileBodyDto,
-  ) {
+  updateProfile(@CurrentMerchant() merchant: Merchant, @Body() body: UpdateProfileBodyDto) {
     return this.merchants.updateProfile(merchant.id, body);
   }
 
@@ -52,10 +40,7 @@ export class MerchantsController {
 
   @Post("api-keys")
   @ApiOperation({ summary: "Create a new API key" })
-  createApiKey(
-    @CurrentMerchant() merchant: Merchant,
-    @Body("name") name: string,
-  ) {
+  createApiKey(@CurrentMerchant() merchant: Merchant, @Body("name") name: string) {
     return this.merchants.createApiKey(merchant.id, name);
   }
 

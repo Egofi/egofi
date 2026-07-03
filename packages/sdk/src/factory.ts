@@ -19,13 +19,10 @@ export type AnyEgofiClient = EgofiClient | MockEgofiClient;
  */
 export function createApiClient(mode?: ApiMode): AnyEgofiClient {
   const resolved: ApiMode =
-    mode ??
-    (process.env["NEXT_PUBLIC_API_MODE"] as ApiMode | undefined) ??
-    "dev";
+    mode ?? (process.env["NEXT_PUBLIC_API_MODE"] as ApiMode | undefined) ?? "dev";
 
   if (resolved === "mock") {
     if (process.env["NODE_ENV"] !== "production") {
-      console.info("[egofi] Running in MOCK mode — no backend required");
     }
     return new MockEgofiClient();
   }

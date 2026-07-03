@@ -1,8 +1,7 @@
+import type { SwapExchange, SwapProvider, SwapQuote, SwapStatusResponse } from "@egofi/types";
+import { RateType, SwapProviderName } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import type { SwapProvider, SwapQuote, SwapExchange, SwapStatusResponse } from "@egofi/types";
-import { SwapProviderName, RateType } from "@egofi/types";
-import Decimal from "decimal.js";
+import type { ConfigService } from "@nestjs/config";
 
 const BASE_URL = "https://api.changenow.io/v2";
 
@@ -72,7 +71,7 @@ export class ChangeNowAdapter implements SwapProvider {
       rate: data.rate.toString(),
       rateType: params.rateType,
       minAmount,
-      estimatedDurationSeconds: parseInt(data.transactionSpeedForecast, 10) * 60,
+      estimatedDurationSeconds: Number.parseInt(data.transactionSpeedForecast, 10) * 60,
       validUntil: data.validUntil ?? new Date(Date.now() + 15 * 60_000).toISOString(),
     };
   }

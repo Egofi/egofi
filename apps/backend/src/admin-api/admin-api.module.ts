@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
+import { LedgerModule } from "../ledger/ledger.module";
+import { MerchantsModule } from "../merchants/merchants.module";
 import { AdminApiController } from "./admin-api.controller";
 import { AdminApiService } from "./admin-api.service";
-import { MerchantsModule } from "../merchants/merchants.module";
-import { LedgerModule } from "../ledger/ledger.module";
 
 @Module({
   imports: [MerchantsModule, LedgerModule],

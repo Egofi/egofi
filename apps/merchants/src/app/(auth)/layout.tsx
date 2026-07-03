@@ -5,7 +5,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <aside className="relative hidden overflow-hidden bg-brand-gradient lg:flex lg:flex-col lg:justify-between lg:p-12">
         {/* Layered atmosphere: mesh glow + faint grid */}
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-brand-mesh" />
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-grid-navy bg-[size:40px_40px] opacity-30" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-grid-navy bg-[size:40px_40px] opacity-30"
+        />
 
         <a href="/" className="relative z-10 flex items-center gap-2">
           <span className="text-2xl font-bold tracking-tight text-white">
@@ -24,8 +27,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             Settle in <span className="text-accent">your</span> stablecoin.
           </h1>
           <p className="text-lg leading-relaxed text-navy-100/85">
-            Customers pay with any token on any chain — you receive USDT, every
-            time. Your money never sits with us.
+            Customers pay with any token on any chain — you receive USDT, every time. Your money
+            never sits with us.
           </p>
           <ul className="space-y-3.5 text-sm text-navy-100/85">
             {[

@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
 import { createApiClient } from "@egofi/sdk";
 import type { MerchantProfile } from "@egofi/types";
 import { Badge, Button, Card, CardContent, Input, Skeleton } from "@egofi/ui";
+import { type FormEvent, useEffect, useState } from "react";
 import { CopyButton } from "../../../lib/CopyButton";
 
 const api = createApiClient();
 
 function initials(name: string): string {
-  return name.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export default function ProfilePage() {
@@ -21,7 +25,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
-    if (!token) { window.location.href = "/login"; return; }
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
     api.setAuthToken(token);
     void api.merchant.getProfile().then((p) => {
       setMerchant(p);
@@ -92,9 +99,7 @@ export default function ProfilePage() {
               <Button type="submit" loading={saving} disabled={!dirty}>
                 {saved ? "Saved ✓" : "Save changes"}
               </Button>
-              {dirty && !saving && (
-                <span className="text-sm text-navy-400">Unsaved changes</span>
-              )}
+              {dirty && !saving && <span className="text-sm text-navy-400">Unsaved changes</span>}
             </div>
           </form>
         </CardContent>
@@ -121,7 +126,10 @@ export default function ProfilePage() {
                   {merchant.kybStatus === "VERIFIED" && " · Verified"}
                   {merchant.kybStatus === "UNDER_REVIEW" && " · Under review"}
                 </span>
-                <a href="/settings/verification" className="text-sm font-medium text-primary hover:underline">
+                <a
+                  href="/settings/verification"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
                   Manage →
                 </a>
               </div>

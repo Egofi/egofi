@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
 import { createApiClient } from "@egofi/sdk";
 import { Button, Card, CardContent, Input, Skeleton } from "@egofi/ui";
+import { type FormEvent, useEffect, useState } from "react";
 import { CopyButton } from "../../../lib/CopyButton";
 
 const api = createApiClient();
 
-const API_BASE =
-  process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3000";
+const API_BASE = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3000";
 
 type ApiKey = { id: string; name: string; createdAt: string };
 
@@ -23,7 +22,10 @@ export default function DevelopersPage() {
 
   const load = async () => {
     const token = localStorage.getItem("egofi_token");
-    if (!token) { window.location.href = "/login"; return; }
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
     api.setAuthToken(token);
     setLoading(true);
     try {
@@ -33,12 +35,17 @@ export default function DevelopersPage() {
     }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void load();
+  }, []);
 
   const create = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!newName.trim()) { setError("Give the key a name so you can recognise it later"); return; }
+    if (!newName.trim()) {
+      setError("Give the key a name so you can recognise it later");
+      return;
+    }
     setCreating(true);
     try {
       const result = await api.merchant.createApiKey(newName.trim());
@@ -53,10 +60,19 @@ export default function DevelopersPage() {
   };
 
   const remove = async (id: string) => {
-    if (!window.confirm("Revoke this API key? Any integration using it will stop working immediately.")) return;
+    if (
+      !window.confirm(
+        "Revoke this API key? Any integration using it will stop working immediately.",
+      )
+    )
+      return;
     setDeletingId(id);
-    try { await api.merchant.deleteApiKey(id); await load(); }
-    finally { setDeletingId(null); }
+    try {
+      await api.merchant.deleteApiKey(id);
+      await load();
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -73,13 +89,17 @@ export default function DevelopersPage() {
         <CardContent className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">Base URL</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">
+                Base URL
+              </p>
               <code className="font-mono text-sm text-navy-900">{API_BASE}/v1</code>
             </div>
             <div className="flex items-center gap-2">
               <CopyButton text={`${API_BASE}/v1`} label="base URL" />
               <a href={`${API_BASE}/docs`} target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary" size="sm">API reference ↗</Button>
+                <Button variant="secondary" size="sm">
+                  API reference ↗
+                </Button>
               </a>
             </div>
           </div>
@@ -93,17 +113,36 @@ export default function DevelopersPage() {
       {revealed && (
         <div className="animate-fade-in-up rounded-2xl border border-accent-300 bg-accent-50 p-5">
           <div className="flex items-start gap-3">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 size-5 shrink-0 text-lime-700" aria-hidden>
-              <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1zm3 8V5.5a3 3 0 1 0-6 0V9h6z" clipRule="evenodd" />
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="mt-0.5 size-5 shrink-0 text-lime-700"
+              aria-hidden
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1zm3 8V5.5a3 3 0 1 0-6 0V9h6z"
+                clipRule="evenodd"
+              />
             </svg>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-lime-900">Copy your new key now — it won't be shown again</p>
-              <p className="mt-0.5 text-sm text-lime-800">Key <strong>{revealed.name}</strong>. Store it in your server's secret manager.</p>
+              <p className="font-semibold text-lime-900">
+                Copy your new key now — it won't be shown again
+              </p>
+              <p className="mt-0.5 text-sm text-lime-800">
+                Key <strong>{revealed.name}</strong>. Store it in your server's secret manager.
+              </p>
               <div className="mt-3 flex items-center gap-2 rounded-lg border border-lime-300 bg-white p-3">
-                <code className="min-w-0 flex-1 truncate font-mono text-sm text-navy-900">{revealed.key}</code>
+                <code className="min-w-0 flex-1 truncate font-mono text-sm text-navy-900">
+                  {revealed.key}
+                </code>
                 <CopyButton text={revealed.key} label="API key" />
               </div>
-              <button type="button" onClick={() => setRevealed(null)} className="mt-3 text-sm font-medium text-lime-800 hover:underline">
+              <button
+                type="button"
+                onClick={() => setRevealed(null)}
+                className="mt-3 text-sm font-medium text-lime-800 hover:underline"
+              >
                 I've saved it — dismiss
               </button>
             </div>
@@ -124,7 +163,9 @@ export default function DevelopersPage() {
                 {...(error ? { error } : {})}
               />
             </div>
-            <Button type="submit" loading={creating} size="lg">Create key</Button>
+            <Button type="submit" loading={creating} size="lg">
+              Create key
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -137,11 +178,15 @@ export default function DevelopersPage() {
           </div>
           {loading ? (
             <div className="space-y-3 p-5">
-              {[0, 1].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
             </div>
           ) : keys.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <p className="text-sm text-navy-500">No API keys yet. Create one above to start integrating.</p>
+              <p className="text-sm text-navy-500">
+                No API keys yet. Create one above to start integrating.
+              </p>
             </div>
           ) : (
             <ul className="divide-y divide-navy-50">
@@ -150,15 +195,27 @@ export default function DevelopersPage() {
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-navy-50 text-navy-400">
                       <svg viewBox="0 0 20 20" fill="currentColor" className="size-4" aria-hidden>
-                        <path fillRule="evenodd" d="M8 7a5 5 0 1 1 3.61 4.804l-1.903 1.903A1 1 0 0 1 9 14H8v1a1 1 0 0 1-1 1H6v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a1 1 0 0 1 .293-.707L8.196 8.39A5.002 5.002 0 0 1 8 7z" clipRule="evenodd" />
+                        <path
+                          fillRule="evenodd"
+                          d="M8 7a5 5 0 1 1 3.61 4.804l-1.903 1.903A1 1 0 0 1 9 14H8v1a1 1 0 0 1-1 1H6v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a1 1 0 0 1 .293-.707L8.196 8.39A5.002 5.002 0 0 1 8 7z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </span>
                     <div className="min-w-0">
                       <p className="truncate font-medium text-navy-900">{k.name}</p>
-                      <p className="text-xs text-navy-400">Created {new Date(k.createdAt).toLocaleDateString()}</p>
+                      <p className="text-xs text-navy-400">
+                        Created {new Date(k.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" loading={deletingId === k.id} onClick={() => remove(k.id)} className="text-danger-600 hover:bg-danger-50">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    loading={deletingId === k.id}
+                    onClick={() => remove(k.id)}
+                    className="text-danger-600 hover:bg-danger-50"
+                  >
                     Revoke
                   </Button>
                 </li>

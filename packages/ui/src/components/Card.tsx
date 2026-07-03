@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 import { cn } from "../lib/cn";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -37,10 +37,7 @@ export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   children,
   ...props
 }) => (
-  <h3
-    className={cn("text-lg font-semibold tracking-tight text-navy-950", className)}
-    {...props}
-  >
+  <h3 className={cn("text-lg font-semibold tracking-tight text-navy-950", className)} {...props}>
     {children}
   </h3>
 );

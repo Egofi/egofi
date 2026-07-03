@@ -1,10 +1,10 @@
+import { SwapProviderName } from "@egofi/types";
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import { ProviderHealthService } from "../../rails/swap-provider/provider-health.service";
-import { SwapProviderName } from "@egofi/types";
-import { QUEUES } from "../queues";
+import type { ProviderHealthService } from "../../rails/swap-provider/provider-health.service";
 import { BaseProcessor } from "../base.processor";
+import { QUEUES } from "../queues";
 
 /**
  * Hourly rollup (§8 provider-health): per-provider success rate, freeze rate,
@@ -20,10 +20,7 @@ export class ProviderHealthProcessor extends BaseProcessor {
   }
 
   async process(_job: Job): Promise<void> {
-    await this.providerHealth.snapshot([
-      SwapProviderName.ChangeNOW,
-      SwapProviderName.SimpleSwap,
-    ]);
+    await this.providerHealth.snapshot([SwapProviderName.ChangeNOW, SwapProviderName.SimpleSwap]);
     this.logger.log("provider health snapshots recorded");
   }
 }

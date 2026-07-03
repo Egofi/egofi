@@ -16,10 +16,17 @@ async function main() {
   console.log(`Seeded admin: ${email}  (password: ${password})`);
 
   await prisma.feePolicy.upsert({ where: { id: "global" }, update: {}, create: { id: "global" } });
-  await prisma.recurringPolicy.upsert({ where: { id: "global" }, update: {}, create: { id: "global" } });
+  await prisma.recurringPolicy.upsert({
+    where: { id: "global" },
+    update: {},
+    create: { id: "global" },
+  });
   console.log("Seeded global fee + recurring policies");
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());

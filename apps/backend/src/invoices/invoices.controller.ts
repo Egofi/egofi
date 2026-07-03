@@ -1,26 +1,10 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiHeader, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { InvoicesService } from "./invoices.service";
-import { MerchantAuthGuard } from "../auth/guards/merchant-auth.guard";
-import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import type { Merchant } from "@prisma/client";
-import {
-  IsString,
-  IsOptional,
-  IsNumberString,
-  IsInt,
-  Min,
-  Max,
-  IsObject,
-} from "class-validator";
+import { IsInt, IsNumberString, IsObject, IsOptional, IsString, Max, Min } from "class-validator";
+import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
+import { MerchantAuthGuard } from "../auth/guards/merchant-auth.guard";
+import type { InvoicesService } from "./invoices.service";
 
 class CreateInvoiceBodyDto {
   @IsString()
@@ -65,15 +49,8 @@ export class InvoicesController {
     description:
       "Unique key (8–128 chars) — a retried request with the same key replays the original response instead of creating a second invoice",
   })
-  async create(
-    @CurrentMerchant() merchant: Merchant,
-    @Body() body: CreateInvoiceBodyDto,
-  ) {
-    return this.invoices.create(
-      { ...body, merchantId: merchant.id },
-      "0",
-      "0",
-    );
+  async create(@CurrentMerchant() merchant: Merchant, @Body() body: CreateInvoiceBodyDto) {
+    return this.invoices.create({ ...body, merchantId: merchant.id }, "0", "0");
   }
 
   @Get()
@@ -94,7 +71,7 @@ export class InvoicesController {
 
   @Get(":id")
   @ApiOperation({ summary: "Get invoice by ID" })
-  get(@CurrentMerchant() merchant: Merchant, @Param("id") id: string) {
+  get(@CurrentMerchant() _merchant: Merchant, @Param("id") id: string) {
     return this.invoices.get(id);
   }
 }

@@ -1,7 +1,7 @@
+import { ScreeningVerdict } from "@egofi/types";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import Decimal from "decimal.js";
-import { PrismaService } from "../core/prisma.service";
-import { ScreeningVerdict } from "@egofi/types";
+import type { PrismaService } from "../core/prisma.service";
 import { volumeCapForTier } from "../kyb/kyb.tiers";
 
 export interface ComplianceCheck {
@@ -31,7 +31,7 @@ export class ComplianceService {
   async check(params: ComplianceCheck): Promise<ComplianceResult> {
     this.logger.debug({ ...params }, "Compliance check");
 
-    const amountNum = parseFloat(params.amount);
+    const amountNum = Number.parseFloat(params.amount);
     if (amountNum > 10_000) {
       this.logger.warn({ ...params }, "Large transaction flagged for review");
       return "REVIEW";
@@ -97,12 +97,14 @@ export class ComplianceService {
   }
 
   /** Throws when a settlement/refund address fails screening. */
-  async assertAddressClear(address: string, chain: string, role: "settlement" | "refund"): Promise<void> {
+  async assertAddressClear(
+    address: string,
+    chain: string,
+    role: "settlement" | "refund",
+  ): Promise<void> {
     const verdict = await this.screenAddress(address, chain);
     if (verdict === ScreeningVerdict.Sanctioned) {
-      throw new BadRequestException(
-        `The ${role} address provided cannot be accepted.`,
-      );
+      throw new BadRequestException(`The ${role} address provided cannot be accepted.`);
     }
   }
 

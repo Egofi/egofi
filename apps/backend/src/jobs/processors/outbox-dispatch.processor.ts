@@ -1,11 +1,11 @@
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import { OutboxService } from "../../core/outbox.service";
-import { PrismaService } from "../../core/prisma.service";
-import { JobsService } from "../jobs.service";
-import { QUEUES } from "../queues";
+import type { OutboxService } from "../../core/outbox.service";
+import type { PrismaService } from "../../core/prisma.service";
 import { BaseProcessor } from "../base.processor";
+import type { JobsService } from "../jobs.service";
+import { QUEUES } from "../queues";
 
 /**
  * Delivers pending outbox events (§8): runs every few seconds, fetches due
@@ -51,10 +51,7 @@ export class OutboxDispatchProcessor extends BaseProcessor {
         }
         await this.outbox.markDelivered(event.id);
       } catch (error) {
-        this.logger.warn(
-          { outboxEventId: event.id, error },
-          "outbox dispatch failed; backing off",
-        );
+        this.logger.warn({ outboxEventId: event.id, error }, "outbox dispatch failed; backing off");
         await this.outbox.markFailed(
           event.id,
           event.attempts,

@@ -1,17 +1,12 @@
-import { Injectable, Logger, BadRequestException } from "@nestjs/common";
-import type {
-  Invoice,
-  PaymentInstructions,
-  RailEvent,
-  RouteQuery,
-} from "../rail.interface";
-import type { SettlementRail } from "../rail.interface";
 import { RailStatus, RailType, RateType } from "@egofi/types";
-import { ChangeNowAdapter } from "./providers/changenow.adapter";
-import { SimpleSwapAdapter } from "./providers/simpleswap.adapter";
-import { PrismaService } from "../../core/prisma.service";
-import { ProviderHealthService } from "./provider-health.service";
 import type { SwapProvider } from "@egofi/types";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import type { PrismaService } from "../../core/prisma.service";
+import type { Invoice, PaymentInstructions, RailEvent, RouteQuery } from "../rail.interface";
+import type { SettlementRail } from "../rail.interface";
+import type { ProviderHealthService } from "./provider-health.service";
+import type { ChangeNowAdapter } from "./providers/changenow.adapter";
+import type { SimpleSwapAdapter } from "./providers/simpleswap.adapter";
 
 @Injectable()
 export class SwapProviderRail implements SettlementRail {
@@ -41,8 +36,9 @@ export class SwapProviderRail implements SettlementRail {
       where: { id: invoice.merchantId },
     });
 
-    const settlementAddr = (merchant.settlementAddresses as Record<string, string>)["tron"]
-      ?? Object.values(merchant.settlementAddresses as Record<string, string>)[0];
+    const settlementAddr =
+      (merchant.settlementAddresses as Record<string, string>)["tron"] ??
+      Object.values(merchant.settlementAddresses as Record<string, string>)[0];
     if (!settlementAddr) throw new BadRequestException("Merchant settlement address not set");
 
     const fromAmount = invoice.quotedAmount.toString();
@@ -57,7 +53,7 @@ export class SwapProviderRail implements SettlementRail {
     for (const provider of rankedProviders) {
       try {
         const minAmount = await provider.getMinAmount(invoice.payAsset, merchant.settlementAsset);
-        if (parseFloat(fromAmount) < parseFloat(minAmount)) {
+        if (Number.parseFloat(fromAmount) < Number.parseFloat(minAmount)) {
           throw new BadRequestException(
             `Amount below ${provider.name} minimum of ${minAmount} ${invoice.payAsset}`,
           );
@@ -117,8 +113,8 @@ export class SwapProviderRail implements SettlementRail {
             fromAsset: invoice.payAsset,
             toAsset: merchant.settlementAsset,
             rate:
-              parseFloat(fromAmount) > 0
-                ? (parseFloat(exchange.toAmount) / parseFloat(fromAmount)).toString()
+              Number.parseFloat(fromAmount) > 0
+                ? (Number.parseFloat(exchange.toAmount) / Number.parseFloat(fromAmount)).toString()
                 : "0",
             providerRef: exchange.id,
             validUntil: new Date(exchange.validUntil),
@@ -142,7 +138,7 @@ export class SwapProviderRail implements SettlementRail {
       invoiceId: invoice.id,
       rail: RailType.SwapProvider,
       depositAddress: exchange.depositAddress,
-      exactAmount: BigInt(Math.round(parseFloat(exchange.depositAmount) * 1e6)),
+      exactAmount: BigInt(Math.round(Number.parseFloat(exchange.depositAmount) * 1e6)),
       asset: invoice.payAsset,
       chain: invoice.payChain,
       expiresAt: new Date(exchange.validUntil),
@@ -157,9 +153,7 @@ export class SwapProviderRail implements SettlementRail {
       try {
         const status = await provider.getStatus(paymentRef);
         return this.mapStatus(status.status);
-      } catch {
-        continue;
-      }
+      } catch {}
     }
     return RailStatus.Awaiting;
   }
@@ -193,7 +187,13 @@ export class SwapProviderRail implements SettlementRail {
       return { type: "CONVERSION_STARTED", providerRef: event.id };
     }
     if (event.status === "confirming" && event.payinHash) {
-      return { type: "DEPOSIT_DETECTED", txHash: event.payinHash, amount: 0n, asset: "", chain: "" };
+      return {
+        type: "DEPOSIT_DETECTED",
+        txHash: event.payinHash,
+        amount: 0n,
+        asset: "",
+        chain: "",
+      };
     }
     if (event.status === "failed") {
       return { type: "FAILED", reason: "Provider marked exchange as failed" };

@@ -11,15 +11,8 @@ import type {
   MerchantProfile,
   UpdateSettlementDto,
 } from "@egofi/types";
+import { InvoiceState, KybDocumentStatus, type KybDocumentType, KybStatus } from "@egofi/types";
 import {
-  InvoiceState,
-  KybDocumentStatus,
-  KybDocumentType,
-  KybStatus,
-} from "@egofi/types";
-import {
-  buildMockCheckoutSession,
-  getMockCheckoutState,
   MOCK_API_KEYS,
   MOCK_CHECKOUT_TIMINGS,
   MOCK_FEE_POLICY,
@@ -27,6 +20,8 @@ import {
   MOCK_KYB_TIERS,
   MOCK_MERCHANT,
   MOCK_MERCHANTS_LIST,
+  buildMockCheckoutSession,
+  getMockCheckoutState,
 } from "./mock-data.js";
 
 function delay(ms = 400): Promise<void> {
@@ -91,7 +86,7 @@ export class MockEgofiClient {
       if (!existing) {
         return buildMockCheckoutSession(invoiceId);
       }
-      const state = getMockCheckoutState(invoiceId);
+      const _state = getMockCheckoutState(invoiceId);
       return buildMockCheckoutSession(
         invoiceId,
         existing.payAsset,
@@ -234,10 +229,7 @@ export class MockEgofiClient {
       };
     },
 
-    uploadDocument: async (
-      type: KybDocumentType,
-      file: File,
-    ): Promise<KybDocumentDto> => {
+    uploadDocument: async (type: KybDocumentType, file: File): Promise<KybDocumentDto> => {
       await delay(700);
       const doc: KybDocumentDto = {
         id: `kybdoc_mock_${Date.now()}`,

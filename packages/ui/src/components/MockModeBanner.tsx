@@ -1,5 +1,3 @@
-import * as React from "react";
-
 export function MockModeBanner() {
   if (process.env["NEXT_PUBLIC_API_MODE"] !== "mock") return null;
   return (

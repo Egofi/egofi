@@ -1,5 +1,5 @@
-import type { NextConfig } from "next";
 import { join } from "node:path";
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Pin tracing to the monorepo root so Next ignores the stray lockfile in the

@@ -15,9 +15,11 @@
     @apply text-navy-900 antialiased;
     /* Cool, faintly-lit canvas so white cards lift with their shadows. */
     background-color: #f6f8fc;
-    background-image:
-      radial-gradient(60% 40% at 100% 0%, rgba(29, 78, 216, 0.05) 0%, transparent 60%),
-      radial-gradient(50% 40% at 0% 8%, rgba(14, 165, 233, 0.05) 0%, transparent 55%);
+    background-image: radial-gradient(
+        60% 40% at 100% 0%,
+        rgba(29, 78, 216, 0.05) 0%,
+        transparent 60%
+      ), radial-gradient(50% 40% at 0% 8%, rgba(14, 165, 233, 0.05) 0%, transparent 55%);
     background-attachment: fixed;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     text-rendering: optimizeLegibility;
