@@ -1,0 +1,9 @@
+{
+  "extends": "@egofi/config/tsconfig-nextjs",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

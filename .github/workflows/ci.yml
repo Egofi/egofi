@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PNPM_VERSION: 9.15.4
+  NODE_VERSION: 22
+
+jobs:
+  ci:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: egofi
+          POSTGRES_PASSWORD: egofi_test
+          POSTGRES_DB: egofi_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://egofi:egofi_test@localhost:5432/egofi_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-secret-minimum-32-characters
+      ADMIN_JWT_SECRET: ci-admin-test-secret-32-chars-min
+      WEBHOOK_SIGNING_SECRET: ci-webhook-secret
+      TATUM_API_KEY: ci-placeholder
+      TATUM_WEBHOOK_HMAC_SECRET: ci-placeholder
+      CHANGENOW_API_KEY: ci-placeholder
+      SIMPLESWAP_API_KEY: ci-placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (Biome)
+        run: pnpm turbo run lint
+
+      - name: Type-check
+        run: pnpm turbo run typecheck
+
+      - name: Generate Prisma client
+        run: pnpm --filter @egofi/backend db:generate
+
+      - name: Run migrations
+        run: pnpm --filter @egofi/backend db:migrate
+
+      - name: Test
+        run: pnpm turbo run test
+
+      - name: Build
+        run: pnpm turbo run build

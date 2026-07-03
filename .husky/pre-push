@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run tests on affected packages before push
+pnpm turbo run test --affected

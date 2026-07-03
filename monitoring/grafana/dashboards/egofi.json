@@ -1,0 +1,267 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "11.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
+  ],
+  "annotations": { "list": [] },
+  "description": "Egofi payment gateway — invoices, queues, HTTP, Node.js",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "📦 Invoices",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(egofi_invoices_created_total[1h]))", "legendFormat": "Invoices / hr" }],
+      "title": "Invoices Created (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(egofi_invoice_state_transitions_total{to_state=\"PAID_CONFIRMED\"}[1h]))", "legendFormat": "Confirmed / hr" }],
+      "title": "Paid Confirmed (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(egofi_invoice_state_transitions_total{to_state=\"FAILED\"}[1h]))", "legendFormat": "Failed / hr" }],
+      "title": "Failed Invoices (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }] }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(egofi_invoice_state_transitions_total{to_state=\"UNDERPAID\"}[1h]))", "legendFormat": "Underpaid / hr" }],
+      "title": "Underpaid (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "id": 5,
+      "options": { "legend": { "calcs": ["last"], "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "sum by (to_state) (rate(egofi_invoice_state_transitions_total[5m])) * 60", "legendFormat": "→ {{to_state}}" }
+      ],
+      "title": "Invoice State Transitions / min",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "id": 6,
+      "options": { "legend": { "calcs": ["last"], "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "sum by (rail) (rate(egofi_invoices_created_total[5m])) * 60", "legendFormat": "{{rail}}" }
+      ],
+      "title": "Invoice Creation Rate by Rail / min",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 101,
+      "title": "🔄 Swap Providers",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 10,
+      "options": { "legend": { "calcs": ["last"], "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "sum by (provider, outcome) (rate(egofi_swap_attempts_total[5m])) * 60", "legendFormat": "{{provider}} / {{outcome}}" }
+      ],
+      "title": "Swap Attempts by Provider / min",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "ms" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 11,
+      "options": { "legend": { "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (provider, le) (rate(egofi_swap_duration_ms_bucket[5m])))", "legendFormat": "p50 {{provider}}" },
+        { "expr": "histogram_quantile(0.95, sum by (provider, le) (rate(egofi_swap_duration_ms_bucket[5m])))", "legendFormat": "p95 {{provider}}" }
+      ],
+      "title": "Swap Confirmation Latency (p50/p95)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 102,
+      "title": "⚙️ BullMQ Queues",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "id": 20,
+      "options": { "legend": { "calcs": ["last"], "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "egofi_queue_waiting_jobs", "legendFormat": "waiting: {{queue}}" },
+        { "expr": "egofi_queue_failed_jobs", "legendFormat": "failed: {{queue}}" }
+      ],
+      "title": "Queue Depths",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+      "id": 21,
+      "options": { "legend": { "calcs": ["last"], "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "sum by (queue, state) (rate(egofi_queue_jobs_total[5m])) * 60", "legendFormat": "{{queue}} / {{state}}" }
+      ],
+      "title": "Jobs Processed / min by Queue",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 103,
+      "title": "🌐 HTTP",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 32 },
+      "id": 30,
+      "targets": [
+        { "expr": "sum(rate(egofi_http_requests_total[1m]))", "legendFormat": "Total" },
+        { "expr": "sum(rate(egofi_http_requests_total{status_code=~\"5..\"}[1m]))", "legendFormat": "5xx errors" }
+      ],
+      "title": "Request Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 32 },
+      "id": 31,
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (le) (rate(egofi_http_request_duration_ms_bucket[5m])))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(egofi_http_request_duration_ms_bucket[5m])))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum by (le) (rate(egofi_http_request_duration_ms_bucket[5m])))", "legendFormat": "p99" }
+      ],
+      "title": "Request Latency (p50/p95/p99)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 32 },
+      "id": 32,
+      "targets": [
+        { "expr": "sum(rate(egofi_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(egofi_http_requests_total[5m])) * 100", "legendFormat": "5xx rate %" }
+      ],
+      "title": "Error Rate %",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+      "id": 104,
+      "title": "🖥️ Node.js Process",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 41 },
+      "id": 40,
+      "targets": [
+        { "expr": "egofi_node_process_resident_memory_bytes", "legendFormat": "RSS {{instance}}" },
+        { "expr": "egofi_node_nodejs_heap_size_used_bytes", "legendFormat": "Heap used {{instance}}" }
+      ],
+      "title": "Memory Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 41 },
+      "id": 41,
+      "targets": [
+        { "expr": "rate(egofi_node_process_cpu_seconds_total[1m]) * 100", "legendFormat": "CPU % {{instance}}" }
+      ],
+      "title": "CPU Usage %",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 },
+      "id": 105,
+      "title": "📬 Webhooks",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 50 },
+      "id": 50,
+      "targets": [
+        { "expr": "sum by (event, outcome) (rate(egofi_webhook_deliveries_total[5m])) * 60", "legendFormat": "{{event}} / {{outcome}}" }
+      ],
+      "title": "Merchant Webhook Deliveries / min",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["egofi", "payment", "crypto"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Egofi Gateway",
+  "uid": "egofi-main",
+  "version": 1
+}

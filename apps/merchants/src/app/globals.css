@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply text-navy-900 antialiased;
+    /* Cool, faintly-lit canvas so white cards lift with their shadows. */
+    background-color: #f6f8fc;
+    background-image:
+      radial-gradient(60% 40% at 100% 0%, rgba(29, 78, 216, 0.05) 0%, transparent 60%),
+      radial-gradient(50% 40% at 0% 8%, rgba(14, 165, 233, 0.05) 0%, transparent 55%);
+    background-attachment: fixed;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    @apply bg-accent-200 text-navy-950;
+  }
+
+  /* Refined focus ring across all interactive elements. */
+  :where(a, button, input, select, textarea):focus-visible {
+    @apply outline-none ring-2 ring-primary-500/40 ring-offset-2 ring-offset-white;
+  }
+
+  /* Slim, cool scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(147 174 207 / 0.6) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    background-color: rgb(147 174 207 / 0.5);
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(91 128 176 / 0.6);
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* Skeleton shimmer surface. */
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-navy-100/70;
+  }
+  .skeleton::after {
+    content: "";
+    @apply absolute inset-0 -translate-x-full bg-shimmer animate-shimmer;
+  }
+}

@@ -1,0 +1,63 @@
+Option A — Full stack (real backend)
+1. Infrastructure — already running, but if you ever restart:
+
+
+docker compose -f docker-compose.dev.yml up -d
+
+Note the remapped ports: Postgres 5433, Redis 6380 (your flasharb project holds the defaults). The backend .env already points at these.
+
+2. One port conflict to resolve first: flasharb-grafana occupies 3002, which is the merchants app's port. Either stop it:
+
+
+docker stop flasharb-grafana
+or run the merchants app on another port later (pnpm --filter @egofi/merchants dev -- --port 3005).
+
+3. Run all apps:
+
+
+pnpm turbo run dev --parallel
+Or individually in separate terminals if you want cleaner logs:
+
+
+pnpm --filter @egofi/backend dev      # API on :3000
+pnpm --filter @egofi/checkout dev     # :3001
+pnpm --filter @egofi/merchants dev    # :3002
+pnpm --filter @egofi/admin dev        # :3003
+
+
+pnpm dev:all        # runs backend + all 3 frontends in parallel
+pnpm test:all       # runs every package's tests
+pnpm typecheck:all  # typechecks every package
+Or run apps individually — this always works:
+
+
+pnpm --filter @egofi/backend dev
+pnpm --filter @egofi/checkout dev
+
+
+Option B — Mock mode (no backend needed at all)
+Each frontend has a dev:mock script that runs against simulated data — the checkout page even auto-progresses through the whole payment lifecycle (awaiting → received → converting → payout → confirmed) over ~55 seconds:
+
+
+pnpm --filter @egofi/checkout dev:mock
+pnpm --filter @egofi/merchants dev:mock
+pnpm --filter @egofi/admin dev:mock
+You'll see an amber "MOCK MODE" banner at the bottom of each app.
+
+Where everything lives
+What	URL
+API + Swagger docs	http://localhost:3000/docs
+Checkout	http://localhost:3001
+Merchant portal	http://localhost:3002
+Admin back-office	http://localhost:3003
+Bull Board (job queues)	http://localhost:3000/admin/queues
+Prometheus metrics	http://localhost:3000/metrics and http://localhost:9091
+Grafana dashboard	http://localhost:3100 (admin / egofi_grafana)
+A sensible test walkthrough
+Register a merchant at http://localhost:3002/register, then log in and paste settlement addresses in Settings.
+Approve the merchant from the admin app (http://localhost:3003/merchants) — new merchants start as PENDING.
+Create an invoice via Swagger (http://localhost:3000/docs) or the dashboard — note that POST /invoices now requires an Idempotency-Key header (any 8–128 char string); send the same request twice with the same key and you'll get the identical response back with an x-idempotent-replay: true header. That's the idempotency gate working.
+Open the checkout link (http://localhost:3001/pay/<invoiceId>) to see the QR, exact amount, and countdown.
+Watch the machinery: Bull Board shows the outbox-dispatch tick every 5s and detection-sweeper every minute; Grafana's "Egofi Gateway" dashboard fills in as requests flow.
+Test error handling: hit a nonexistent invoice (GET /invoices/xyz) and you'll get an RFC 9457 application/problem+json response with a correlationId.
+Unit tests (state machine, amount pool, rail router) haven't been written yet — pnpm turbo run test will pass trivially. That's the main remaining gap if you want real regression coverage; happy to write those next.

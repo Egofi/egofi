@@ -1,0 +1,11 @@
+# Default owner for everything
+* @devcaliban
+
+# Payment-critical paths — require owner review
+/apps/backend/src/rails/ @devcaliban
+/apps/backend/src/invoices/ @devcaliban
+/apps/backend/src/ledger/ @devcaliban
+/apps/backend/src/webhooks/ @devcaliban
+/apps/backend/prisma/ @devcaliban
+/packages/domain/ @devcaliban
+/packages/types/ @devcaliban

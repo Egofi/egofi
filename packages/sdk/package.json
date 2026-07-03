@@ -1,0 +1,29 @@
+{
+  "name": "@egofi/sdk",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Typed API client for the Egofi backend, used by checkout, merchants, and admin apps",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@egofi/types": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@egofi/config": "workspace:*",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,343 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Merchants ─────────────────────────────────────────────────────────────
+
+model Merchant {
+  id                  String          @id @default(cuid())
+  business            String
+  email               String          @unique
+  passwordHash        String
+  status              MerchantStatus  @default(PENDING)
+  kybStatus           KybStatus       @default(PENDING)
+  kybTier             Int             @default(0) // volume limits scale with tier (§14)
+  kybSubmittedAt      DateTime?
+  kybReviewNote       String?
+  settlementAsset     String          @default("USDT-TRC20")
+  settlementAddresses Json // sanctions-screened at onboarding (§14)
+  xpub                String?
+  xpubMode            Boolean         @default(false)
+  webhookUrl          String?
+  webhookSecret       String? // HMAC key for outbound signing, encrypted at rest
+  feeOverride         Json?
+  apiKeys             ApiKey[]
+  invoices            Invoice[]
+  kybDocuments        KybDocument[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+enum KybStatus {
+  PENDING // not yet submitted
+  UNDER_REVIEW // submitted, awaiting operator review
+  VERIFIED
+  REJECTED
+}
+
+// ─── KYB documents ─────────────────────────────────────────────────────────
+// Sensitive PII: the file itself lives in Cloudinary as a PRIVATE/authenticated
+// resource; only its public_id is stored here. Raw documents are never exposed
+// — admins view them through short-lived signed URLs (§14).
+
+model KybDocument {
+  id                   String            @id @default(cuid())
+  merchantId           String
+  type                 KybDocumentType
+  status               KybDocumentStatus @default(PENDING)
+  cloudinaryPublicId   String
+  cloudinaryResourceType String          @default("image")
+  originalFilename     String
+  mimeType             String
+  sizeBytes            Int
+  reviewNote           String?
+  uploadedAt           DateTime          @default(now())
+  reviewedAt           DateTime?
+  merchant             Merchant          @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId])
+  @@index([status])
+}
+
+enum KybDocumentType {
+  BUSINESS_REGISTRATION // CAC certificate
+  TAX_ID // TIN
+  DIRECTOR_ID // NIN / passport / driver's licence
+  PROOF_OF_ADDRESS // utility bill / bank statement header
+  BANK_STATEMENT
+  OTHER
+}
+
+enum KybDocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MerchantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+model ApiKey {
+  id         String   @id @default(cuid())
+  merchantId String
+  name       String
+  keyHash    String   @unique
+  lastUsedAt DateTime?
+  createdAt  DateTime @default(now())
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+}
+
+// ─── Invoices ──────────────────────────────────────────────────────────────
+
+model Invoice {
+  id              String         @id @default(cuid())
+  merchantId      String
+  displayCurrency String
+  displayAmount   Decimal        @db.Decimal(36, 18)
+  payAsset        String
+  payChain        String
+  quotedAmount    Decimal        @db.Decimal(36, 18)
+  rate            Decimal        @db.Decimal(36, 18)
+  rateLockedUntil DateTime
+  rail            String
+  railRef         String?
+  state           InvoiceState   @default(DRAFT)
+  refundAddress   String?
+  depositAddress  String?
+  expectedAmount  Decimal?       @db.Decimal(36, 18)
+  metadata        Json?
+  events          PaymentEvent[]
+  ledgerEntries   LedgerEntry[]
+  expiresAt       DateTime
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  merchant        Merchant       @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@index([state])
+  @@index([depositAddress, payAsset, payChain])
+}
+
+enum InvoiceState {
+  DRAFT
+  AWAITING_PAYMENT
+  RECEIVED
+  CONVERTING
+  COMPLIANCE_HOLD
+  PAYOUT_SENT
+  PAID_CONFIRMED
+  UNDERPAID
+  OVERPAID
+  FAILED
+  REFUNDED
+  EXPIRED
+  COOLDOWN
+}
+
+// ─── Quotes (every rate shown is persisted — audit + quote-race handling) ──
+
+model Quote {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  provider    String? // null for DirectTransferRail quotes
+  fromAsset   String
+  toAsset     String
+  rate        Decimal  @db.Decimal(36, 18)
+  providerRef String? // provider's rate/exchange id
+  validUntil  DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([invoiceId])
+}
+
+// ─── Provider transactions (provider-side mirror of a swap, reconciled daily) ──
+
+model ProviderTransaction {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  provider      String
+  providerTxId  String   @unique
+  status        String // provider-native status, raw
+  depositTxHash String?
+  payoutTxHash  String?
+  quotedOut     Decimal  @db.Decimal(36, 18)
+  deliveredOut  Decimal? @db.Decimal(36, 18) // drift vs quotedOut feeds provider-health
+  raw           Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([invoiceId])
+  @@index([provider, status])
+}
+
+// ─── Unmatched payments (money that arrived but matched nothing) ───────────
+
+model UnmatchedPayment {
+  id         String   @id @default(cuid())
+  address    String
+  asset      String
+  chain      String
+  amount     Decimal  @db.Decimal(36, 18)
+  txHash     String   @unique
+  candidates Json? // nearest-invoice suggestions for review
+  status     String   @default("open") // open | resolved | returned
+  createdAt  DateTime @default(now())
+
+  @@index([status])
+}
+
+// ─── Transactional outbox (state change + event written in one tx) ─────────
+
+model OutboxEvent {
+  id          String    @id @default(cuid())
+  aggregate   String // e.g. invoice
+  aggregateId String
+  type        String // e.g. invoice.paid_confirmed
+  payload     Json
+  status      String    @default("pending") // pending | delivered | dead
+  attempts    Int       @default(0)
+  nextAttempt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, nextAttempt])
+  @@index([aggregateId])
+}
+
+// ─── Provider health snapshots (feeds failover scoring) ────────────────────
+
+model ProviderHealthSnapshot {
+  id              String   @id @default(cuid())
+  provider        String
+  successRate     Decimal  @db.Decimal(8, 4)
+  freezeRate      Decimal  @db.Decimal(8, 4)
+  medianSettleMs  Int
+  quotedVsDelivered Decimal @db.Decimal(8, 4) // mean drift %
+  sampleSize      Int
+  createdAt       DateTime @default(now())
+
+  @@index([provider, createdAt])
+}
+
+model PaymentEvent {
+  id         String   @id @default(cuid())
+  invoiceId  String
+  rail       String
+  type       String
+  txHash     String?
+  leg        String?
+  amount     Decimal? @db.Decimal(36, 18)
+  asset      String?
+  chain      String?
+  rawPayload Json
+  ts         DateTime @default(now())
+  invoice    Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+  @@index([txHash])
+}
+
+// ─── Ledger ────────────────────────────────────────────────────────────────
+
+model LedgerEntry {
+  id        String   @id @default(cuid())
+  invoiceId String
+  kind      String
+  amount    Decimal  @db.Decimal(36, 18)
+  asset     String
+  ts        DateTime @default(now())
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+}
+
+// ─── Amount pool (DirectTransferRail disambiguation) ───────────────────────
+
+model AmountReservation {
+  id             String   @id @default(cuid())
+  invoiceId      String   @unique
+  address        String
+  asset          String
+  chain          String
+  amountBaseUnits String
+  expiresAt      DateTime
+  cooldownUntil  DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([address, asset, chain])
+}
+
+// ─── Tatum subscriptions ───────────────────────────────────────────────────
+
+model TatumSubscription {
+  id             String   @id @default(cuid())
+  subscriptionId String   @unique
+  address        String
+  chain          String
+  merchantId     String
+  createdAt      DateTime @default(now())
+
+  @@index([address, chain])
+}
+
+// ─── Fee policy (global) ───────────────────────────────────────────────────
+
+model FeePolicy {
+  id                   String   @id @default("global")
+  providerFeeStatus    String   @default("active")
+  providerFeePercent   Decimal  @db.Decimal(8, 4) @default(0.4)
+  quoteMarkupStatus    String   @default("active")
+  quoteMarkupPercent   Decimal  @db.Decimal(8, 4) @default(0)
+  saasStatus           String   @default("disabled")
+  saasAmountUsd        Decimal  @db.Decimal(12, 2) @default(0)
+  saasIntervalDays     Int      @default(30)
+  deprecationNotes     Json?
+  updatedAt            DateTime @updatedAt
+}
+
+// ─── Recurring policy ──────────────────────────────────────────────────────
+
+model RecurringPolicy {
+  id          String   @id @default("global")
+  authModel   String   @default("APPROVE_AND_PULL")
+  engine      String   @default("IN_HOUSE")
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Outbound webhook deliveries ───────────────────────────────────────────
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  merchantId  String
+  invoiceId   String
+  event       String
+  payload     Json
+  url         String
+  status      String   @default("PENDING")
+  attempts    Int      @default(0)
+  lastError   String?
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([merchantId])
+  @@index([invoiceId])
+  @@index([status])
+}
+
+// ─── Admin users ───────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+}

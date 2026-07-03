@@ -1,0 +1,73 @@
+import { Injectable } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
+import { PrismaService } from "../core/prisma.service";
+import { ComplianceService } from "../compliance/compliance.service";
+import { createHash, randomBytes } from "crypto";
+import type { UpdateProfileDto, UpdateSettlementDto } from "@egofi/types";
+
+@Injectable()
+export class MerchantsService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly compliance: ComplianceService,
+  ) {}
+
+  async updateProfile(merchantId: string, dto: UpdateProfileDto) {
+    return this.prisma.merchant.update({
+      where: { id: merchantId },
+      data: {
+        ...(dto.business ? { business: dto.business } : {}),
+      },
+    });
+  }
+
+  async updateSettlement(merchantId: string, dto: UpdateSettlementDto) {
+    // Sanctions-screen settlement addresses at onboarding (§14): refuse a
+    // sanctioned payout destination before it ever receives a payment.
+    if (dto.settlementAddresses) {
+      for (const [chain, address] of Object.entries(dto.settlementAddresses)) {
+        if (typeof address === "string" && address.length > 0) {
+          await this.compliance.assertAddressClear(address, chain, "settlement");
+        }
+      }
+    }
+
+    return this.prisma.merchant.update({
+      where: { id: merchantId },
+      data: {
+        ...(dto.settlementAsset ? { settlementAsset: dto.settlementAsset } : {}),
+        ...(dto.settlementAddresses
+          ? { settlementAddresses: dto.settlementAddresses as Prisma.InputJsonValue }
+          : {}),
+        ...(dto.xpub !== undefined ? { xpub: dto.xpub } : {}),
+        ...(dto.xpubMode !== undefined ? { xpubMode: dto.xpubMode } : {}),
+        ...(dto.webhookUrl !== undefined ? { webhookUrl: dto.webhookUrl } : {}),
+      },
+    });
+  }
+
+  async createApiKey(merchantId: string, name: string) {
+    const rawKey = `egofi_${randomBytes(32).toString("hex")}`;
+    const keyHash = createHash("sha256").update(rawKey).digest("hex");
+
+    await this.prisma.apiKey.create({
+      data: { merchantId, name, keyHash },
+    });
+
+    return { key: rawKey, name };
+  }
+
+  async listApiKeys(merchantId: string) {
+    return this.prisma.apiKey.findMany({
+      where: { merchantId },
+      select: { id: true, name: true, createdAt: true, lastUsedAt: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async deleteApiKey(merchantId: string, keyId: string) {
+    await this.prisma.apiKey.deleteMany({
+      where: { id: keyId, merchantId },
+    });
+  }
+}

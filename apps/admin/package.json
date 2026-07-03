@@ -1,0 +1,35 @@
+{
+  "name": "@egofi/admin",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Egofi superadmin back-office",
+  "scripts": {
+    "dev": "next dev --port 3003",
+    "dev:mock": "next dev --port 3003 --env-file .env.mock",
+    "build": "next build",
+    "build:mock": "NEXT_PUBLIC_API_MODE=mock next build",
+    "start": "next start --port 3003",
+    "lint": "biome check src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .next out"
+  },
+  "dependencies": {
+    "@egofi/sdk": "workspace:*",
+    "@egofi/types": "workspace:*",
+    "@egofi/ui": "workspace:*",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "decimal.js": "^10.5.0"
+  },
+  "devDependencies": {
+    "@egofi/config": "workspace:*",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "tailwindcss": "^3.4.17",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "typescript": "^5.7.3"
+  }
+}

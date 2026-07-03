@@ -1,0 +1,13 @@
+import { Module } from "@nestjs/common";
+import { WebhooksController } from "./webhooks.controller";
+import { WebhooksService } from "./webhooks.service";
+import { InvoicesModule } from "../invoices/invoices.module";
+import { DirectTransferModule } from "../rails/direct-transfer/direct-transfer.module";
+
+@Module({
+  imports: [InvoicesModule, DirectTransferModule],
+  controllers: [WebhooksController],
+  providers: [WebhooksService],
+  exports: [WebhooksService],
+})
+export class WebhooksModule {}

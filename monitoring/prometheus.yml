@@ -1,0 +1,38 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    env: production
+    app: egofi
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: egofi_api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend:3000"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "api"
+
+  - job_name: egofi_worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend-worker:3000"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "worker"
+
+  - job_name: egofi_webhook
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend-webhook:3010"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "webhook"

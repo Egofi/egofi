@@ -1,0 +1,28 @@
+{
+  "name": "@egofi/domain",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Pure domain primitives (Money, Address, state guards) — zero runtime dependencies",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@egofi/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@egofi/config": "workspace:*",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

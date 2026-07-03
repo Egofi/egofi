@@ -1,0 +1,353 @@
+import type {
+  CheckoutSessionDto,
+  CreateInvoiceDto,
+  CreateInvoicePayload,
+  CreateMerchantDto,
+  FeePolicy,
+  InvoiceDto,
+  InvoiceStatusDto,
+  KybDocumentDto,
+  KybOverview,
+  MerchantProfile,
+  UpdateSettlementDto,
+} from "@egofi/types";
+import {
+  InvoiceState,
+  KybDocumentStatus,
+  KybDocumentType,
+  KybStatus,
+} from "@egofi/types";
+import {
+  buildMockCheckoutSession,
+  getMockCheckoutState,
+  MOCK_API_KEYS,
+  MOCK_CHECKOUT_TIMINGS,
+  MOCK_FEE_POLICY,
+  MOCK_INVOICES,
+  MOCK_KYB_TIERS,
+  MOCK_MERCHANT,
+  MOCK_MERCHANTS_LIST,
+} from "./mock-data.js";
+
+function delay(ms = 400): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms + Math.random() * 200));
+}
+
+let invoiceCounter = MOCK_INVOICES.length;
+const inMemoryInvoices: InvoiceDto[] = [...MOCK_INVOICES];
+let currentMerchant: MerchantProfile = { ...MOCK_MERCHANT };
+const apiKeys = [...MOCK_API_KEYS];
+let mockMerchants = [...MOCK_MERCHANTS_LIST];
+const mockKybDocuments: KybDocumentDto[] = [];
+let mockKybStatus: KybStatus = KybStatus.Pending;
+let mockKybSubmittedAt: string | null = null;
+
+export class MockEgofiClient {
+  readonly auth = {
+    login: async (_email: string, _password: string) => {
+      await delay(500);
+      return { accessToken: "mock_jwt_token_abc123", merchant: currentMerchant };
+    },
+
+    register: async (dto: CreateMerchantDto) => {
+      await delay(600);
+      currentMerchant = {
+        ...MOCK_MERCHANT,
+        business: dto.business,
+        email: dto.email,
+        settlementAsset: dto.settlementAsset,
+        settlementAddresses: dto.settlementAddresses,
+      };
+      return { accessToken: "mock_jwt_token_abc123", merchant: currentMerchant };
+    },
+
+    me: async (): Promise<MerchantProfile> => {
+      await delay(200);
+      return currentMerchant;
+    },
+  };
+
+  readonly checkout = {
+    createSession: async (dto: CreateInvoiceDto): Promise<CheckoutSessionDto> => {
+      await delay(600);
+      const id = `inv_mock_${String(++invoiceCounter).padStart(3, "0")}`;
+      MOCK_CHECKOUT_TIMINGS[id] = Date.now();
+
+      const session = buildMockCheckoutSession(
+        id,
+        dto.payAsset,
+        dto.payChain,
+        dto.displayAmount,
+        dto.displayCurrency,
+      );
+
+      inMemoryInvoices.unshift(session.invoice);
+      return session;
+    },
+
+    getSession: async (invoiceId: string): Promise<CheckoutSessionDto> => {
+      await delay(250);
+      const existing = inMemoryInvoices.find((i) => i.id === invoiceId);
+      if (!existing) {
+        return buildMockCheckoutSession(invoiceId);
+      }
+      const state = getMockCheckoutState(invoiceId);
+      return buildMockCheckoutSession(
+        invoiceId,
+        existing.payAsset,
+        existing.payChain,
+        existing.displayAmount,
+        existing.displayCurrency,
+      );
+    },
+
+    getStatus: async (invoiceId: string): Promise<InvoiceStatusDto> => {
+      await delay(150);
+      const state = getMockCheckoutState(invoiceId);
+      return {
+        invoiceId,
+        state,
+        ...(state !== InvoiceState.AwaitingPayment
+          ? { depositTxHash: "0xmocktxhash1234567890abcdef" }
+          : {}),
+        ...(state === InvoiceState.PayoutSent || state === InvoiceState.PaidConfirmed
+          ? { payoutTxHash: "TRmockpayouttx1234567890abcdef" }
+          : {}),
+        updatedAt: new Date().toISOString(),
+      };
+    },
+  };
+
+  readonly invoices = {
+    create: async (dto: CreateInvoicePayload): Promise<InvoiceDto> => {
+      await delay(500);
+      const id = `inv_mock_${String(++invoiceCounter).padStart(3, "0")}`;
+      const invoice: InvoiceDto = {
+        id,
+        merchantId: currentMerchant.id,
+        displayCurrency: dto.displayCurrency,
+        displayAmount: dto.displayAmount,
+        payAsset: dto.payAsset,
+        payChain: dto.payChain,
+        quotedAmount: dto.displayAmount,
+        rate: "1.000000",
+        rateLockedUntil: new Date(Date.now() + 15 * 60_000).toISOString(),
+        rail: "DIRECT_TRANSFER" as never,
+        railRef: null,
+        state: InvoiceState.AwaitingPayment,
+        refundAddress: dto.refundAddress ?? null,
+        expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+        createdAt: new Date().toISOString(),
+      };
+      inMemoryInvoices.unshift(invoice);
+      return invoice;
+    },
+
+    list: async (params?: {
+      page?: number;
+      limit?: number;
+      state?: string;
+    }): Promise<{ data: InvoiceDto[]; total: number }> => {
+      await delay(300);
+      const page = params?.page ?? 1;
+      const limit = params?.limit ?? 20;
+      const filtered = params?.state
+        ? inMemoryInvoices.filter((i) => i.state === params.state)
+        : inMemoryInvoices;
+      const start = (page - 1) * limit;
+      return {
+        data: filtered.slice(start, start + limit),
+        total: filtered.length,
+      };
+    },
+
+    get: async (id: string): Promise<InvoiceDto> => {
+      await delay(200);
+      const invoice = inMemoryInvoices.find((i) => i.id === id);
+      if (!invoice) throw new Error(`Invoice ${id} not found`);
+      return invoice;
+    },
+  };
+
+  readonly merchant = {
+    getProfile: async (): Promise<MerchantProfile> => {
+      await delay(250);
+      return currentMerchant;
+    },
+
+    updateProfile: async (dto: { business?: string }): Promise<MerchantProfile> => {
+      await delay(400);
+      currentMerchant = {
+        ...currentMerchant,
+        ...(dto.business ? { business: dto.business } : {}),
+      };
+      return currentMerchant;
+    },
+
+    updateSettlement: async (dto: UpdateSettlementDto): Promise<MerchantProfile> => {
+      await delay(400);
+      currentMerchant = {
+        ...currentMerchant,
+        ...(dto.settlementAsset ? { settlementAsset: dto.settlementAsset } : {}),
+        ...(dto.settlementAddresses ? { settlementAddresses: dto.settlementAddresses } : {}),
+        ...(dto.xpub !== undefined ? { xpub: dto.xpub } : {}),
+        ...(dto.xpubMode !== undefined ? { xpubMode: dto.xpubMode } : {}),
+        ...(dto.webhookUrl !== undefined ? { webhookUrl: dto.webhookUrl } : {}),
+      };
+      return currentMerchant;
+    },
+
+    createApiKey: async (name: string) => {
+      await delay(400);
+      const key = {
+        id: `key_mock_${Date.now()}`,
+        name,
+        createdAt: new Date().toISOString(),
+        lastUsedAt: null,
+      };
+      apiKeys.push(key);
+      return { key: `egofi_mock_${Math.random().toString(36).slice(2)}`, ...key };
+    },
+
+    listApiKeys: async () => {
+      await delay(200);
+      return [...apiKeys];
+    },
+
+    deleteApiKey: async (id: string) => {
+      await delay(300);
+      const idx = apiKeys.findIndex((k) => k.id === id);
+      if (idx !== -1) apiKeys.splice(idx, 1);
+    },
+  };
+
+  readonly kyb = {
+    getOverview: async (): Promise<KybOverview> => {
+      await delay(250);
+      return {
+        status: mockKybStatus,
+        tier: currentMerchant.kybTier,
+        submittedAt: mockKybSubmittedAt,
+        reviewNote: null,
+        documents: [...mockKybDocuments],
+        tiers: MOCK_KYB_TIERS,
+      };
+    },
+
+    uploadDocument: async (
+      type: KybDocumentType,
+      file: File,
+    ): Promise<KybDocumentDto> => {
+      await delay(700);
+      const doc: KybDocumentDto = {
+        id: `kybdoc_mock_${Date.now()}`,
+        type,
+        status: KybDocumentStatus.Pending,
+        originalFilename: file.name,
+        mimeType: file.type,
+        sizeBytes: file.size,
+        uploadedAt: new Date().toISOString(),
+        reviewedAt: null,
+        reviewNote: null,
+      };
+      // Replace any existing doc of the same type
+      const idx = mockKybDocuments.findIndex((d) => d.type === type);
+      if (idx !== -1) mockKybDocuments.splice(idx, 1);
+      mockKybDocuments.push(doc);
+      return doc;
+    },
+
+    deleteDocument: async (id: string): Promise<{ ok: boolean }> => {
+      await delay(300);
+      const idx = mockKybDocuments.findIndex((d) => d.id === id);
+      if (idx !== -1) mockKybDocuments.splice(idx, 1);
+      return { ok: true };
+    },
+
+    submit: async (): Promise<KybOverview> => {
+      await delay(500);
+      mockKybStatus = KybStatus.UnderReview;
+      mockKybSubmittedAt = new Date().toISOString();
+      return {
+        status: mockKybStatus,
+        tier: currentMerchant.kybTier,
+        submittedAt: mockKybSubmittedAt,
+        reviewNote: null,
+        documents: [...mockKybDocuments],
+        tiers: MOCK_KYB_TIERS,
+      };
+    },
+  };
+
+  readonly admin = {
+    login: async (_email: string, _password: string) => {
+      await delay(400);
+      return { accessToken: "mock_admin_jwt_token" };
+    },
+    listMerchants: async (params?: { status?: string; page?: number }) => {
+      await delay(350);
+      const filtered = params?.status
+        ? mockMerchants.filter((m) => m.status === params.status)
+        : mockMerchants;
+      return { data: filtered, total: filtered.length };
+    },
+
+    approveMerchant: async (id: string): Promise<MerchantProfile> => {
+      await delay(400);
+      mockMerchants = mockMerchants.map((m) =>
+        m.id === id ? { ...m, status: "ACTIVE" as never } : m,
+      );
+      const merchant = mockMerchants.find((m) => m.id === id);
+      if (!merchant) throw new Error(`Merchant ${id} not found`);
+      return merchant;
+    },
+
+    suspendMerchant: async (id: string, _reason: string): Promise<MerchantProfile> => {
+      await delay(400);
+      mockMerchants = mockMerchants.map((m) =>
+        m.id === id ? { ...m, status: "SUSPENDED" as never } : m,
+      );
+      const merchant = mockMerchants.find((m) => m.id === id);
+      if (!merchant) throw new Error(`Merchant ${id} not found`);
+      return merchant;
+    },
+
+    getFeePolicy: async (): Promise<FeePolicy> => {
+      await delay(200);
+      return { ...MOCK_FEE_POLICY };
+    },
+
+    updateFeePolicy: async (policy: Partial<FeePolicy>): Promise<FeePolicy> => {
+      await delay(400);
+      return { ...MOCK_FEE_POLICY, ...policy };
+    },
+
+    listPendingKyb: async () => {
+      await delay(300);
+      return mockMerchants
+        .filter((m) => m.kybStatus === KybStatus.UnderReview)
+        .map((m) => ({
+          merchantId: m.id,
+          business: m.business,
+          email: m.email,
+          status: m.kybStatus,
+          currentTier: m.kybTier,
+          submittedAt: new Date(Date.now() - 3_600_000).toISOString(),
+          documents: [...mockKybDocuments],
+        }));
+    },
+    getKybDocumentUrl: async (_documentId: string) => {
+      await delay(200);
+      return { url: "https://example.com/mock-signed-document-url" };
+    },
+    approveKyb: async (_merchantId: string, _tier: number, _note?: string) => {
+      await delay(400);
+    },
+    rejectKyb: async (_merchantId: string, _note: string) => {
+      await delay(400);
+    },
+  };
+
+  // Matching EgofiClient API — no-op in mock mode
+  setAuthToken(_token: string): void {}
+}

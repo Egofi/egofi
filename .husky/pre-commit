@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Biome format + lint on staged files, then typecheck affected packages
+pnpm exec lint-staged
+pnpm turbo run typecheck --affected

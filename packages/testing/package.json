@@ -1,0 +1,26 @@
+{
+  "name": "@egofi/testing",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared test fixtures, builders, and fake adapters for Egofi",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@egofi/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@egofi/config": "workspace:*",
+    "typescript": "^5.7.3"
+  }
+}
