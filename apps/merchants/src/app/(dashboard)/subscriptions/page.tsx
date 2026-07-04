@@ -1,13 +1,12 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { SubscriptionPlanDto } from "@egofi/types";
 import { SubscriptionPeriodUnit } from "@egofi/types";
 import { Button, Spinner, cn } from "@egofi/ui";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { CopyButton } from "../../../lib/CopyButton";
-
-const api = createApiClient();
+import { api } from "../../../lib/api";
+import { loginRedirect } from "../../../lib/auth";
 
 const PERIOD_UNITS: { value: SubscriptionPeriodUnit; label: string; singular: string }[] = [
   { value: SubscriptionPeriodUnit.Day, label: "Day(s)", singular: "Day" },
@@ -52,7 +51,7 @@ export default function SubscriptionsPage() {
   const load = async () => {
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);

@@ -35,6 +35,7 @@ const inMemoryInvoices: InvoiceDto[] = [...MOCK_INVOICES];
 let currentMerchant: MerchantProfile = { ...MOCK_MERCHANT };
 const apiKeys = [...MOCK_API_KEYS];
 let mockMerchants = [...MOCK_MERCHANTS_LIST];
+let mockIpnSecret: string | null = null;
 const mockSubscriptionPlans: SubscriptionPlanDto[] = [];
 let subscriptionCounter = 0;
 const mockKybDocuments: KybDocumentDto[] = [];
@@ -42,6 +43,9 @@ let mockKybStatus: KybStatus = KybStatus.Pending;
 let mockKybSubmittedAt: string | null = null;
 
 export class MockEgofiClient {
+  /** Parity with EgofiClient — never fired in mock mode. */
+  onUnauthorized?: () => void;
+
   readonly auth = {
     login: async (_email: string, _password: string) => {
       await delay(500);
@@ -271,6 +275,35 @@ export class MockEgofiClient {
       await delay(300);
       const idx = apiKeys.findIndex((k) => k.id === id);
       if (idx !== -1) apiKeys.splice(idx, 1);
+    },
+
+    getIntegration: async () => {
+      await delay(200);
+      return {
+        webhookUrl: currentMerchant.webhookUrl ?? null,
+        ipnSecret: mockIpnSecret,
+      };
+    },
+
+    setWebhookUrl: async (webhookUrl: string) => {
+      await delay(350);
+      const url = webhookUrl.trim();
+      if (url) {
+        currentMerchant = { ...currentMerchant, webhookUrl: url };
+      } else {
+        const { webhookUrl: _omit, ...rest } = currentMerchant;
+        currentMerchant = rest;
+      }
+      return {
+        webhookUrl: currentMerchant.webhookUrl ?? null,
+        ipnSecret: mockIpnSecret,
+      };
+    },
+
+    rotateIpnSecret: async () => {
+      await delay(350);
+      mockIpnSecret = `whsec_mock_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+      return { ipnSecret: mockIpnSecret };
     },
   };
 

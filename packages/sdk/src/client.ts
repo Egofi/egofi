@@ -5,6 +5,7 @@ import type {
   CreateMerchantDto,
   CreateSubscriptionPlanDto,
   FeePolicy,
+  IntegrationSettingsDto,
   InvoiceDto,
   InvoiceStatusDto,
   KybDocumentDto,
@@ -56,6 +57,13 @@ export class EgofiClient {
   private readonly baseUrl: string;
   private readonly headers: Record<string, string>;
 
+  /**
+   * Called whenever a request comes back 401 Unauthorized — i.e. the session
+   * is missing or expired. Apps set this to clear local auth and redirect to
+   * login. Not fired in the SDK itself beyond invoking the callback.
+   */
+  onUnauthorized?: () => void;
+
   constructor(options: EgofiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
     this.headers = { "Content-Type": "application/json" };
@@ -86,10 +94,16 @@ export class EgofiClient {
       ? { "Idempotency-Key": options?.idempotencyKey ?? generateIdempotencyKey() }
       : {};
 
+    // Only advertise a JSON content-type when we actually send a body. A POST
+    // with `Content-Type: application/json` and an empty body is rejected by the
+    // server's JSON body parser (e.g. rotate-secret / kyb-submit take no body).
+    const hasBody = body !== undefined;
+    const { "Content-Type": _contentType, ...noBodyHeaders } = this.headers;
+
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
-      headers: { ...this.headers, ...idempotencyHeaders },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      headers: { ...(hasBody ? this.headers : noBodyHeaders), ...idempotencyHeaders },
+      ...(hasBody ? { body: JSON.stringify(body) } : {}),
     });
 
     if (!response.ok) {
@@ -102,6 +116,7 @@ export class EgofiClient {
       } catch {
         // ignore parse failure
       }
+      if (response.status === 401) this.onUnauthorized?.();
       throw new EgofiApiError(response.status, code, message);
     }
 
@@ -138,6 +153,7 @@ export class EgofiClient {
       } catch {
         // ignore parse failure
       }
+      if (response.status === 401) this.onUnauthorized?.();
       throw new EgofiApiError(response.status, code, message);
     }
     if (response.status === 204) return undefined as T;
@@ -224,6 +240,12 @@ export class EgofiClient {
         "/merchant/api-keys",
       ),
     deleteApiKey: (id: string) => this.request<void>("DELETE", `/merchant/api-keys/${id}`),
+
+    // Gateway integration (webhook / IPN)
+    getIntegration: () => this.request<IntegrationSettingsDto>("GET", "/merchant/integration"),
+    setWebhookUrl: (webhookUrl: string) =>
+      this.request<IntegrationSettingsDto>("PATCH", "/merchant/webhook", { webhookUrl }),
+    rotateIpnSecret: () => this.request<{ ipnSecret: string }>("POST", "/merchant/ipn-secret"),
   };
 
   // KYB (merchant)

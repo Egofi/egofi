@@ -1,14 +1,13 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { InvoiceDto } from "@egofi/types";
 import { Button } from "@egofi/ui";
 import { type FormEvent, useMemo, useState } from "react";
 import { CurrencySelect } from "../../../../lib/CurrencySelect";
 import { OrderDetails } from "../../../../lib/OrderDetails";
+import { api } from "../../../../lib/api";
+import { loginRedirect } from "../../../../lib/auth";
 import { PAY_CURRENCIES, minPaymentUsd, networkOf } from "../../../../lib/crypto-assets";
-
-const api = createApiClient();
 
 const CURRENCIES = ["USD", "NGN", "EUR", "GBP", "GHS", "KES", "ZAR"];
 
@@ -101,7 +100,7 @@ export default function NewInvoicePage() {
     }
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);

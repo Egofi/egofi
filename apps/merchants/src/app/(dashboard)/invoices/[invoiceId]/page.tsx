@@ -1,6 +1,5 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { CheckoutSessionDto, InvoiceDto, InvoiceStatusDto } from "@egofi/types";
 import { InvoiceState } from "@egofi/types";
 import { Spinner, cn } from "@egofi/ui";
@@ -9,6 +8,8 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { CopyButton } from "../../../../lib/CopyButton";
 import { PayWith } from "../../../../lib/PayWith";
+import { api } from "../../../../lib/api";
+import { loginRedirect } from "../../../../lib/auth";
 import { checkoutUrl } from "../../../../lib/checkout-url";
 import {
   type ButtonVariant,
@@ -17,8 +18,6 @@ import {
   widgetSnippet,
 } from "../../../../lib/embeds";
 import { INVOICE_STATE_CONFIG, InvoiceStateBadge } from "../../../../lib/invoice-state";
-
-const api = createApiClient();
 
 const POLL_INTERVAL_MS = 6_000;
 const TERMINAL_STATES: string[] = [
@@ -87,7 +86,7 @@ export default function InvoiceDetailPage() {
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);
