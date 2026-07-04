@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 
-export function CopyButton({ text, label }: { text: string; label?: string }) {
+export function CopyButton({
+  text,
+  label,
+  className,
+}: {
+  text: string;
+  label?: string;
+  className?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -18,7 +26,7 @@ export function CopyButton({ text, label }: { text: string; label?: string }) {
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all duration-150 ${
         copied
           ? "bg-success-50 text-success-700"
-          : "text-primary hover:bg-primary-50 active:bg-primary-100"
+          : (className ?? "text-primary hover:bg-primary-50 active:bg-primary-100")
       }`}
       aria-label={copied ? "Copied" : `Copy ${label ?? "to clipboard"}`}
     >

@@ -44,6 +44,7 @@ export class SwapProviderRail implements SettlementRail {
     const fromAmount = invoice.quotedAmount.toString();
 
     let exchange: Awaited<ReturnType<SwapProvider["createExchange"]>> | null = null;
+    let selectedMinAmount: string | null = null;
     let lastError: unknown;
 
     // Health scoring reorders providers: a degraded provider (freeze-rate
@@ -53,6 +54,7 @@ export class SwapProviderRail implements SettlementRail {
     for (const provider of rankedProviders) {
       try {
         const minAmount = await provider.getMinAmount(invoice.payAsset, merchant.settlementAsset);
+        selectedMinAmount = minAmount;
         if (Number.parseFloat(fromAmount) < Number.parseFloat(minAmount)) {
           throw new BadRequestException(
             `Amount below ${provider.name} minimum of ${minAmount} ${invoice.payAsset}`,
@@ -142,8 +144,12 @@ export class SwapProviderRail implements SettlementRail {
       asset: invoice.payAsset,
       chain: invoice.payChain,
       expiresAt: new Date(exchange.validUntil),
-      paymentUri: `${invoice.payChain.toLowerCase()}:${exchange.depositAddress}?amount=${exchange.depositAmount}`,
+      paymentUri: exchange.depositAddress,
+      paymentUriWithAmount: `${invoice.payChain.toLowerCase()}:${exchange.depositAddress}?amount=${exchange.depositAmount}`,
       qrData: exchange.depositAddress,
+      ...(selectedMinAmount
+        ? { minAmount: BigInt(Math.round(Number.parseFloat(selectedMinAmount) * 1e6)) }
+        : {}),
       providerRef: exchange.id,
     };
   }
