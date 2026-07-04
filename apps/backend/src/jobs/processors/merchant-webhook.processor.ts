@@ -30,7 +30,7 @@ export class MerchantWebhookProcessor extends BaseProcessor {
 
     const merchant = await this.prisma.merchant.findUnique({
       where: { id: merchantId },
-      select: { webhookUrl: true },
+      select: { webhookUrl: true, webhookSecret: true },
     });
 
     if (!merchant?.webhookUrl) return;
@@ -44,7 +44,10 @@ export class MerchantWebhookProcessor extends BaseProcessor {
       timestamp: new Date().toISOString(),
     });
 
-    const secret = this.config.getOrThrow<string>("WEBHOOK_SIGNING_SECRET");
+    // Sign with the merchant's own IPN secret when set (so they can verify with
+    // the secret shown in their dashboard); otherwise fall back to the global one.
+    const secret =
+      merchant.webhookSecret ?? this.config.getOrThrow<string>("WEBHOOK_SIGNING_SECRET");
     const signature = createHmac("sha256", secret).update(body).digest("hex");
 
     const res = await fetch(merchant.webhookUrl, {

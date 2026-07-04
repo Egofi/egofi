@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { UpdateProfileDto, UpdateSettlementDto } from "@egofi/types";
-import { Injectable } from "@nestjs/common";
+import type { IntegrationSettingsDto, UpdateProfileDto, UpdateSettlementDto } from "@egofi/types";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { ComplianceService } from "../compliance/compliance.service";
 import { PrismaService } from "../core/prisma.service";
@@ -69,5 +69,41 @@ export class MerchantsService {
     await this.prisma.apiKey.deleteMany({
       where: { id: keyId, merchantId },
     });
+  }
+
+  // ── Gateway integration (webhook / IPN) ─────────────────────────────────
+
+  async getIntegration(merchantId: string): Promise<IntegrationSettingsDto> {
+    const m = await this.prisma.merchant.findUniqueOrThrow({
+      where: { id: merchantId },
+      select: { webhookUrl: true, webhookSecret: true },
+    });
+    return { webhookUrl: m.webhookUrl ?? null, ipnSecret: m.webhookSecret ?? null };
+  }
+
+  async setWebhookUrl(
+    merchantId: string,
+    webhookUrl: string | null,
+  ): Promise<IntegrationSettingsDto> {
+    const url = webhookUrl?.trim() || null;
+    if (url && !/^https?:\/\/.+/i.test(url)) {
+      throw new BadRequestException("Webhook URL must be a valid http(s) URL");
+    }
+    const m = await this.prisma.merchant.update({
+      where: { id: merchantId },
+      data: { webhookUrl: url },
+      select: { webhookUrl: true, webhookSecret: true },
+    });
+    return { webhookUrl: m.webhookUrl ?? null, ipnSecret: m.webhookSecret ?? null };
+  }
+
+  /** Generate (or rotate) the HMAC secret egofi signs this merchant's webhooks with. */
+  async rotateIpnSecret(merchantId: string): Promise<{ ipnSecret: string }> {
+    const ipnSecret = `whsec_${randomBytes(32).toString("hex")}`;
+    await this.prisma.merchant.update({
+      where: { id: merchantId },
+      data: { webhookSecret: ipnSecret },
+    });
+    return { ipnSecret };
   }
 }

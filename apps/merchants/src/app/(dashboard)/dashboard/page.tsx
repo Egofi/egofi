@@ -1,14 +1,13 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { InvoiceDto, MerchantProfile } from "@egofi/types";
 import { KybStatus } from "@egofi/types";
 import { Badge, Button, Card, CardContent, Skeleton } from "@egofi/ui";
 import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+import { loginRedirect } from "../../../lib/auth";
 import { InvoiceStateBadge } from "../../../lib/invoice-state";
 import { KYB_STATUS_META } from "../../../lib/kyb-meta";
-
-const api = createApiClient();
 
 const PlusIcon = (
   <svg viewBox="0 0 16 16" fill="currentColor" className="size-4" aria-hidden>
@@ -66,7 +65,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);
