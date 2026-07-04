@@ -21,6 +21,7 @@
     "test:coverage": "vitest run --coverage",
     "db:generate": "prisma generate",
     "db:seed": "ts-node --transpile-only prisma/seed.ts",
+    "db:seed:merchant": "node --env-file=.env prisma/seed-merchant.mjs",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",

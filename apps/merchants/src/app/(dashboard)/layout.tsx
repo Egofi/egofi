@@ -2,9 +2,12 @@
 
 import { createApiClient } from "@egofi/sdk";
 import type { MerchantProfile } from "@egofi/types";
+import { KybStatus } from "@egofi/types";
 import { cn } from "@egofi/ui";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AnnouncementBar } from "../../lib/AnnouncementBar";
+import { LanguageSwitcher } from "../../lib/LanguageSwitcher";
 
 const api = createApiClient();
 
@@ -28,6 +31,19 @@ const NAV_ITEMS: NavItem[] = [
         <path
           fillRule="evenodd"
           d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-3.62-3.622A1.5 1.5 0 0 0 11.38 2H4.5zM6.75 8a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/subscriptions",
+    label: "Subscriptions",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
+        <path
+          fillRule="evenodd"
+          d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219z"
           clipRule="evenodd"
         />
       </svg>
@@ -61,6 +77,7 @@ const SettingsIcon = (
 function pageTitle(pathname: string): string {
   if (pathname.startsWith("/settings")) return "Settings";
   if (pathname.startsWith("/developers")) return "Developers";
+  if (pathname.startsWith("/subscriptions")) return "Subscriptions";
   const item = NAV_ITEMS.find((n) => pathname === n.href || pathname.startsWith(`${n.href}/`));
   return item?.label ?? "Home";
 }
@@ -213,6 +230,55 @@ function UserMenu({
   );
 }
 
+/**
+ * "Verify account" pill shown in the header until KYB is verified — mirrors the
+ * reference console's verification nudge. Green + done once verified.
+ */
+function VerifyChip({ merchant }: { merchant: MerchantProfile | null }) {
+  if (!merchant) return null;
+  const verified = merchant.kybStatus === KybStatus.Verified;
+  const underReview = merchant.kybStatus === KybStatus.UnderReview;
+
+  if (verified) {
+    return (
+      <span className="hidden items-center gap-1.5 rounded-lg bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-700 ring-1 ring-inset ring-success-200 sm:inline-flex">
+        <svg viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
+          <path
+            fillRule="evenodd"
+            d="M8 1l1.9 1.36 2.32-.2.86 2.17 2.06 1.09-.6 2.25.6 2.25-2.06 1.09-.86 2.17-2.32-.2L8 15l-1.9-1.36-2.32.2-.86-2.17-2.06-1.09.6-2.25-.6-2.25 2.06-1.09.86-2.17 2.32.2L8 1zm3.03 5.28a.75.75 0 0 0-1.06-1.06L7.25 7.94 6.03 6.72a.75.75 0 0 0-1.06 1.06l1.75 1.75a.75.75 0 0 0 1.06 0l3.25-3.25z"
+            clipRule="evenodd"
+          />
+        </svg>
+        Verified
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href="/settings/verification"
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition-colors",
+        underReview
+          ? "bg-info-50 text-info-700 ring-info-200 hover:bg-info-100"
+          : "bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100",
+      )}
+    >
+      <svg viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
+        <path
+          fillRule="evenodd"
+          d="M8 1a3 3 0 0 0-3 3v1H4.5A1.5 1.5 0 0 0 3 6.5v6A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 11.5 5H11V4a3 3 0 0 0-3-3zm1.5 4V4a1.5 1.5 0 0 0-3 0v1h3z"
+          clipRule="evenodd"
+        />
+      </svg>
+      <span className="hidden sm:inline">
+        {underReview ? "Verification pending" : "Verify account"}
+      </span>
+      <span className="sm:hidden">Verify</span>
+    </a>
+  );
+}
+
 function MenuLink({ href, label }: { href: string; label: string }) {
   return (
     <a
@@ -311,6 +377,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main column */}
       <div className="flex min-h-screen min-w-0 flex-col md:pl-64">
+        <AnnouncementBar />
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100/70 bg-white/80 px-4 backdrop-blur-md sm:px-6">
           <button
             type="button"
@@ -327,7 +394,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </svg>
           </button>
           <h1 className="text-sm font-semibold text-navy-900">{pageTitle(pathname)}</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <VerifyChip merchant={merchant} />
+            <LanguageSwitcher />
+            <span className="hidden h-6 w-px bg-navy-100 sm:block" />
             <UserMenu merchant={merchant} onSignOut={signOut} />
           </div>
         </header>

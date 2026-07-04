@@ -62,6 +62,7 @@ export class DirectTransferRail implements SettlementRail {
       chain: invoice.payChain,
       expiresAt: invoice.expiresAt,
       paymentUri,
+      paymentUriWithAmount: paymentUri,
       qrData: paymentUri,
     };
   }
