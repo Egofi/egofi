@@ -14,6 +14,13 @@ class UpdateProfileBodyDto {
   business?: string;
 }
 
+class SetWebhookBodyDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  webhookUrl?: string;
+}
+
 @ApiTags("merchant")
 @UseGuards(JwtAuthGuard)
 @Controller("merchant")
@@ -54,5 +61,23 @@ export class MerchantsController {
   @ApiOperation({ summary: "Delete an API key" })
   deleteApiKey(@CurrentMerchant() merchant: Merchant, @Param("id") id: string) {
     return this.merchants.deleteApiKey(merchant.id, id);
+  }
+
+  @Get("integration")
+  @ApiOperation({ summary: "Get webhook/IPN integration settings" })
+  getIntegration(@CurrentMerchant() merchant: Merchant) {
+    return this.merchants.getIntegration(merchant.id);
+  }
+
+  @Patch("webhook")
+  @ApiOperation({ summary: "Set the webhook (IPN) callback URL" })
+  setWebhook(@CurrentMerchant() merchant: Merchant, @Body() body: SetWebhookBodyDto) {
+    return this.merchants.setWebhookUrl(merchant.id, body.webhookUrl ?? null);
+  }
+
+  @Post("ipn-secret")
+  @ApiOperation({ summary: "Generate or rotate the IPN signing secret" })
+  rotateIpnSecret(@CurrentMerchant() merchant: Merchant) {
+    return this.merchants.rotateIpnSecret(merchant.id);
   }
 }

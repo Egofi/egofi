@@ -1,14 +1,13 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { InvoiceDto } from "@egofi/types";
 import { Button, cn } from "@egofi/ui";
 import { useEffect, useMemo, useState } from "react";
 import { PayWith } from "../../../lib/PayWith";
+import { api } from "../../../lib/api";
+import { loginRedirect } from "../../../lib/auth";
 import { checkoutUrl } from "../../../lib/checkout-url";
 import { InvoiceStateBadge } from "../../../lib/invoice-state";
-
-const api = createApiClient();
 
 const PAGE_SIZE = 20;
 
@@ -51,7 +50,7 @@ export default function InvoicesPage() {
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);
