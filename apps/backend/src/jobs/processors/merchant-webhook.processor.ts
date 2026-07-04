@@ -1,9 +1,9 @@
 ﻿import { createHmac } from "node:crypto";
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import type { Job } from "bullmq";
-import type { PrismaService } from "../../core/prisma.service";
+import { PrismaService } from "../../core/prisma.service";
 import { BaseProcessor } from "../base.processor";
 import { QUEUES } from "../queues";
 

@@ -11,7 +11,7 @@ import {
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { FastifyRequest } from "fastify";
 import { SkipIdempotency } from "../shared";
-import type { WebhooksService } from "./webhooks.service";
+import { WebhooksService } from "./webhooks.service";
 
 @ApiTags("webhooks")
 @SkipIdempotency() // inbound events dedupe on (txHash, leg); third parties don't send our header

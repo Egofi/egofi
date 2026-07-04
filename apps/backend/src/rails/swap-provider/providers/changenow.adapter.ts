@@ -1,7 +1,7 @@
 import type { SwapExchange, SwapProvider, SwapQuote, SwapStatusResponse } from "@egofi/types";
 import { RateType, SwapProviderName } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 
 const BASE_URL = "https://api.changenow.io/v2";
 

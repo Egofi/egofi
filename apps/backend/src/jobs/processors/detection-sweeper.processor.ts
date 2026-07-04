@@ -2,9 +2,9 @@ import { InvoiceState, RailStatus, RailType } from "@egofi/types";
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import type { PrismaService } from "../../core/prisma.service";
-import type { InvoicesService } from "../../invoices/invoices.service";
-import type { SwapProviderRail } from "../../rails/swap-provider/swap-provider.rail";
+import { PrismaService } from "../../core/prisma.service";
+import { InvoicesService } from "../../invoices/invoices.service";
+import { SwapProviderRail } from "../../rails/swap-provider/swap-provider.rail";
 import { BaseProcessor } from "../base.processor";
 import { QUEUES } from "../queues";
 

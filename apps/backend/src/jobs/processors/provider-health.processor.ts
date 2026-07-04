@@ -2,7 +2,7 @@ import { SwapProviderName } from "@egofi/types";
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import type { ProviderHealthService } from "../../rails/swap-provider/provider-health.service";
+import { ProviderHealthService } from "../../rails/swap-provider/provider-health.service";
 import { BaseProcessor } from "../base.processor";
 import { QUEUES } from "../queues";
 

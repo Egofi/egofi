@@ -8,11 +8,11 @@ import type {
 } from "@egofi/types";
 import { InvoiceState, RailType } from "@egofi/types";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import type { PrismaService } from "../core/prisma.service";
-import type { InvoicesService } from "../invoices/invoices.service";
-import type { JobsService } from "../jobs/jobs.service";
-import type { PricingService } from "../pricing/pricing.service";
-import type { RailRouter } from "../rails/rail.router";
+import { PrismaService } from "../core/prisma.service";
+import { InvoicesService } from "../invoices/invoices.service";
+import { JobsService } from "../jobs/jobs.service";
+import { PricingService } from "../pricing/pricing.service";
+import { RailRouter } from "../rails/rail.router";
 
 // Maps a settlement asset label to the chain it settles on. Merchants configure
 // a single settlement asset (default USDT-TRC20); the payout chain is implied.

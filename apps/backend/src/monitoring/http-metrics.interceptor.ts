@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { type Observable, tap } from "rxjs";
-import type { MetricsService } from "./metrics.service";
+import { MetricsService } from "./metrics.service";
 
 @Injectable()
 export class HttpMetricsInterceptor implements NestInterceptor {
