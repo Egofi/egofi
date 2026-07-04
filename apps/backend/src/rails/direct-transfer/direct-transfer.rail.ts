@@ -1,10 +1,10 @@
 import { RailStatus, RailType } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
-import type { PrismaService } from "../../core/prisma.service";
+import { PrismaService } from "../../core/prisma.service";
 import type { Invoice, PaymentInstructions, RailEvent, RouteQuery } from "../rail.interface";
 import type { SettlementRail } from "../rail.interface";
-import type { AmountPoolService } from "./amount-pool.service";
-import type { PaymentUriService } from "./payment-uri.service";
+import { AmountPoolService } from "./amount-pool.service";
+import { PaymentUriService } from "./payment-uri.service";
 
 const COOLDOWN_MULTIPLIER = 2;
 

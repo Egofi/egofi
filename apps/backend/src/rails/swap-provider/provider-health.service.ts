@@ -1,7 +1,7 @@
 import type { SwapProvider } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
 import Decimal from "decimal.js";
-import type { PrismaService } from "../../core/prisma.service";
+import { PrismaService } from "../../core/prisma.service";
 
 const LOOKBACK_HOURS = 24;
 // A provider whose recent success rate drops below this is demoted behind

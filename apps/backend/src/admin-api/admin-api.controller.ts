@@ -2,7 +2,7 @@ import type { FeePolicy } from "@egofi/types";
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AdminAuthGuard } from "../auth/guards/admin-auth.guard";
-import type { AdminApiService } from "./admin-api.service";
+import { AdminApiService } from "./admin-api.service";
 
 @ApiTags("admin")
 @UseGuards(AdminAuthGuard)

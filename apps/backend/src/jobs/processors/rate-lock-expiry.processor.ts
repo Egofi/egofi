@@ -1,7 +1,7 @@
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import type { InvoicesService } from "../../invoices/invoices.service";
+import { InvoicesService } from "../../invoices/invoices.service";
 import { BaseProcessor } from "../base.processor";
 import { QUEUES } from "../queues";
 

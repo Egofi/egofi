@@ -7,10 +7,10 @@ import {
   type NestInterceptor,
   SetMetadata,
 } from "@nestjs/common";
-import type { Reflector } from "@nestjs/core";
+import { Reflector } from "@nestjs/core";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { type Observable, firstValueFrom, from } from "rxjs";
-import type { RedisService } from "../core/redis.service";
+import { RedisService } from "../core/redis.service";
 
 export const SKIP_IDEMPOTENCY_KEY = "egofi:skip-idempotency";
 

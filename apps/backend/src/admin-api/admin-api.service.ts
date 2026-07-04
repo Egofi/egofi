@@ -1,8 +1,8 @@
 import type { FeePolicy } from "@egofi/types";
 import { Injectable } from "@nestjs/common";
 import type { FeePolicy as FeePolicyRow, MerchantStatus, Prisma } from "@prisma/client";
-import type { PrismaService } from "../core/prisma.service";
-import type { LedgerService } from "../ledger/ledger.service";
+import { PrismaService } from "../core/prisma.service";
+import { LedgerService } from "../ledger/ledger.service";
 
 // The DB stores fee config as flat columns; the API/UI use a nested DTO. Map
 // between them here so the two shapes never leak into each other.

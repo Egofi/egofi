@@ -1,12 +1,12 @@
 import { RailStatus, RailType, RateType } from "@egofi/types";
 import type { SwapProvider } from "@egofi/types";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import type { PrismaService } from "../../core/prisma.service";
+import { PrismaService } from "../../core/prisma.service";
 import type { Invoice, PaymentInstructions, RailEvent, RouteQuery } from "../rail.interface";
 import type { SettlementRail } from "../rail.interface";
-import type { ProviderHealthService } from "./provider-health.service";
-import type { ChangeNowAdapter } from "./providers/changenow.adapter";
-import type { SimpleSwapAdapter } from "./providers/simpleswap.adapter";
+import { ProviderHealthService } from "./provider-health.service";
+import { ChangeNowAdapter } from "./providers/changenow.adapter";
+import { SimpleSwapAdapter } from "./providers/simpleswap.adapter";
 
 @Injectable()
 export class SwapProviderRail implements SettlementRail {

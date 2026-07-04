@@ -4,7 +4,7 @@ import type { Merchant } from "@prisma/client";
 import { IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import type { MerchantsService } from "./merchants.service";
+import { MerchantsService } from "./merchants.service";
 
 class UpdateProfileBodyDto {
   @IsString()
