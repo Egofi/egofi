@@ -6,7 +6,7 @@ import type {
 import { Injectable, NotFoundException } from "@nestjs/common";
 import type { Prisma, SubscriptionPlan } from "@prisma/client";
 import Decimal from "decimal.js";
-import type { PrismaService } from "../core/prisma.service";
+import { PrismaService } from "../core/prisma.service";
 
 @Injectable()
 export class SubscriptionsService {

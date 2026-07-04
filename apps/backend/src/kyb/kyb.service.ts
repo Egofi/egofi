@@ -7,9 +7,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import type { KybDocument } from "@prisma/client";
-import type { OutboxService } from "../core/outbox.service";
-import type { PrismaService } from "../core/prisma.service";
-import type { CloudinaryService } from "./cloudinary.service";
+import { OutboxService } from "../core/outbox.service";
+import { PrismaService } from "../core/prisma.service";
+import { CloudinaryService } from "./cloudinary.service";
 import { KYB_TIERS, MINIMUM_SUBMISSION_DOCS } from "./kyb.tiers";
 
 const ALLOWED_MIME = new Set([

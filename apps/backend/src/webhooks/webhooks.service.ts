@@ -1,12 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { InvoiceState, PaymentLeg, RailType } from "@egofi/types";
 import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import Decimal from "decimal.js";
 import { z } from "zod";
-import type { PrismaService } from "../core/prisma.service";
-import type { InvoicesService } from "../invoices/invoices.service";
-import type { AmountPoolService } from "../rails/direct-transfer/amount-pool.service";
+import { PrismaService } from "../core/prisma.service";
+import { InvoicesService } from "../invoices/invoices.service";
+import { AmountPoolService } from "../rails/direct-transfer/amount-pool.service";
 
 const TatumWebhookSchema = z.object({
   subscriptionId: z.string(),

@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 import { AdminAuthGuard } from "../auth/guards/admin-auth.guard";
-import type { KybService } from "./kyb.service";
+import { KybService } from "./kyb.service";
 
 class ApproveKybDto {
   @IsInt()

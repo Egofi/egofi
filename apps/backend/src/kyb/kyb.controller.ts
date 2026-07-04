@@ -16,7 +16,7 @@ import type { FastifyRequest } from "fastify";
 import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { SkipIdempotency } from "../shared";
-import type { KybService } from "./kyb.service";
+import { KybService } from "./kyb.service";
 
 @ApiTags("kyb")
 @UseGuards(JwtAuthGuard)

@@ -1,7 +1,7 @@
 import type { CreateInvoiceDto, SubscribeNotifyDto } from "@egofi/types";
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import type { CheckoutService } from "./checkout.service";
+import { CheckoutService } from "./checkout.service";
 
 @ApiTags("checkout")
 @Controller("checkout")

@@ -1,7 +1,7 @@
 import { Controller, Get, Header, Res } from "@nestjs/common";
 import { ApiExcludeController } from "@nestjs/swagger";
 import type { FastifyReply } from "fastify";
-import type { MetricsService } from "./metrics.service";
+import { MetricsService } from "./metrics.service";
 
 @ApiExcludeController()
 @Controller("metrics")

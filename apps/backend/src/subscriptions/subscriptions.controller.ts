@@ -15,7 +15,7 @@ import {
 } from "class-validator";
 import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import type { SubscriptionsService } from "./subscriptions.service";
+import { SubscriptionsService } from "./subscriptions.service";
 
 class CreateSubscriptionPlanBodyDto {
   @IsString()
