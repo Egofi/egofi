@@ -43,9 +43,28 @@ export interface CheckoutSessionDto {
     exactAmount: string;
     asset: string;
     chain: string;
+    /**
+     * Payment URI for the plain "Address" tab — for on-chain wallets this is
+     * the bare address; some rails embed the amount here too.
+     */
     paymentUri: string;
+    /**
+     * Payment URI with the exact amount pre-filled (BIP-21 / EIP-681 / Solana
+     * Pay / TronLink). Powers the "With amount" tab and WalletConnect deep
+     * link. Falls back to `paymentUri` when the rail can't embed an amount.
+     */
+    paymentUriWithAmount: string;
     qrData: string;
     expiresAt: string;
+    /**
+     * ISO timestamp the locked rate is valid until. After this the customer is
+     * re-quoted. Mirrors `invoice.rateLockedUntil` for convenience.
+     */
+    rateLockedUntil: string;
+    /** Minimum acceptable deposit in base units; below this can't be processed. */
+    minAmount?: string;
+    /** Human label e.g. "Send BTC on the Bitcoin network". */
+    networkLabel?: string;
     providerRef?: string;
   };
 }
@@ -57,4 +76,14 @@ export interface InvoiceStatusDto {
   depositTxHash?: string;
   payoutTxHash?: string;
   updatedAt: string;
+}
+
+/** Body for POST /checkout/sessions/:id/notify — subscribe an email to status updates. */
+export interface SubscribeNotifyDto {
+  email: string;
+}
+
+export interface NotifySubscriptionDto {
+  ok: boolean;
+  email: string;
 }

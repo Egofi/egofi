@@ -1,10 +1,10 @@
 import type { CreateMerchantDto } from "@egofi/types";
 import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
-import type { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import type { Prisma } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
-import type { PrismaService } from "../core/prisma.service";
+import { PrismaService } from "../core/prisma.service";
 
 @Injectable()
 export class AuthService {

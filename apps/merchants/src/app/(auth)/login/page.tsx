@@ -4,7 +4,10 @@ import { createApiClient } from "@egofi/sdk";
 import { Button, Input } from "@egofi/ui";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { safeNext } from "../../../lib/auth";
 
+// Login uses its own client (no onUnauthorized) so an invalid-credentials 401
+// shows an error instead of redirecting back to /login.
 const api = createApiClient();
 
 export default function LoginPage() {
@@ -21,7 +24,9 @@ export default function LoginPage() {
     try {
       const { accessToken } = await api.auth.login(email, password);
       localStorage.setItem("egofi_token", accessToken);
-      router.push("/dashboard");
+      // Return to the page the merchant was on before being logged out.
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(safeNext(next));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

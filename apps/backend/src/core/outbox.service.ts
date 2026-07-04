@@ -1,7 +1,7 @@
 import { OutboxStatus } from "@egofi/types";
 import { Injectable, Logger } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
-import type { PrismaService } from "./prisma.service";
+import { PrismaService } from "./prisma.service";
 
 const MAX_ATTEMPTS = 10;
 const BASE_BACKOFF_MS = 5_000;

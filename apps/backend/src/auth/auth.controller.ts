@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { SkipIdempotency } from "../shared";
-import type { AuthService } from "./auth.service";
+import { AuthService } from "./auth.service";
 import { CurrentMerchant } from "./decorators/current-merchant.decorator";
-import type { AdminLoginDto, LoginDto, RegisterDto } from "./dto/auth.dto";
+import { AdminLoginDto, LoginDto, RegisterDto } from "./dto/auth.dto";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 
 @ApiTags("auth")

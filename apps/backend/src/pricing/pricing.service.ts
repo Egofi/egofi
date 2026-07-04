@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import Decimal from "decimal.js";
-import type { RedisService } from "../core/redis.service";
+import { RedisService } from "../core/redis.service";
 
 const RATE_CACHE_TTL = 60; // seconds
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";

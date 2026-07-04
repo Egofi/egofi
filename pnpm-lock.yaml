@@ -299,12 +299,18 @@ importers:
       '@egofi/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      cryptocurrency-icons:
+        specifier: ^0.18.1
+        version: 0.18.1
       decimal.js:
         specifier: ^10.5.0
         version: 10.6.0
       next:
         specifier: ^15.1.6
         version: 15.5.20(@opentelemetry/api@1.9.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -318,6 +324,9 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.20.0
+      '@types/qrcode':
+        specifier: ^1.5.5
+        version: 1.5.6
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.31
@@ -2125,6 +2134,9 @@ packages:
   crypto@1.0.1:
     resolution: {integrity: sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==}
     deprecated: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
+
+  cryptocurrency-icons@0.18.1:
+    resolution: {integrity: sha512-dvR5O8JOmav3559Yb0Igpkia+3vpt/aeNvMu5ZIVUG2Bzpq9wNcOJRIQas49XJrPjtZ98GAEn3aDQO+w7uhS2w==}
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -5907,6 +5919,8 @@ snapshots:
       which: 2.0.2
 
   crypto@1.0.1: {}
+
+  cryptocurrency-icons@0.18.1: {}
 
   cssesc@3.0.0: {}
 

@@ -3,6 +3,7 @@ export * from "./rail.js";
 export * from "./merchant.js";
 export * from "./kyb.js";
 export * from "./invoice.js";
+export * from "./subscription.js";
 export * from "./webhook.js";
 export * from "./fee.js";
 export * from "./swap.js";

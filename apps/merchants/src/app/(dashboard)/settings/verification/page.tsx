@@ -1,14 +1,13 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { KybDocumentDto, KybOverview } from "@egofi/types";
 import { KybDocumentType, KybStatus } from "@egofi/types";
 import { Badge, Button, Card, CardContent, Skeleton, cn } from "@egofi/ui";
 import { useEffect, useState } from "react";
+import { api } from "../../../../lib/api";
+import { loginRedirect } from "../../../../lib/auth";
 import { KYB_STATUS_META, formatCap } from "../../../../lib/kyb-meta";
 import { DocumentSlot } from "./DocumentSlot";
-
-const api = createApiClient();
 
 const TIER1_DOCS = [KybDocumentType.BusinessRegistration, KybDocumentType.DirectorId];
 const TIER2_DOCS = [
@@ -25,7 +24,7 @@ export default function VerificationPage() {
   const load = async () => {
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);
