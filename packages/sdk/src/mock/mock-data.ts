@@ -171,6 +171,32 @@ export function getMockCheckoutState(invoiceId: string): InvoiceState {
   return state;
 }
 
+const MOCK_ADDRESSES: Record<string, string> = {
+  TRON: "TJYeasTPa6gpR4vF4ycuPCRbXfRBXgqVXK",
+  SOLANA: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  BITCOIN: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+};
+
+const CHAIN_URI_SCHEME: Record<string, string> = {
+  TRON: "tron",
+  SOLANA: "solana",
+  BITCOIN: "bitcoin",
+  ETHEREUM: "ethereum",
+  BSC: "ethereum",
+  POLYGON: "ethereum",
+  BASE: "ethereum",
+};
+
+const CHAIN_DISPLAY_NAMES: Record<string, string> = {
+  ETHEREUM: "Ethereum",
+  BSC: "BNB Smart Chain",
+  POLYGON: "Polygon",
+  BASE: "Base",
+  TRON: "Tron",
+  SOLANA: "Solana",
+  BITCOIN: "Bitcoin",
+};
+
 export function buildMockCheckoutSession(
   invoiceId: string,
   payAsset = "USDT-TRC20",
@@ -179,6 +205,12 @@ export function buildMockCheckoutSession(
   currency = "USD",
 ): CheckoutSessionDto {
   const expiresAt = new Date(Date.now() + 30 * 60_000).toISOString();
+  const rateLockedUntil = new Date(Date.now() + 15 * 60_000).toISOString();
+  const chainKey = payChain.toUpperCase();
+  const depositAddress = MOCK_ADDRESSES[chainKey] ?? "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+  const scheme = CHAIN_URI_SCHEME[chainKey] ?? "ethereum";
+  const chainName = CHAIN_DISPLAY_NAMES[chainKey] ?? payChain;
+
   return {
     invoice: {
       id: invoiceId,
@@ -189,7 +221,7 @@ export function buildMockCheckoutSession(
       payChain,
       quotedAmount: amount,
       rate: "1.000000",
-      rateLockedUntil: expiresAt,
+      rateLockedUntil,
       rail: payChain === "TRON" ? RailType.DirectTransfer : RailType.SwapProvider,
       railRef: payChain !== "TRON" ? "mock_changenow_ref" : null,
       state: getMockCheckoutState(invoiceId),
@@ -198,20 +230,16 @@ export function buildMockCheckoutSession(
       createdAt: new Date().toISOString(),
     },
     instructions: {
-      depositAddress:
-        payChain === "TRON"
-          ? "TJYeasTPa6gpR4vF4ycuPCRbXfRBXgqVXK"
-          : payChain === "SOLANA"
-            ? "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
-            : payChain === "BITCOIN"
-              ? "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-              : "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      depositAddress,
       exactAmount: (Number.parseFloat(amount) * 1e6).toFixed(0),
       asset: payAsset,
       chain: payChain,
-      paymentUri: `tron:TJYeasTPa6gpR4vF4ycuPCRbXfRBXgqVXK?amount=${amount}`,
-      qrData: `tron:TJYeasTPa6gpR4vF4ycuPCRbXfRBXgqVXK?amount=${amount}`,
+      paymentUri: depositAddress,
+      paymentUriWithAmount: `${scheme}:${depositAddress}?amount=${amount}`,
+      qrData: depositAddress,
       expiresAt,
+      rateLockedUntil,
+      networkLabel: `Send ${payAsset} on the ${chainName} network`,
     },
   };
 }

@@ -3,6 +3,7 @@ import type {
   CreateInvoiceDto,
   CreateInvoicePayload,
   CreateMerchantDto,
+  CreateSubscriptionPlanDto,
   FeePolicy,
   InvoiceDto,
   InvoiceStatusDto,
@@ -11,6 +12,8 @@ import type {
   KybOverview,
   KybReviewItem,
   MerchantProfile,
+  NotifySubscriptionDto,
+  SubscriptionPlanDto,
   UpdateProfileDto,
   UpdateSettlementDto,
 } from "@egofi/types";
@@ -165,6 +168,10 @@ export class EgofiClient {
       this.request<CheckoutSessionDto>("GET", `/checkout/sessions/${invoiceId}`),
     getStatus: (invoiceId: string) =>
       this.request<InvoiceStatusDto>("GET", `/checkout/sessions/${invoiceId}/status`),
+    subscribeNotify: (invoiceId: string, email: string) =>
+      this.request<NotifySubscriptionDto>("POST", `/checkout/sessions/${invoiceId}/notify`, {
+        email,
+      }),
   };
 
   // Invoices (merchant)
@@ -185,6 +192,19 @@ export class EgofiClient {
       );
     },
     get: (id: string) => this.request<InvoiceDto>("GET", `/invoices/${id}`),
+  };
+
+  // Subscription plans (merchant)
+  readonly subscriptions = {
+    create: (payload: CreateSubscriptionPlanDto) =>
+      this.request<SubscriptionPlanDto>("POST", "/subscriptions", payload),
+    list: (search?: string) =>
+      this.request<{ data: SubscriptionPlanDto[]; total: number }>(
+        "GET",
+        `/subscriptions${search ? `?search=${encodeURIComponent(search)}` : ""}`,
+      ),
+    get: (id: string) => this.request<SubscriptionPlanDto>("GET", `/subscriptions/${id}`),
+    delete: (id: string) => this.request<{ ok: boolean }>("DELETE", `/subscriptions/${id}`),
   };
 
   // Merchant settings

@@ -24,6 +24,7 @@ import {
   ProblemDetailsFilter,
   validateEnv,
 } from "./shared";
+import { SubscriptionsModule } from "./subscriptions/subscriptions.module";
 import { WebhooksModule } from "./webhooks/webhooks.module";
 
 @Module({
@@ -41,6 +42,7 @@ import { WebhooksModule } from "./webhooks/webhooks.module";
     MerchantsModule,
     InvoicesModule,
     CheckoutModule,
+    SubscriptionsModule,
     RailsModule,
     ChainModule,
     PricingModule,

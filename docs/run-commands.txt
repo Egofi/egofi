@@ -1,23 +1,9 @@
-Option A — Full stack (real backend)
-1. Infrastructure — already running, but if you ever restart:
-
-
-docker compose -f docker-compose.dev.yml up -d
-
-Note the remapped ports: Postgres 5433, Redis 6380 (your flasharb project holds the defaults). The backend .env already points at these.
-
-2. One port conflict to resolve first: flasharb-grafana occupies 3002, which is the merchants app's port. Either stop it:
-
-
-docker stop flasharb-grafana
-or run the merchants app on another port later (pnpm --filter @egofi/merchants dev -- --port 3005).
-
-3. Run all apps:
-
-
 pnpm turbo run dev --parallel
 Or individually in separate terminals if you want cleaner logs:
 
+docker compose -f docker-compose.dev.yml up -d
+
+corepack pnpm --filter @egofi/backend db:migrate
 
 pnpm --filter @egofi/backend dev      # API on :3000
 pnpm --filter @egofi/checkout dev     # :3001
