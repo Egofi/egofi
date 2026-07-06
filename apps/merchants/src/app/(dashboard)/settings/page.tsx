@@ -1,12 +1,11 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { MerchantProfile } from "@egofi/types";
 import { Badge, Button, Card, CardContent, Input, Skeleton } from "@egofi/ui";
 import { type FormEvent, useEffect, useState } from "react";
 import { CopyButton } from "../../../lib/CopyButton";
-
-const api = createApiClient();
+import { api } from "../../../lib/api";
+import { loginRedirect } from "../../../lib/auth";
 
 function initials(name: string): string {
   return name
@@ -26,7 +25,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);

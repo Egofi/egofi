@@ -1,11 +1,10 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { MerchantProfile } from "@egofi/types";
 import { Button, Card, CardContent, Input, Skeleton } from "@egofi/ui";
 import { type FormEvent, useEffect, useState } from "react";
-
-const api = createApiClient();
+import { api } from "../../../../lib/api";
+import { loginRedirect } from "../../../../lib/auth";
 
 const ADDRESS_FIELDS = [
   {
@@ -46,7 +45,7 @@ export default function SettlementPage() {
   useEffect(() => {
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);

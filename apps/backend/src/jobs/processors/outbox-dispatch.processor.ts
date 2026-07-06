@@ -1,10 +1,10 @@
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
-import type { OutboxService } from "../../core/outbox.service";
-import type { PrismaService } from "../../core/prisma.service";
+import { OutboxService } from "../../core/outbox.service";
+import { PrismaService } from "../../core/prisma.service";
 import { BaseProcessor } from "../base.processor";
-import type { JobsService } from "../jobs.service";
+import { JobsService } from "../jobs.service";
 import { QUEUES } from "../queues";
 
 /**

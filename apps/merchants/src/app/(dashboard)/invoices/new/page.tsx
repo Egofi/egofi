@@ -1,29 +1,13 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { InvoiceDto } from "@egofi/types";
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@egofi/ui";
-import { type FormEvent, useState } from "react";
-import { CopyButton } from "../../../../lib/CopyButton";
-import { checkoutUrl } from "../../../../lib/checkout-url";
-
-const api = createApiClient();
-
-// What the customer pays with. Each option maps to a (payAsset, payChain) pair.
-const PAY_OPTIONS = [
-  { label: "USDT · Tron (TRC-20)", asset: "USDT", chain: "TRON" },
-  { label: "USDT · BSC (BEP-20)", asset: "USDT", chain: "BSC" },
-  { label: "USDT · Polygon", asset: "USDT", chain: "POLYGON" },
-  { label: "USDT · Ethereum", asset: "USDT", chain: "ETHEREUM" },
-  { label: "USDC · Solana", asset: "USDC", chain: "SOLANA" },
-  { label: "USDC · Base", asset: "USDC", chain: "BASE" },
-  { label: "USDC · Polygon", asset: "USDC", chain: "POLYGON" },
-  { label: "Bitcoin", asset: "BTC", chain: "BITCOIN" },
-  { label: "Ethereum", asset: "ETH", chain: "ETHEREUM" },
-  { label: "Solana", asset: "SOL", chain: "SOLANA" },
-  { label: "BNB · BSC", asset: "BNB", chain: "BSC" },
-  { label: "TRX · Tron", asset: "TRX", chain: "TRON" },
-] as const;
+import { Button } from "@egofi/ui";
+import { type FormEvent, useMemo, useState } from "react";
+import { CurrencySelect } from "../../../../lib/CurrencySelect";
+import { OrderDetails } from "../../../../lib/OrderDetails";
+import { api } from "../../../../lib/api";
+import { loginRedirect } from "../../../../lib/auth";
+import { PAY_CURRENCIES, minPaymentUsd, networkOf } from "../../../../lib/crypto-assets";
 
 const CURRENCIES = ["USD", "NGN", "EUR", "GBP", "GHS", "KES", "ZAR"];
 
@@ -35,254 +19,368 @@ const TTL_OPTIONS = [
   { label: "24 hours", value: 86400 },
 ];
 
+const DEFAULT_CURRENCY = "USDT-TRON";
+
+function InfoDot({ text }: { text: string }) {
+  return (
+    <span
+      title={text}
+      className="inline-flex size-4 cursor-help items-center justify-center rounded-full text-info-500"
+      aria-label={text}
+    >
+      <svg viewBox="0 0 16 16" fill="currentColor" className="size-4" aria-hidden>
+        <path
+          fillRule="evenodd"
+          d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zM8 4a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-1.5 0v-.5A.75.75 0 0 1 8 4zm.75 3.25a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function CheckField({
+  label,
+  checked,
+  onChange,
+  info,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  info: string;
+}) {
+  return (
+    <label className="flex cursor-pointer select-none items-center gap-2">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="size-4 rounded border-navy-300 text-primary focus:ring-2 focus:ring-primary-500/40"
+      />
+      <span className="text-sm font-medium text-navy-800">{label}</span>
+      <InfoDot text={info} />
+    </label>
+  );
+}
+
 export default function NewInvoicePage() {
-  const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("USD");
-  const [payOptionIdx, setPayOptionIdx] = useState(0);
-  const [refundAddress, setRefundAddress] = useState("");
+  const [currencyId, setCurrencyId] = useState(DEFAULT_CURRENCY);
+  const [price, setPrice] = useState("");
+  const [priceCurrency, setPriceCurrency] = useState("USD");
+  const [fixedRate, setFixedRate] = useState(false);
+  const [feePaidByUser, setFeePaidByUser] = useState(false);
+  const [orderId, setOrderId] = useState("");
+  const [showDescription, setShowDescription] = useState(false);
+  const [description, setDescription] = useState("");
+  const [showCustomer, setShowCustomer] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [ttlSeconds, setTtlSeconds] = useState(1800);
+  const [refundAddress, setRefundAddress] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<InvoiceDto | null>(null);
 
+  const currency = useMemo(
+    () => PAY_CURRENCIES.find((c) => c.id === currencyId) ?? PAY_CURRENCIES[0]!,
+    [currencyId],
+  );
+  const net = networkOf(currency.chain);
+  const minUsd = minPaymentUsd(currency.chain);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!amount || Number(amount) <= 0) {
-      setError("Enter an amount greater than zero");
+    if (!price || Number(price) <= 0) {
+      setError("Enter a price greater than zero");
       return;
     }
     const token = localStorage.getItem("egofi_token");
     if (!token) {
-      window.location.href = "/login";
+      loginRedirect();
       return;
     }
     api.setAuthToken(token);
-    const opt = PAY_OPTIONS[payOptionIdx]!;
+
+    // Optional extras ride along as invoice metadata — the API stores them
+    // verbatim and they surface in the dashboard + webhooks.
+    const metadata: Record<string, unknown> = {
+      fixedRate,
+      feePaidByUser,
+      ...(orderId ? { orderId } : {}),
+      ...(description ? { description } : {}),
+      ...(customerName || customerEmail
+        ? {
+            customer: {
+              ...(customerName ? { name: customerName } : {}),
+              ...(customerEmail ? { email: customerEmail } : {}),
+            },
+          }
+        : {}),
+    };
+
     setLoading(true);
     try {
       const invoice = await api.invoices.create({
-        displayCurrency: currency,
-        displayAmount: amount,
-        payAsset: opt.asset,
-        payChain: opt.chain,
+        displayCurrency: priceCurrency,
+        displayAmount: price,
+        payAsset: currency.asset,
+        payChain: currency.chain,
         ttlSeconds,
         ...(refundAddress ? { refundAddress } : {}),
+        metadata,
       });
       setCreated(invoice);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create the invoice");
+      setError(err instanceof Error ? err.message : "Could not create the payment link");
     } finally {
       setLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setCreated(null);
-    setAmount("");
-    setRefundAddress("");
-  };
-
-  // ── Success view ──────────────────────────────────────────────
+  // ── Order details (post-create) ───────────────────────────────
   if (created) {
-    const url = checkoutUrl(created.id);
     return (
-      <div className="mx-auto max-w-2xl space-y-6 p-6 lg:p-10">
-        <div className="animate-fade-in-up">
-          <Card>
-            <CardContent className="p-8">
-              <div className="flex flex-col items-center text-center">
-                <span className="flex size-14 items-center justify-center rounded-full bg-success-50">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="size-7 text-success-500"
-                    aria-hidden
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                <h1 className="mt-4 text-xl font-bold tracking-tight text-navy-950">
-                  Payment link created
-                </h1>
-                <p className="mt-1 text-sm text-navy-500">
-                  Share this link with your customer. It expires with the invoice.
-                </p>
-              </div>
-
-              {/* Shareable link */}
-              <div className="mt-6 flex items-center gap-2 rounded-xl border border-navy-100 bg-navy-50/50 p-3">
-                <span className="min-w-0 flex-1 truncate font-mono text-sm text-navy-800">
-                  {url}
-                </span>
-                <CopyButton text={url} label="payment link" />
-              </div>
-
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1">
-                  <Button variant="secondary" className="w-full">
-                    Open checkout
-                  </Button>
-                </a>
-                <a href={`/invoices/${created.id}`} className="flex-1">
-                  <Button variant="secondary" className="w-full">
-                    View invoice
-                  </Button>
-                </a>
-              </div>
-
-              <div className="mt-6 border-t border-navy-100 pt-6 text-sm">
-                <dl className="grid grid-cols-2 gap-y-3">
-                  <dt className="text-navy-500">Amount</dt>
-                  <dd className="text-right font-semibold text-navy-900">
-                    {created.displayAmount} {created.displayCurrency}
-                  </dd>
-                  <dt className="text-navy-500">Customer pays</dt>
-                  <dd className="text-right text-navy-900">
-                    {created.payAsset} · {created.payChain}
-                  </dd>
-                  <dt className="text-navy-500">Invoice ID</dt>
-                  <dd className="text-right font-mono text-xs text-navy-700">{created.id}</dd>
-                </dl>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              + Create another payment link
-            </button>
-          </div>
-        </div>
+      <div className="mx-auto max-w-lg p-4 sm:p-6 lg:p-10">
+        <OrderDetails
+          invoiceId={created.id}
+          onCreateAnother={() => {
+            setCreated(null);
+            setPrice("");
+            setOrderId("");
+            setDescription("");
+          }}
+        />
       </div>
     );
   }
 
-  // ── Form view ─────────────────────────────────────────────────
+  // ── Form (modal-style) ────────────────────────────────────────
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6 lg:p-10">
-      <header>
-        <a href="/invoices" className="text-sm font-medium text-navy-400 hover:text-navy-700">
-          ← Invoices
-        </a>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-navy-950">New payment link</h1>
-        <p className="mt-1 text-sm text-navy-500">
-          Set the amount and what the customer pays with. We generate a hosted checkout page you can
-          share anywhere.
-        </p>
-      </header>
+    <div className="mx-auto max-w-lg p-4 sm:p-6 lg:p-10">
+      <form
+        onSubmit={handleSubmit}
+        className="animate-fade-in-up rounded-3xl border border-navy-100 bg-white p-6 shadow-lg sm:p-8"
+      >
+        <div className="flex items-start justify-between">
+          <h1 className="text-xl font-bold tracking-tight text-navy-950">Create payment link</h1>
+          <a
+            href="/invoices"
+            aria-label="Close"
+            className="rounded-lg p-1.5 text-navy-400 transition-colors hover:bg-navy-100 hover:text-navy-700"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+            <span className="sr-only">Close</span>
+          </a>
+        </div>
 
-      <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Amount + currency */}
-            <div className="grid grid-cols-[1fr_auto] gap-3">
-              <Input
-                label="Amount"
+        <div className="mt-6 space-y-5">
+          {/* Pay currency */}
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-navy-500">Pay currency</span>
+            <CurrencySelect value={currencyId} onChange={setCurrencyId} />
+          </div>
+
+          {/* Price + fiat currency */}
+          <div>
+            <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-navy-500">
+              Price
+            </label>
+            <div className="flex items-stretch overflow-hidden rounded-xl border border-navy-200 bg-white transition-colors focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10">
+              <input
+                id="price"
                 type="number"
                 inputMode="decimal"
                 step="any"
                 min="0"
                 placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent px-4 py-3 text-navy-900 placeholder:text-navy-400 focus:outline-none"
                 required
-                {...(error ? { error } : {})}
               />
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="currency" className="text-sm font-medium text-navy-800">
-                  Currency
-                </label>
-                <select
-                  id="currency"
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="h-[42px] rounded-lg border border-navy-200 bg-white px-3 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Pay with */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="pay-with" className="text-sm font-medium text-navy-800">
-                Customer pays with
-              </label>
               <select
-                id="pay-with"
-                value={payOptionIdx}
-                onChange={(e) => setPayOptionIdx(Number(e.target.value))}
-                className="w-full rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
+                value={priceCurrency}
+                onChange={(e) => setPriceCurrency(e.target.value)}
+                aria-label="Price currency"
+                className="border-l border-navy-100 bg-navy-50 px-3 text-sm font-medium text-navy-700 focus:outline-none"
               >
-                {PAY_OPTIONS.map((o, i) => (
-                  <option key={o.label} value={i}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-sm text-navy-400">
-                We convert this to your settlement asset automatically — you always receive what's
-                configured in Settings.
-              </p>
-            </div>
-
-            {/* Expiry */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="ttl" className="text-sm font-medium text-navy-800">
-                Link expires after
-              </label>
-              <select
-                id="ttl"
-                value={ttlSeconds}
-                onChange={(e) => setTtlSeconds(Number(e.target.value))}
-                className="w-full rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
-              >
-                {TTL_OPTIONS.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
                   </option>
                 ))}
               </select>
             </div>
+            {error && <p className="mt-1.5 text-xs text-danger-600">{error}</p>}
+          </div>
 
-            {/* Refund address (optional) */}
-            <Input
-              label="Refund address (optional)"
-              placeholder="Where to return funds if a swap fails"
-              value={refundAddress}
-              onChange={(e) => setRefundAddress(e.target.value)}
-              hint="Strongly recommended for cross-chain payments — swap providers can require it."
-              className="font-mono"
+          {/* Toggles */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <CheckField
+              label="Fixed rate"
+              checked={fixedRate}
+              onChange={setFixedRate}
+              info="Locks the exchange rate for the payment window. The customer must send the exact amount before the timer expires."
             />
-          </CardContent>
-        </Card>
+            <CheckField
+              label="Fee paid by user"
+              checked={feePaidByUser}
+              onChange={setFeePaidByUser}
+              info="Adds the network and processing fee on top of the price so your customer covers it, not you."
+            />
+          </div>
 
-        <div className="mt-6 flex items-center gap-3">
-          <Button type="submit" loading={loading} size="lg">
-            Create payment link
-          </Button>
-          <a href="/invoices">
-            <Button type="button" variant="ghost" size="lg">
-              Cancel
-            </Button>
-          </a>
+          <hr className="border-navy-100" />
+
+          {/* Order ID */}
+          <div>
+            <input
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              placeholder="Order ID"
+              className="w-full rounded-xl border border-navy-200 bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+            />
+          </div>
+
+          {/* Add description */}
+          {showDescription ? (
+            <div>
+              <label htmlFor="desc" className="mb-1.5 block text-sm font-medium text-navy-500">
+                Description
+              </label>
+              <textarea
+                id="desc"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="What is this payment for?"
+                className="w-full rounded-xl border border-navy-200 bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowDescription(true)}
+              className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-700"
+            >
+              <span className="flex size-5 items-center justify-center rounded border border-primary/40 text-primary">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
+                  <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5z" />
+                </svg>
+              </span>
+              Add description
+            </button>
+          )}
+
+          {/* Set customer info */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowCustomer((v) => !v)}
+              className="flex items-center gap-2 text-sm font-semibold text-navy-800 hover:text-navy-950"
+            >
+              Set customer info
+              <svg
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="size-3.5 text-primary"
+                aria-hidden
+              >
+                <path d="M11.013 2.513a1.75 1.75 0 0 1 2.475 2.474L6.226 12.25a2.75 2.75 0 0 1-1.117.68l-2.15.717a.75.75 0 0 1-.949-.949l.717-2.15a2.75 2.75 0 0 1 .68-1.116l7.606-7.606z" />
+              </svg>
+            </button>
+            {showCustomer && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <input
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Customer name"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                />
+                <input
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="Customer email"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Advanced (expiry + refund) */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              className="flex items-center gap-1.5 text-sm font-medium text-navy-400 hover:text-navy-700"
+            >
+              Advanced options
+              <svg
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className={`size-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+            {showAdvanced && (
+              <div className="mt-3 space-y-3">
+                <div>
+                  <label htmlFor="ttl" className="mb-1.5 block text-sm font-medium text-navy-500">
+                    Link expires after
+                  </label>
+                  <select
+                    id="ttl"
+                    value={ttlSeconds}
+                    onChange={(e) => setTtlSeconds(Number(e.target.value))}
+                    className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-900 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                  >
+                    {TTL_OPTIONS.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <input
+                  value={refundAddress}
+                  onChange={(e) => setRefundAddress(e.target.value)}
+                  placeholder="Refund address (optional)"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 font-mono text-sm text-navy-900 placeholder:font-sans placeholder:text-navy-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Minimum payment hint */}
+          <p className="text-sm text-navy-500">
+            Current <span className="font-medium text-primary">minimum payment amount</span> for{" "}
+            {currency.asset} on {net.fullName} is{" "}
+            <span className="font-medium tabular-nums text-navy-700">
+              {minUsd.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{" "}
+              USD
+            </span>
+          </p>
         </div>
+
+        <Button type="submit" loading={loading} size="lg" className="mt-6 w-full">
+          Confirm
+        </Button>
       </form>
     </div>
   );

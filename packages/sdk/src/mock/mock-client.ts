@@ -3,12 +3,14 @@ import type {
   CreateInvoiceDto,
   CreateInvoicePayload,
   CreateMerchantDto,
+  CreateSubscriptionPlanDto,
   FeePolicy,
   InvoiceDto,
   InvoiceStatusDto,
   KybDocumentDto,
   KybOverview,
   MerchantProfile,
+  SubscriptionPlanDto,
   UpdateSettlementDto,
 } from "@egofi/types";
 import { InvoiceState, KybDocumentStatus, type KybDocumentType, KybStatus } from "@egofi/types";
@@ -33,11 +35,17 @@ const inMemoryInvoices: InvoiceDto[] = [...MOCK_INVOICES];
 let currentMerchant: MerchantProfile = { ...MOCK_MERCHANT };
 const apiKeys = [...MOCK_API_KEYS];
 let mockMerchants = [...MOCK_MERCHANTS_LIST];
+let mockIpnSecret: string | null = null;
+const mockSubscriptionPlans: SubscriptionPlanDto[] = [];
+let subscriptionCounter = 0;
 const mockKybDocuments: KybDocumentDto[] = [];
 let mockKybStatus: KybStatus = KybStatus.Pending;
 let mockKybSubmittedAt: string | null = null;
 
 export class MockEgofiClient {
+  /** Parity with EgofiClient — never fired in mock mode. */
+  onUnauthorized?: () => void;
+
   readonly auth = {
     login: async (_email: string, _password: string) => {
       await delay(500);
@@ -111,6 +119,11 @@ export class MockEgofiClient {
         updatedAt: new Date().toISOString(),
       };
     },
+
+    subscribeNotify: async (_invoiceId: string, email: string) => {
+      await delay(400);
+      return { ok: true, email: email.trim().toLowerCase() };
+    },
   };
 
   readonly invoices = {
@@ -164,6 +177,55 @@ export class MockEgofiClient {
     },
   };
 
+  readonly subscriptions = {
+    create: async (payload: CreateSubscriptionPlanDto): Promise<SubscriptionPlanDto> => {
+      await delay(500);
+      const now = new Date().toISOString();
+      const plan: SubscriptionPlanDto = {
+        id: `sub_mock_${String(++subscriptionCounter).padStart(4, "0")}`,
+        merchantId: currentMerchant.id,
+        title: payload.title.trim(),
+        periodDuration: payload.periodDuration,
+        periodUnit: payload.periodUnit,
+        costPerPeriod: payload.costPerPeriod,
+        currency: (payload.currency ?? "USD").toUpperCase(),
+        ipnCallbackUrl: payload.ipnCallbackUrl?.trim() || null,
+        successUrl: payload.successUrl?.trim() || null,
+        failedUrl: payload.failedUrl?.trim() || null,
+        partialUrl: payload.partialUrl?.trim() || null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      mockSubscriptionPlans.unshift(plan);
+      return plan;
+    },
+
+    list: async (search?: string): Promise<{ data: SubscriptionPlanDto[]; total: number }> => {
+      await delay(250);
+      const q = search?.trim().toLowerCase();
+      const data = q
+        ? mockSubscriptionPlans.filter(
+            (p) => p.title.toLowerCase().includes(q) || p.id.toLowerCase().includes(q),
+          )
+        : mockSubscriptionPlans;
+      return { data: [...data], total: data.length };
+    },
+
+    get: async (id: string): Promise<SubscriptionPlanDto> => {
+      await delay(200);
+      const plan = mockSubscriptionPlans.find((p) => p.id === id);
+      if (!plan) throw new Error(`Subscription plan ${id} not found`);
+      return plan;
+    },
+
+    delete: async (id: string): Promise<{ ok: boolean }> => {
+      await delay(300);
+      const idx = mockSubscriptionPlans.findIndex((p) => p.id === id);
+      if (idx !== -1) mockSubscriptionPlans.splice(idx, 1);
+      return { ok: true };
+    },
+  };
+
   readonly merchant = {
     getProfile: async (): Promise<MerchantProfile> => {
       await delay(250);
@@ -213,6 +275,35 @@ export class MockEgofiClient {
       await delay(300);
       const idx = apiKeys.findIndex((k) => k.id === id);
       if (idx !== -1) apiKeys.splice(idx, 1);
+    },
+
+    getIntegration: async () => {
+      await delay(200);
+      return {
+        webhookUrl: currentMerchant.webhookUrl ?? null,
+        ipnSecret: mockIpnSecret,
+      };
+    },
+
+    setWebhookUrl: async (webhookUrl: string) => {
+      await delay(350);
+      const url = webhookUrl.trim();
+      if (url) {
+        currentMerchant = { ...currentMerchant, webhookUrl: url };
+      } else {
+        const { webhookUrl: _omit, ...rest } = currentMerchant;
+        currentMerchant = rest;
+      }
+      return {
+        webhookUrl: currentMerchant.webhookUrl ?? null,
+        ipnSecret: mockIpnSecret,
+      };
+    },
+
+    rotateIpnSecret: async () => {
+      await delay(350);
+      mockIpnSecret = `whsec_mock_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+      return { ipnSecret: mockIpnSecret };
     },
   };
 

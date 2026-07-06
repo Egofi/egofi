@@ -1,7 +1,7 @@
 import { ScreeningVerdict } from "@egofi/types";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import Decimal from "decimal.js";
-import type { PrismaService } from "../core/prisma.service";
+import { PrismaService } from "../core/prisma.service";
 import { volumeCapForTier } from "../kyb/kyb.tiers";
 
 export interface ComplianceCheck {

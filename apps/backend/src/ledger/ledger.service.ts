@@ -1,7 +1,7 @@
 import { LedgerEntryKind } from "@egofi/types";
 import { Injectable } from "@nestjs/common";
 import Decimal from "decimal.js";
-import type { PrismaService } from "../core/prisma.service";
+import { PrismaService } from "../core/prisma.service";
 
 @Injectable()
 export class LedgerService {

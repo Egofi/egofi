@@ -4,7 +4,7 @@ import type { Merchant } from "@prisma/client";
 import { IsInt, IsNumberString, IsObject, IsOptional, IsString, Max, Min } from "class-validator";
 import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import { MerchantAuthGuard } from "../auth/guards/merchant-auth.guard";
-import type { InvoicesService } from "./invoices.service";
+import { InvoicesService } from "./invoices.service";
 
 class CreateInvoiceBodyDto {
   @IsString()

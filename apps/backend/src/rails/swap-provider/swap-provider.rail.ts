@@ -1,12 +1,12 @@
 import { RailStatus, RailType, RateType } from "@egofi/types";
 import type { SwapProvider } from "@egofi/types";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import type { PrismaService } from "../../core/prisma.service";
+import { PrismaService } from "../../core/prisma.service";
 import type { Invoice, PaymentInstructions, RailEvent, RouteQuery } from "../rail.interface";
 import type { SettlementRail } from "../rail.interface";
-import type { ProviderHealthService } from "./provider-health.service";
-import type { ChangeNowAdapter } from "./providers/changenow.adapter";
-import type { SimpleSwapAdapter } from "./providers/simpleswap.adapter";
+import { ProviderHealthService } from "./provider-health.service";
+import { ChangeNowAdapter } from "./providers/changenow.adapter";
+import { SimpleSwapAdapter } from "./providers/simpleswap.adapter";
 
 @Injectable()
 export class SwapProviderRail implements SettlementRail {
@@ -44,6 +44,7 @@ export class SwapProviderRail implements SettlementRail {
     const fromAmount = invoice.quotedAmount.toString();
 
     let exchange: Awaited<ReturnType<SwapProvider["createExchange"]>> | null = null;
+    let selectedMinAmount: string | null = null;
     let lastError: unknown;
 
     // Health scoring reorders providers: a degraded provider (freeze-rate
@@ -53,6 +54,7 @@ export class SwapProviderRail implements SettlementRail {
     for (const provider of rankedProviders) {
       try {
         const minAmount = await provider.getMinAmount(invoice.payAsset, merchant.settlementAsset);
+        selectedMinAmount = minAmount;
         if (Number.parseFloat(fromAmount) < Number.parseFloat(minAmount)) {
           throw new BadRequestException(
             `Amount below ${provider.name} minimum of ${minAmount} ${invoice.payAsset}`,
@@ -142,8 +144,12 @@ export class SwapProviderRail implements SettlementRail {
       asset: invoice.payAsset,
       chain: invoice.payChain,
       expiresAt: new Date(exchange.validUntil),
-      paymentUri: `${invoice.payChain.toLowerCase()}:${exchange.depositAddress}?amount=${exchange.depositAmount}`,
+      paymentUri: exchange.depositAddress,
+      paymentUriWithAmount: `${invoice.payChain.toLowerCase()}:${exchange.depositAddress}?amount=${exchange.depositAmount}`,
       qrData: exchange.depositAddress,
+      ...(selectedMinAmount
+        ? { minAmount: BigInt(Math.round(Number.parseFloat(selectedMinAmount) * 1e6)) }
+        : {}),
       providerRef: exchange.id,
     };
   }

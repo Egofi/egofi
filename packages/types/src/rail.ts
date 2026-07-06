@@ -27,7 +27,11 @@ export interface PaymentInstructions {
   chain: string;
   expiresAt: Date;
   paymentUri: string;
+  /** Payment URI with amount embedded; falls back to paymentUri if unavailable. */
+  paymentUriWithAmount?: string;
   qrData: string;
+  /** Minimum acceptable deposit in base units (rail/provider minimum). */
+  minAmount?: bigint;
   providerRef?: string;
   memo?: string;
 }

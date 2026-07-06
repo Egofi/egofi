@@ -3,15 +3,16 @@ import type {
   CreateInvoiceDto,
   InvoiceDto,
   InvoiceStatusDto,
+  NotifySubscriptionDto,
   PaymentInstructions,
 } from "@egofi/types";
 import { InvoiceState, RailType } from "@egofi/types";
-import { Injectable, NotFoundException } from "@nestjs/common";
-import type { PrismaService } from "../core/prisma.service";
-import type { InvoicesService } from "../invoices/invoices.service";
-import type { JobsService } from "../jobs/jobs.service";
-import type { PricingService } from "../pricing/pricing.service";
-import type { RailRouter } from "../rails/rail.router";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../core/prisma.service";
+import { InvoicesService } from "../invoices/invoices.service";
+import { JobsService } from "../jobs/jobs.service";
+import { PricingService } from "../pricing/pricing.service";
+import { RailRouter } from "../rails/rail.router";
 
 // Maps a settlement asset label to the chain it settles on. Merchants configure
 // a single settlement asset (default USDT-TRC20); the payout chain is implied.
@@ -26,6 +27,26 @@ const SETTLEMENT_CHAIN: Record<string, string> = {
 function settlementChain(asset: string): string {
   return SETTLEMENT_CHAIN[asset.toUpperCase()] ?? "TRON";
 }
+
+// Friendly network names for the checkout "Send X on the Y network" line.
+const CHAIN_DISPLAY_NAMES: Record<string, string> = {
+  ETHEREUM: "Ethereum",
+  BSC: "BNB Smart Chain",
+  POLYGON: "Polygon",
+  BASE: "Base",
+  TRON: "Tron",
+  SOLANA: "Solana",
+  BITCOIN: "Bitcoin",
+};
+
+function networkLabel(asset: string, chain: string): string {
+  const chainName = CHAIN_DISPLAY_NAMES[chain.toUpperCase()] ?? chain;
+  return `Send ${asset} on the ${chainName} network`;
+}
+
+// Basic RFC-5322-ish email guard — the checkout notify endpoint is public, so
+// reject obviously malformed input before persisting.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Injectable()
 export class CheckoutService {
@@ -46,7 +67,7 @@ export class CheckoutService {
 
     return {
       invoice: { ...invoice, state: InvoiceState.AwaitingPayment },
-      instructions: this.toInstructionsDto(instructions),
+      instructions: this.toInstructionsDto(instructions, invoice.rateLockedUntil),
     };
   }
 
@@ -60,7 +81,10 @@ export class CheckoutService {
     if (invoice.state === InvoiceState.Draft) {
       const instructions = await this.issueInvoice(invoice);
       invoice = await this.invoices.get(invoiceId);
-      return { invoice, instructions: this.toInstructionsDto(instructions) };
+      return {
+        invoice,
+        instructions: this.toInstructionsDto(instructions, invoice.rateLockedUntil),
+      };
     }
 
     const dbInvoice = await this.prisma.invoice.findUnique({
@@ -69,18 +93,41 @@ export class CheckoutService {
     });
     if (!dbInvoice) throw new NotFoundException(`Session ${invoiceId} not found`);
 
+    const address = dbInvoice.depositAddress ?? "";
     return {
       invoice,
       instructions: {
-        depositAddress: dbInvoice.depositAddress ?? "",
+        depositAddress: address,
         exactAmount: dbInvoice.expectedAmount?.toString() ?? "0",
         asset: invoice.payAsset,
         chain: invoice.payChain,
-        paymentUri: "",
-        qrData: dbInvoice.depositAddress ?? "",
+        paymentUri: address,
+        paymentUriWithAmount: address,
+        qrData: address,
         expiresAt: dbInvoice.expiresAt.toISOString(),
+        rateLockedUntil: invoice.rateLockedUntil,
+        networkLabel: networkLabel(invoice.payAsset, invoice.payChain),
       },
     };
+  }
+
+  /**
+   * Subscribe an email to this checkout's status updates. Public endpoint —
+   * validate the email shape and persist it on the invoice so the notification
+   * worker can reach the payer when the merchant is credited.
+   */
+  async subscribeNotify(invoiceId: string, email: string): Promise<NotifySubscriptionDto> {
+    const trimmed = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(trimmed)) {
+      throw new BadRequestException("A valid email address is required");
+    }
+    // Ensure the invoice exists (throws NotFound otherwise).
+    await this.invoices.get(invoiceId);
+    await this.prisma.invoice.update({
+      where: { id: invoiceId },
+      data: { notifyEmail: trimmed },
+    });
+    return { ok: true, email: trimmed };
   }
 
   async getStatus(invoiceId: string): Promise<InvoiceStatusDto> {
@@ -167,15 +214,24 @@ export class CheckoutService {
     return instructions;
   }
 
-  private toInstructionsDto(instructions: PaymentInstructions): CheckoutSessionDto["instructions"] {
+  private toInstructionsDto(
+    instructions: PaymentInstructions,
+    rateLockedUntil: string,
+  ): CheckoutSessionDto["instructions"] {
     return {
       depositAddress: instructions.depositAddress,
       exactAmount: instructions.exactAmount.toString(),
       asset: instructions.asset,
       chain: instructions.chain,
       paymentUri: instructions.paymentUri,
+      paymentUriWithAmount: instructions.paymentUriWithAmount ?? instructions.paymentUri,
       qrData: instructions.qrData,
       expiresAt: instructions.expiresAt.toISOString(),
+      rateLockedUntil,
+      networkLabel: networkLabel(instructions.asset, instructions.chain),
+      ...(instructions.minAmount !== undefined
+        ? { minAmount: instructions.minAmount.toString() }
+        : {}),
       ...(instructions.providerRef ? { providerRef: instructions.providerRef } : {}),
     };
   }

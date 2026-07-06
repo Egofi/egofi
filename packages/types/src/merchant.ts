@@ -49,3 +49,13 @@ export interface UpdateSettlementDto {
 export interface UpdateProfileDto {
   business?: string;
 }
+
+/**
+ * The merchant's gateway-integration credentials: the webhook (IPN) callback
+ * URL egofi POSTs to, and the HMAC secret used to sign those callbacks so the
+ * merchant's server can verify authenticity.
+ */
+export interface IntegrationSettingsDto {
+  webhookUrl: string | null;
+  ipnSecret: string | null;
+}

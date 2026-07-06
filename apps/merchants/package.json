@@ -4,6 +4,7 @@
   "private": true,
   "description": "Egofi merchant dashboard",
   "scripts": {
+    "sync:icons": "node scripts/sync-crypto-icons.mjs",
     "dev": "next dev --port 3002",
     "dev:mock": "next dev --port 3002 --env-file .env.mock",
     "build": "next build",
@@ -17,19 +18,22 @@
     "@egofi/sdk": "workspace:*",
     "@egofi/types": "workspace:*",
     "@egofi/ui": "workspace:*",
+    "cryptocurrency-icons": "^0.18.1",
+    "decimal.js": "^10.5.0",
     "next": "^15.1.6",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "decimal.js": "^10.5.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@egofi/config": "workspace:*",
     "@types/node": "^22.10.5",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
-    "tailwindcss": "^3.4.17",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
   }
 }

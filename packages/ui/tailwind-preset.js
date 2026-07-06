@@ -75,11 +75,20 @@ module.exports = {
         "glow-primary": "0 0 0 4px rgb(29 78 216 / 0.14)",
         "inset-hairline": "inset 0 0 0 1px rgb(255 255 255 / 0.06)",
       },
+      // Flat / square corners across the whole UI. Every rectangular radius
+      // token collapses to 0 so `rounded`, `rounded-md`, `rounded-2xl`, etc.
+      // render sharp. `full` is kept so genuine circles (avatars, status dots,
+      // spinners, pill badges) stay round rather than becoming squares.
       borderRadius: {
-        lg: "0.625rem",
-        xl: "0.875rem",
-        "2xl": "1.125rem",
-        "3xl": "1.5rem",
+        none: "0",
+        sm: "0",
+        DEFAULT: "0",
+        md: "0",
+        lg: "0",
+        xl: "0",
+        "2xl": "0",
+        "3xl": "0",
+        full: "9999px",
       },
       backgroundImage: {
         "brand-gradient":

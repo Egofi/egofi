@@ -115,6 +115,7 @@ model Invoice {
   refundAddress   String?
   depositAddress  String?
   expectedAmount  Decimal?       @db.Decimal(36, 18)
+  notifyEmail     String?
   metadata        Json?
   events          PaymentEvent[]
   ledgerEntries   LedgerEntry[]
@@ -302,6 +303,28 @@ model FeePolicy {
   saasIntervalDays     Int      @default(30)
   deprecationNotes     Json?
   updatedAt            DateTime @updatedAt
+}
+
+// ─── Subscription plans ────────────────────────────────────────────────────
+// A reusable recurring-billing template a merchant shares with customers.
+
+model SubscriptionPlan {
+  id             String   @id @default(cuid())
+  merchantId     String
+  title          String
+  periodDuration Int      @default(1)
+  periodUnit     String   @default("MONTH") // DAY | WEEK | MONTH | YEAR
+  costPerPeriod  Decimal  @db.Decimal(36, 18)
+  currency       String   @default("USD")
+  ipnCallbackUrl String?
+  successUrl     String?
+  failedUrl      String?
+  partialUrl     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  merchant       Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId])
 }
 
 // ─── Recurring policy ──────────────────────────────────────────────────────
