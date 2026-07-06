@@ -29,6 +29,7 @@ model Merchant {
   apiKeys             ApiKey[]
   invoices            Invoice[]
   kybDocuments        KybDocument[]
+  refreshTokens       RefreshToken[]
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 }
@@ -340,4 +341,39 @@ model AdminUser {
   passwordHash String
   role         String   @default("ADMIN")
   createdAt    DateTime @default(now())
+}
+
+// ─── Refresh tokens (JWT rotation, §6) ─────────────────────────────────────
+
+model RefreshToken {
+  id           String    @id @default(cuid())
+  merchantId   String
+  tokenHash    String    @unique
+  family       String    // rotation family — reuse detection revokes the whole family
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  merchant     Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId])
+  @@index([family])
+}
+
+// ─── Admin audit log (compliance trail, §5) ────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actorEmail String
+  action     String   // e.g. "merchant.approve", "fee-policy.update"
+  targetType String   // e.g. "merchant", "fee-policy"
+  targetId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }
