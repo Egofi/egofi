@@ -11,8 +11,10 @@ export {
   CorrelationIdInterceptor,
   CORRELATION_HEADER,
 } from "./correlation-id.interceptor";
+export { MerchantContextInterceptor } from "./merchant-context.interceptor";
 export { ProblemDetailsFilter } from "./problem-details.filter";
 export {
   SkipIdempotency,
   IdempotencyInterceptor,
 } from "./idempotency.interceptor";
+export { bearerTokenFromHeader, timingSafeStringEqual } from "./secrets";

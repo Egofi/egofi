@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   BadRequestException,
   type CallHandler,
@@ -13,27 +14,17 @@ import { type Observable, firstValueFrom, from } from "rxjs";
 import { RedisService } from "../core/redis.service";
 
 export const SKIP_IDEMPOTENCY_KEY = "egofi:skip-idempotency";
-
-/**
- * Opts a controller/handler OUT of the idempotency gate. Reserved for
- * endpoints where the requirement is wrong by design: inbound provider
- * webhooks (they carry their own (txHash, leg) dedupe and third parties
- * won't send our header) and authentication (no resource is created).
- */
 export const SkipIdempotency = () => SetMetadata(SKIP_IDEMPOTENCY_KEY, true);
 
 const IDEMPOTENCY_HEADER = "idempotency-key";
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-const TTL_SECONDS = 60 * 60 * 24; // replay window: 24h
+const TTL_SECONDS = 60 * 60 * 24;
 const IN_FLIGHT = "__in_flight__";
 
-/**
- * Out-of-the-box idempotency gate (§1 API design): EVERY mutating endpoint
- * requires an `Idempotency-Key` header by default — a retried request must
- * never create a second charge. This is the default, not an opt-in: new
- * endpoints are protected the moment they exist. A retry with the same key
- * replays the original response; concurrent duplicates get 409.
- */
+interface RequestWithPrincipal extends FastifyRequest {
+  user?: { id?: string; role?: string };
+}
+
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
   constructor(
@@ -43,7 +34,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const http = context.switchToHttp();
-    const request = http.getRequest<FastifyRequest>();
+    const request = http.getRequest<RequestWithPrincipal>();
     const reply = http.getResponse<FastifyReply>();
 
     if (!MUTATING_METHODS.has(request.method)) return next.handle();
@@ -58,13 +49,16 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const key = Array.isArray(headerValue) ? headerValue[0] : headerValue;
     if (!key || key.length < 8 || key.length > 128) {
       throw new BadRequestException(
-        "An Idempotency-Key header (8–128 chars) is required on mutating endpoints",
+        "An Idempotency-Key header (8-128 chars) is required on mutating endpoints",
       );
     }
 
-    const redisKey = `idem:${request.method}:${request.url}:${key}`;
+    const principal = request.user?.id
+      ? `${request.user.role ?? "user"}:${request.user.id}`
+      : `ip:${request.ip}`;
+    const keyHash = createHash("sha256").update(key).digest("hex");
+    const redisKey = `idem:${principal}:${request.method}:${request.url}:${keyHash}`;
 
-    // Claim the key; if already claimed, replay or reject.
     const claimed = await this.redis.set(redisKey, IN_FLIGHT, "EX", TTL_SECONDS, "NX");
 
     if (claimed !== "OK") {
@@ -89,7 +83,6 @@ export class IdempotencyInterceptor implements NestInterceptor {
           );
           return body;
         } catch (error) {
-          // Failed requests release the key so the client can retry.
           await this.redis.del(redisKey);
           throw error;
         }

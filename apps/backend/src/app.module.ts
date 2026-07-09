@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { APP_FILTER, APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
-import { ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AdminApiModule } from "./admin-api/admin-api.module";
 import { AuthModule } from "./auth/auth.module";
 import { ChainModule } from "./chain/chain.module";
@@ -21,6 +21,7 @@ import { RailsModule } from "./rails/rails.module";
 import {
   CorrelationIdInterceptor,
   IdempotencyInterceptor,
+  MerchantContextInterceptor,
   ProblemDetailsFilter,
   validateEnv,
 } from "./shared";
@@ -34,7 +35,7 @@ import { WebhooksModule } from "./webhooks/webhooks.module";
       envFilePath: [".env.local", ".env"],
       validate: validateEnv,
     }),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     ScheduleModule.forRoot(),
     CoreModule,
     MonitoringModule,
@@ -55,8 +56,10 @@ import { WebhooksModule } from "./webhooks/webhooks.module";
     AdminApiModule,
   ],
   providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
     { provide: APP_INTERCEPTOR, useClass: CorrelationIdInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: MerchantContextInterceptor },
     { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
   ],
 })

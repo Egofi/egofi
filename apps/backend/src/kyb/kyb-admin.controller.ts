@@ -1,7 +1,10 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
+import type { FastifyRequest } from "fastify";
+import { CurrentAdmin } from "../auth/decorators/current-admin.decorator";
 import { AdminAuthGuard } from "../auth/guards/admin-auth.guard";
+import type { AdminPrincipal } from "../auth/principals";
 import { KybService } from "./kyb.service";
 
 class ApproveKybDto {
@@ -12,11 +15,14 @@ class ApproveKybDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(1000)
   note?: string;
 }
 
 class RejectKybDto {
   @IsString()
+  @MinLength(3)
+  @MaxLength(1000)
   note!: string;
 }
 
@@ -40,13 +46,23 @@ export class KybAdminController {
 
   @Post("merchants/:merchantId/approve")
   @ApiOperation({ summary: "Approve KYB and set the merchant's tier" })
-  approve(@Param("merchantId") merchantId: string, @Body() dto: ApproveKybDto) {
-    return this.kyb.approve(merchantId, dto.tier, dto.note);
+  approve(
+    @Param("merchantId") merchantId: string,
+    @Body() dto: ApproveKybDto,
+    @CurrentAdmin() actor: AdminPrincipal,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.kyb.approve(merchantId, dto.tier, dto.note, actor, req.ip);
   }
 
   @Post("merchants/:merchantId/reject")
   @ApiOperation({ summary: "Reject KYB with a reason" })
-  reject(@Param("merchantId") merchantId: string, @Body() dto: RejectKybDto) {
-    return this.kyb.reject(merchantId, dto.note);
+  reject(
+    @Param("merchantId") merchantId: string,
+    @Body() dto: RejectKybDto,
+    @CurrentAdmin() actor: AdminPrincipal,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.kyb.reject(merchantId, dto.note, actor, req.ip);
   }
 }

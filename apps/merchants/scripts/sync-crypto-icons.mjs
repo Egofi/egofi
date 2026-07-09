@@ -1,9 +1,9 @@
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 // Copies the coin glyphs we use from the `cryptocurrency-icons` package into
 // public/crypto-icons so <CoinIcon> can serve them as static assets (offline,
 // no bundler config). Re-run after changing the pay-currency catalog:
 //   pnpm --filter @egofi/merchants sync:icons
 import { createRequire } from "node:module";
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 

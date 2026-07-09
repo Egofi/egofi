@@ -1,10 +1,8 @@
 import { type ExecutionContext, createParamDecorator } from "@nestjs/common";
-import type { Merchant } from "@prisma/client";
 import type { FastifyRequest } from "fastify";
+import type { AuthenticatedMerchant } from "../principals";
 
 export const CurrentMerchant = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
-  // Passport attaches the authenticated principal to the request; Fastify's
-  // types don't know about it.
-  const req = ctx.switchToHttp().getRequest<FastifyRequest & { user?: Merchant }>();
+  const req = ctx.switchToHttp().getRequest<FastifyRequest & { user?: AuthenticatedMerchant }>();
   return req.user;
 });

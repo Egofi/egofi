@@ -1,9 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import type { Merchant } from "@prisma/client";
-import { IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsBoolean, IsObject, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import type { AuthenticatedMerchant } from "../auth/principals";
+import { publicMerchant } from "../auth/principals";
 import { MerchantsService } from "./merchants.service";
 
 class UpdateProfileBodyDto {
@@ -14,11 +15,43 @@ class UpdateProfileBodyDto {
   business?: string;
 }
 
-class SetWebhookBodyDto {
+class UpdateSettlementBodyDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(40)
+  settlementAsset?: string;
+
+  @IsObject()
+  @IsOptional()
+  settlementAddresses?: Record<string, string>;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(512)
+  xpub?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  xpubMode?: boolean;
+
   @IsString()
   @IsOptional()
   @MaxLength(500)
   webhookUrl?: string;
+}
+
+class CreateApiKeyBodyDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(80)
+  name!: string;
+}
+
+class SetWebhookBodyDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  webhookUrl?: string | null;
 }
 
 @ApiTags("merchant")
@@ -29,55 +62,64 @@ export class MerchantsController {
 
   @Get("profile")
   @ApiOperation({ summary: "Get merchant profile" })
-  getProfile(@CurrentMerchant() merchant: Merchant) {
-    return merchant;
+  getProfile(@CurrentMerchant() merchant: AuthenticatedMerchant) {
+    return publicMerchant(merchant);
   }
 
   @Patch("profile")
   @ApiOperation({ summary: "Update merchant profile" })
-  updateProfile(@CurrentMerchant() merchant: Merchant, @Body() body: UpdateProfileBodyDto) {
+  updateProfile(
+    @CurrentMerchant() merchant: AuthenticatedMerchant,
+    @Body() body: UpdateProfileBodyDto,
+  ) {
     return this.merchants.updateProfile(merchant.id, body);
   }
 
   @Patch("settlement")
   @ApiOperation({ summary: "Update settlement config" })
-  updateSettlement(@CurrentMerchant() merchant: Merchant, @Body() body: object) {
-    return this.merchants.updateSettlement(merchant.id, body as never);
+  updateSettlement(
+    @CurrentMerchant() merchant: AuthenticatedMerchant,
+    @Body() body: UpdateSettlementBodyDto,
+  ) {
+    return this.merchants.updateSettlement(merchant.id, body);
   }
 
   @Post("api-keys")
   @ApiOperation({ summary: "Create a new API key" })
-  createApiKey(@CurrentMerchant() merchant: Merchant, @Body("name") name: string) {
-    return this.merchants.createApiKey(merchant.id, name);
+  createApiKey(
+    @CurrentMerchant() merchant: AuthenticatedMerchant,
+    @Body() body: CreateApiKeyBodyDto,
+  ) {
+    return this.merchants.createApiKey(merchant.id, body.name);
   }
 
   @Get("api-keys")
   @ApiOperation({ summary: "List API keys" })
-  listApiKeys(@CurrentMerchant() merchant: Merchant) {
+  listApiKeys(@CurrentMerchant() merchant: AuthenticatedMerchant) {
     return this.merchants.listApiKeys(merchant.id);
   }
 
   @Delete("api-keys/:id")
   @ApiOperation({ summary: "Delete an API key" })
-  deleteApiKey(@CurrentMerchant() merchant: Merchant, @Param("id") id: string) {
+  deleteApiKey(@CurrentMerchant() merchant: AuthenticatedMerchant, @Param("id") id: string) {
     return this.merchants.deleteApiKey(merchant.id, id);
   }
 
   @Get("integration")
   @ApiOperation({ summary: "Get webhook/IPN integration settings" })
-  getIntegration(@CurrentMerchant() merchant: Merchant) {
+  getIntegration(@CurrentMerchant() merchant: AuthenticatedMerchant) {
     return this.merchants.getIntegration(merchant.id);
   }
 
   @Patch("webhook")
   @ApiOperation({ summary: "Set the webhook (IPN) callback URL" })
-  setWebhook(@CurrentMerchant() merchant: Merchant, @Body() body: SetWebhookBodyDto) {
+  setWebhook(@CurrentMerchant() merchant: AuthenticatedMerchant, @Body() body: SetWebhookBodyDto) {
     return this.merchants.setWebhookUrl(merchant.id, body.webhookUrl ?? null);
   }
 
   @Post("ipn-secret")
   @ApiOperation({ summary: "Generate or rotate the IPN signing secret" })
-  rotateIpnSecret(@CurrentMerchant() merchant: Merchant) {
+  rotateIpnSecret(@CurrentMerchant() merchant: AuthenticatedMerchant) {
     return this.merchants.rotateIpnSecret(merchant.id);
   }
 }

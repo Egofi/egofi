@@ -1,5 +1,6 @@
 import fastifyMultipart from "@fastify/multipart";
 import { ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -8,62 +9,106 @@ import { AppModule } from "./app.module";
 
 const logger = pino({ level: process.env["LOG_LEVEL"] ?? "info" });
 
-// Out-of-the-box process safety net: nothing dies silently. An unhandled
-// rejection in payment code is a money-losing bug — log it loudly. Rejections
-// are logged and survived (BullMQ/Fastify layers own their retries);
-// uncaught exceptions mean unknown process state, so log and exit for the
-// orchestrator to restart.
+function readBooleanEnv(name: string): boolean {
+  return process.env[name] === "true";
+}
+
+function readBodyLimit(): number {
+  const raw = Number(process.env["JSON_BODY_LIMIT_BYTES"] ?? 262_144);
+  return Number.isFinite(raw) ? raw : 262_144;
+}
+
+function configureSecurityHeaders(app: NestFastifyApplication, isDeployed: boolean): void {
+  const fastify = app.getHttpAdapter().getInstance();
+  fastify.addHook("onRequest", async (request, reply) => {
+    void reply.header("x-content-type-options", "nosniff");
+    void reply.header("x-frame-options", "DENY");
+    void reply.header("referrer-policy", "no-referrer");
+    void reply.header("cross-origin-resource-policy", "same-site");
+    void reply.header("permissions-policy", "camera=(), microphone=(), geolocation=()");
+
+    if (!request.url.startsWith("/docs")) {
+      void reply.header("content-security-policy", "default-src 'none'; frame-ancestors 'none'");
+    }
+    if (isDeployed) {
+      void reply.header("strict-transport-security", "max-age=15552000; includeSubDomains");
+    }
+  });
+}
+
 process.on("unhandledRejection", (reason) => {
   logger.error({ err: reason }, "UNHANDLED PROMISE REJECTION");
 });
 process.on("uncaughtException", (error) => {
-  logger.fatal({ err: error }, "UNCAUGHT EXCEPTION — exiting");
+  logger.fatal({ err: error }, "UNCAUGHT EXCEPTION - exiting");
   process.exit(1);
 });
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: false }),
+    new FastifyAdapter({
+      logger: false,
+      bodyLimit: readBodyLimit(),
+      trustProxy: readBooleanEnv("TRUST_PROXY"),
+    }),
   );
+  const config = app.get(ConfigService);
+  const nodeEnv = config.get<string>("NODE_ENV", "development");
+  const isDev = nodeEnv === "development";
+  const isDeployed = nodeEnv === "production" || nodeEnv === "staging";
 
-  // Multipart uploads for KYB documents. 10 MB cap, one file per request.
-  // Cast bypasses a harmless fastify 4.28/4.29 type skew across the two copies
-  // pnpm keeps in the tree; the plugin is runtime-compatible.
+  configureSecurityHeaders(app, isDeployed);
+
   await app.register(fastifyMultipart as never, {
     limits: { fileSize: 10 * 1024 * 1024, files: 1 },
   });
 
-  // Graceful shutdown: lets Prisma/Redis/BullMQ close cleanly on SIGTERM so
-  // in-flight jobs finish instead of dying mid-transition.
   app.enableShutdownHooks();
 
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
       transform: true,
       transformOptions: { enableImplicitConversion: true },
     }),
   );
 
-  // Dev: allow any origin so the apps work from LAN IPs (http://192.168.x.x:300x).
-  // Production: strict allowlist of the three deployed frontends.
-  const isDev = (process.env["NODE_ENV"] ?? "development") === "development";
+  const allowedOrigins = new Set(
+    [
+      config.get<string>("CHECKOUT_BASE_URL"),
+      config.get<string>("MERCHANTS_BASE_URL"),
+      config.get<string>("ADMIN_BASE_URL"),
+    ].filter((origin): origin is string => Boolean(origin)),
+  );
+
   app.enableCors({
     origin: isDev
       ? true
-      : [
-          process.env["CHECKOUT_BASE_URL"] ?? "http://localhost:3001",
-          process.env["MERCHANTS_BASE_URL"] ?? "http://localhost:3002",
-          process.env["ADMIN_BASE_URL"] ?? "http://localhost:3003",
-        ],
+      : (origin, callback) => {
+          if (!origin || allowedOrigins.has(origin)) {
+            callback(null, true);
+            return;
+          }
+          callback(new Error("Origin not allowed by CORS"), false);
+        },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "authorization",
+      "content-type",
+      "idempotency-key",
+      "x-api-key",
+      "x-correlation-id",
+    ],
+    exposedHeaders: ["x-correlation-id", "x-idempotent-replay"],
   });
 
-  const role = process.env["ROLE"] ?? "api";
+  const role = config.get<string>("ROLE", "api");
 
-  if (role === "api" || role === "webhook") {
+  if ((role === "api" || role === "webhook") && config.get<boolean>("ENABLE_SWAGGER", false)) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle("Egofi API")
       .setDescription("Non-custodial crypto payment gateway API")
@@ -76,7 +121,7 @@ async function bootstrap(): Promise<void> {
     SwaggerModule.setup("docs", app, document);
   }
 
-  const port = Number(process.env["PORT"] ?? 3000);
+  const port = config.get<number>("PORT", 3000);
   await app.listen(port, "0.0.0.0");
   logger.info({ role, port }, "Egofi backend started");
 }

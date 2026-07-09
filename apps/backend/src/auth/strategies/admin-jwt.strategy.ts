@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PrismaService } from "../../core/prisma.service";
+import type { AdminPrincipal } from "../principals";
 
 interface AdminJwtPayload {
   sub: string;
@@ -22,7 +23,12 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, "admin-jwt") {
     });
   }
 
-  async validate(payload: AdminJwtPayload) {
-    return this.prisma.adminUser.findUnique({ where: { id: payload.sub } });
+  async validate(payload: AdminJwtPayload): Promise<AdminPrincipal | null> {
+    const admin = await this.prisma.adminUser.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, email: true, role: true, createdAt: true },
+    });
+    if (!admin || admin.role !== payload.role) return null;
+    return admin;
   }
 }

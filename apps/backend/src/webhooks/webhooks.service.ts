@@ -7,6 +7,7 @@ import { z } from "zod";
 import { PrismaService } from "../core/prisma.service";
 import { InvoicesService } from "../invoices/invoices.service";
 import { AmountPoolService } from "../rails/direct-transfer/amount-pool.service";
+import { bearerTokenFromHeader, timingSafeStringEqual } from "../shared/secrets";
 
 const TatumWebhookSchema = z.object({
   subscriptionId: z.string(),
@@ -37,13 +38,36 @@ export class WebhooksService {
     private readonly amountPool: AmountPoolService,
   ) {}
 
-  verifyTatumHmac(rawBody: string, signature: string): void {
+  verifyTatumHmac(rawBody: string, signature: string | undefined): void {
+    if (!signature || !/^[a-f0-9]{128}$/i.test(signature)) {
+      throw new UnauthorizedException("Invalid Tatum HMAC signature");
+    }
+
     const secret = this.config.getOrThrow<string>("TATUM_WEBHOOK_HMAC_SECRET");
     const expected = createHmac("sha512", secret).update(rawBody).digest("hex");
-    const expectedBuf = Buffer.from(expected);
-    const sigBuf = Buffer.from(signature);
+    const expectedBuf = Buffer.from(expected, "hex");
+    const sigBuf = Buffer.from(signature, "hex");
     if (expectedBuf.length !== sigBuf.length || !timingSafeEqual(expectedBuf, sigBuf)) {
       throw new UnauthorizedException("Invalid Tatum HMAC signature");
+    }
+  }
+
+  verifyProviderWebhookSecret(
+    authorization: string | undefined,
+    secretHeader: string | undefined,
+  ): void {
+    const expected = this.config.get<string>("PROVIDER_WEBHOOK_SECRET");
+    const nodeEnv = this.config.get<string>("NODE_ENV", "development");
+    const isDeployed = nodeEnv === "production" || nodeEnv === "staging";
+
+    if (!expected) {
+      if (isDeployed) throw new UnauthorizedException("Provider webhook secret is not configured");
+      return;
+    }
+
+    const supplied = bearerTokenFromHeader(authorization) ?? secretHeader;
+    if (!supplied || !timingSafeStringEqual(supplied, expected)) {
+      throw new UnauthorizedException("Invalid provider webhook secret");
     }
   }
 

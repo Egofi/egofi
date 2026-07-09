@@ -14,7 +14,7 @@ import { SkipIdempotency } from "../shared";
 import { WebhooksService } from "./webhooks.service";
 
 @ApiTags("webhooks")
-@SkipIdempotency() // inbound events dedupe on (txHash, leg); third parties don't send our header
+@SkipIdempotency()
 @Controller("webhooks")
 export class WebhooksController {
   constructor(private readonly webhooks: WebhooksService) {}
@@ -24,7 +24,7 @@ export class WebhooksController {
   @ApiOperation({ summary: "Inbound Tatum ADDRESS_EVENT notification" })
   async tatum(
     @Body() body: unknown,
-    @Headers("x-payload-hash") signature: string,
+    @Headers("x-payload-hash") signature: string | undefined,
     @Req() req: RawBodyRequest<FastifyRequest>,
   ) {
     const rawBody = req.rawBody?.toString() ?? JSON.stringify(body);
@@ -36,7 +36,13 @@ export class WebhooksController {
   @Post("providers/:provider")
   @HttpCode(200)
   @ApiOperation({ summary: "Inbound swap provider status webhook" })
-  async provider(@Param("provider") provider: string, @Body() body: unknown) {
+  async provider(
+    @Param("provider") provider: string,
+    @Body() body: unknown,
+    @Headers("authorization") authorization?: string,
+    @Headers("x-egofi-webhook-secret") webhookSecret?: string,
+  ) {
+    this.webhooks.verifyProviderWebhookSecret(authorization, webhookSecret);
     await this.webhooks.processProviderWebhook(provider, body);
     return { ok: true };
   }

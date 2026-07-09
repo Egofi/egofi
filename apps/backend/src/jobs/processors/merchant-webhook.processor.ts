@@ -1,8 +1,9 @@
-﻿import { createHmac } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { Processor } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { Job } from "bullmq";
+import { CryptoService } from "../../core/crypto.service";
 import { PrismaService } from "../../core/prisma.service";
 import { BaseProcessor } from "../base.processor";
 import { QUEUES } from "../queues";
@@ -21,6 +22,7 @@ export class MerchantWebhookProcessor extends BaseProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly crypto: CryptoService,
   ) {
     super();
   }
@@ -46,8 +48,9 @@ export class MerchantWebhookProcessor extends BaseProcessor {
 
     // Sign with the merchant's own IPN secret when set (so they can verify with
     // the secret shown in their dashboard); otherwise fall back to the global one.
-    const secret =
-      merchant.webhookSecret ?? this.config.getOrThrow<string>("WEBHOOK_SIGNING_SECRET");
+    const secret = merchant.webhookSecret
+      ? this.crypto.decryptMaybe(merchant.webhookSecret)
+      : this.config.getOrThrow<string>("WEBHOOK_SIGNING_SECRET");
     const signature = createHmac("sha256", secret).update(body).digest("hex");
 
     const res = await fetch(merchant.webhookUrl, {

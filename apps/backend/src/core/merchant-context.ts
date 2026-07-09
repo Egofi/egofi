@@ -10,12 +10,12 @@ import { AsyncLocalStorage } from "node:async_hooks";
  */
 
 export interface MerchantContext {
-	merchantId: string;
+  merchantId: string;
 }
 
 export const merchantContextStore = new AsyncLocalStorage<MerchantContext>();
 
 /** Returns the current merchant ID or `null` if outside a merchant request. */
 export function currentMerchantId(): string | null {
-	return merchantContextStore.getStore()?.merchantId ?? null;
+  return merchantContextStore.getStore()?.merchantId ?? null;
 }

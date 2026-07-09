@@ -6,7 +6,9 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import type { KybDocument } from "@prisma/client";
+import type { KybDocument, Prisma } from "@prisma/client";
+import type { AdminPrincipal } from "../auth/principals";
+import { AuditService } from "../core/audit.service";
 import { OutboxService } from "../core/outbox.service";
 import { PrismaService } from "../core/prisma.service";
 import { CloudinaryService } from "./cloudinary.service";
@@ -28,6 +30,7 @@ export class KybService {
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
     private readonly outbox: OutboxService,
+    private readonly audit: AuditService,
   ) {}
 
   // ── Merchant ────────────────────────────────────────────────────
@@ -227,10 +230,22 @@ export class KybService {
     };
   }
 
-  async approve(merchantId: string, tier: number, note?: string): Promise<void> {
+  async approve(
+    merchantId: string,
+    tier: number,
+    note?: string,
+    actor?: AdminPrincipal,
+    ip?: string,
+  ): Promise<void> {
     if (![0, 1, 2].includes(tier)) {
       throw new BadRequestException("Tier must be 0, 1, or 2.");
     }
+
+    const before = await this.prisma.merchant.findUniqueOrThrow({
+      where: { id: merchantId },
+      select: { kybStatus: true, kybTier: true, kybReviewNote: true },
+    });
+
     await this.prisma.$transaction(async (tx) => {
       await tx.merchant.update({
         where: { id: merchantId },
@@ -251,16 +266,40 @@ export class KybService {
         payload: { merchantId, tier },
       });
     });
-  }
 
-  async reject(merchantId: string, note: string): Promise<void> {
-    if (!note?.trim()) {
+    if (actor) {
+      await this.audit.record({
+        actorId: actor.id,
+        actorEmail: actor.email,
+        action: "kyb.approve",
+        targetType: "merchant",
+        targetId: merchantId,
+        before: before as unknown as Prisma.InputJsonValue,
+        after: { kybStatus: KybStatus.Verified, kybTier: tier, note: note ?? null },
+        ip,
+      });
+    }
+  }
+  async reject(
+    merchantId: string,
+    note: string,
+    actor?: AdminPrincipal,
+    ip?: string,
+  ): Promise<void> {
+    const trimmedNote = note?.trim();
+    if (!trimmedNote) {
       throw new BadRequestException("A reason is required when rejecting KYB.");
     }
+
+    const before = await this.prisma.merchant.findUniqueOrThrow({
+      where: { id: merchantId },
+      select: { kybStatus: true, kybTier: true, kybReviewNote: true },
+    });
+
     await this.prisma.$transaction(async (tx) => {
       await tx.merchant.update({
         where: { id: merchantId },
-        data: { kybStatus: KybStatus.Rejected, kybReviewNote: note },
+        data: { kybStatus: KybStatus.Rejected, kybReviewNote: trimmedNote },
       });
       await tx.kybDocument.updateMany({
         where: { merchantId, status: KybDocumentStatus.Pending },
@@ -273,6 +312,19 @@ export class KybService {
         payload: { merchantId },
       });
     });
+
+    if (actor) {
+      await this.audit.record({
+        actorId: actor.id,
+        actorEmail: actor.email,
+        action: "kyb.reject",
+        targetType: "merchant",
+        targetId: merchantId,
+        before: before as unknown as Prisma.InputJsonValue,
+        after: { kybStatus: KybStatus.Rejected, note: trimmedNote },
+        ip,
+      });
+    }
   }
 }
 
