@@ -171,7 +171,7 @@ export class KybService {
       );
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.tenantTransaction(async (tx) => {
       await tx.merchant.update({
         where: { id: merchantId },
         data: {
@@ -246,7 +246,7 @@ export class KybService {
       select: { kybStatus: true, kybTier: true, kybReviewNote: true },
     });
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.tenantTransaction(async (tx) => {
       await tx.merchant.update({
         where: { id: merchantId },
         data: {
@@ -296,7 +296,7 @@ export class KybService {
       select: { kybStatus: true, kybTier: true, kybReviewNote: true },
     });
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.tenantTransaction(async (tx) => {
       await tx.merchant.update({
         where: { id: merchantId },
         data: { kybStatus: KybStatus.Rejected, kybReviewNote: trimmedNote },

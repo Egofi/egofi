@@ -41,6 +41,9 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://egofi:egofi_test@localhost:5432/egofi_test
+      # CI runs `prisma generate`, lint, typecheck and unit tests — it never opens
+      # a connection — so both roles can point at the same URL here.
+      DIRECT_DATABASE_URL: postgresql://egofi:egofi_test@localhost:5432/egofi_test
       REDIS_URL: redis://localhost:6379
       JWT_SECRET: ci-test-secret-minimum-32-characters
       ADMIN_JWT_SECRET: ci-admin-test-secret-32-chars-min

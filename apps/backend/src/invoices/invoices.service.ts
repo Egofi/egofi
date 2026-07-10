@@ -97,7 +97,7 @@ export class InvoicesService {
     // State change + append-only event + outbox row in ONE transaction (§8, §12):
     // the PaymentEvent log is the audit trail; the outbox guarantees the
     // merchant webhook fires iff the transition committed.
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.tenantTransaction(async (tx) => {
       const row = await tx.invoice.update({
         where: { id: invoiceId },
         data: {

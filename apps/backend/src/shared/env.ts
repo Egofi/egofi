@@ -40,7 +40,12 @@ export const envSchema = z
     ENABLE_SWAGGER: booleanString,
     JSON_BODY_LIMIT_BYTES: z.coerce.number().int().min(16_384).max(1_048_576).default(262_144),
 
+    // The runtime connection. Must be the unprivileged `egofi_app` role, or
+    // row-level security is silently bypassed (PrismaService refuses to boot).
     DATABASE_URL: z.string().url(),
+    // Owner role, used only by Prisma Migrate. App processes never open it;
+    // set it equal to DATABASE_URL there if you don't want to ship owner creds.
+    DIRECT_DATABASE_URL: z.string().url(),
     REDIS_URL: z.string().url(),
 
     JWT_SECRET: secretSchema("JWT_SECRET"),

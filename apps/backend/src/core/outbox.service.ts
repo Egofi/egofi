@@ -25,7 +25,7 @@ export class OutboxService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Call inside a prisma.$transaction with the tx client. */
+  /** Call inside a prisma.tenantTransaction with the tx client. */
   async emit(tx: Prisma.TransactionClient, event: OutboxEmit): Promise<void> {
     await tx.outboxEvent.create({
       data: {

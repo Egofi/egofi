@@ -319,7 +319,7 @@ export class SubscriptionsService {
       "0",
     );
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.tenantTransaction(async (tx) => {
       await tx.invoice.update({
         where: { id: invoice.id },
         data: { subscriptionId: sub.id, notifyEmail: sub.customerEmail },

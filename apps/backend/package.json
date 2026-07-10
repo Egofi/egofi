@@ -23,6 +23,7 @@
     "db:seed": "ts-node --transpile-only prisma/seed.ts",
     "db:seed:merchant": "node --env-file=.env prisma/seed-merchant.mjs",
     "db:migrate": "prisma migrate deploy",
+    "db:grant": "docker exec -i egofi-dev-postgres-1 psql -U egofi -d egofi -v password=egofi_app_dev -f - < prisma/grant-app-role.sql",
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",
     "clean": "rm -rf dist"

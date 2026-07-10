@@ -4,7 +4,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Prisma Client connects with `url` — the unprivileged egofi_app role that
+  // row-level security applies to. Prisma Migrate uses `directUrl` — the owner
+  // role, which bypasses RLS and may alter the schema.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // ─── Merchants ─────────────────────────────────────────────────────────────

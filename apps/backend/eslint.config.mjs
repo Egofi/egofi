@@ -5,6 +5,10 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config({
   files: ["src/**/*.ts"],
+  // tsconfig excludes specs, so the type-aware parser cannot load them; without
+  // this every spec file is a parse error. These rules guard production async
+  // paths anyway.
+  ignores: ["src/**/*.spec.ts"],
   languageOptions: {
     parser: tseslint.parser,
     parserOptions: {

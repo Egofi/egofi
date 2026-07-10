@@ -14,6 +14,7 @@
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
+- [Tenant isolation](#tenant-isolation)
 - [Apps & ports](#apps--ports)
 - [How a payment works](#how-a-payment-works)
 - [Integrating egofi](#integrating-egofi)
@@ -93,7 +94,10 @@ cp apps/backend/.env.example apps/backend/.env
 Then edit `apps/backend/.env` so the connection strings match the Docker host ports:
 
 ```env
-DATABASE_URL=postgresql://egofi:egofi_dev@localhost:5433/egofi
+# Runtime role — unprivileged, row-level security applies to it.
+DATABASE_URL=postgresql://egofi_app:egofi_app_dev@localhost:5433/egofi
+# Owner role — used only by `prisma migrate`.
+DIRECT_DATABASE_URL=postgresql://egofi:egofi_dev@localhost:5433/egofi
 REDIS_URL=redis://localhost:6380
 ```
 
@@ -102,7 +106,8 @@ Set the secrets you care about (`JWT_SECRET`, `WEBHOOK_SIGNING_SECRET`, `ADMIN_J
 ### 4. Migrate & seed
 
 ```bash
-pnpm --filter @egofi/backend db:migrate      # apply migrations
+pnpm --filter @egofi/backend db:migrate      # apply migrations (also creates the egofi_app role)
+pnpm --filter @egofi/backend db:grant        # give egofi_app a password so the app can log in
 pnpm --filter @egofi/backend db:generate     # generate the Prisma client
 pnpm --filter @egofi/backend db:seed         # seed the admin user + global policies
 
@@ -121,6 +126,34 @@ Or run apps individually, e.g. `pnpm --filter @egofi/backend dev`.
 > **Frontends without a backend:** the Next.js apps support a **mock mode** (`NEXT_PUBLIC_API_MODE=mock`) that serves simulated data via `@egofi/sdk`'s mock client — handy for UI work. Use each app's `dev:mock` script.
 
 ---
+
+## Tenant isolation
+
+Merchant data is fenced off twice.
+
+Every merchant-facing service filters on `merchantId`, and Postgres row-level
+security enforces the same thing underneath. On each authenticated merchant
+request the app sets a transaction-local `app.current_merchant_id`; policies on
+every tenant table compare it against the row's `merchantId`. A merchant-facing
+query that forgets its `where` clause therefore returns nothing rather than
+another merchant's rows.
+
+Three things make this real rather than decorative:
+
+- The app connects as `egofi_app`, which is `NOSUPERUSER NOBYPASSRLS`. Superusers
+  and table owners bypass policies, so connecting as the owner would leave RLS
+  looking enabled while doing nothing. `PrismaService` checks the role at boot
+  and refuses to start if it is privileged.
+- `PrismaService` returns an extended Prisma client from its constructor, so no
+  injected client can skip the guard. Interactive transactions must go through
+  `prisma.tenantTransaction()` — `prisma.$transaction()` would re-enter the
+  query hook and split writes across two connections. A unit test enforces this.
+- Adding a table with a `merchantId` column and no policy also fails the boot
+  check, so a future migration cannot quietly opt out.
+
+Public checkout, admin endpoints and background workers run with no merchant
+context and are unrestricted, exactly as before. RLS is a guard against missing
+filters, not against a compromised backend.
 
 ## Apps & ports
 
@@ -217,7 +250,8 @@ Backend (`apps/backend/.env`) — see `apps/backend/.env.example` for the full l
 
 | Variable | Purpose |
 | -------- | ------- |
-| `DATABASE_URL` | Postgres connection (use host port `5433` in dev) |
+| `DATABASE_URL` | Postgres connection for the app. **Must be the unprivileged `egofi_app` role** — a superuser silently bypasses row-level security, so the backend refuses to start as one. Host port `5433` in dev |
+| `DIRECT_DATABASE_URL` | Postgres connection for `prisma migrate` only, as the schema owner. App processes never open it; set it equal to `DATABASE_URL` there if you don't want owner credentials on app hosts |
 | `REDIS_URL` | Redis connection (use host port `6380` in dev) |
 | `JWT_SECRET` / `JWT_EXPIRES_IN` | Merchant session signing (default 7d) |
 | `ADMIN_JWT_SECRET` | Separate secret for operator sessions |
