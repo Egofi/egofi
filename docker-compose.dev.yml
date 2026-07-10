@@ -10,7 +10,11 @@ services:
       POSTGRES_PASSWORD: egofi_dev
       POSTGRES_DB: egofi
     ports:
-      - "5433:5432" # host 5433 — 5432 is held by another local project
+      # Bound to IPv4 loopback on purpose. An unqualified "5433:5432" also opens
+      # an IPv6 listener, and Node resolves `localhost` to ::1 first — if Docker's
+      # relay wedges on that address, every client hangs. It also keeps the dev
+      # database off the LAN. Host 5433: 5432 is held by another local project.
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +27,8 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "6380:6379" # host 6380 — 6379 is held by another local project
+      # IPv4 loopback only — see the note on postgres above.
+      - "127.0.0.1:6380:6379" # host 6380 — 6379 is held by another local project
     volumes:
       - redis_dev_data:/data
 
