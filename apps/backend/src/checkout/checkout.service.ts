@@ -157,13 +157,17 @@ export class CheckoutService {
     // issue time) so the deposit amount is correct. Sessions created via the
     // checkout API already carry a live quote and skip the re-quote.
     let quotedAmount = invoice.quotedAmount;
+    // Set only when we priced the invoice here, so the transition below writes
+    // the quote back. Invoices created through the public checkout arrive
+    // already priced and must keep the rate they were created with.
+    let freshQuote: { quotedAmount: string; rate: string } | undefined;
     if (!quotedAmount || Number.parseFloat(quotedAmount) <= 0) {
-      const quote = await this.pricing.getQuote(
+      freshQuote = await this.pricing.getQuote(
         invoice.payAsset,
         invoice.displayCurrency,
         invoice.displayAmount,
       );
-      quotedAmount = quote.quotedAmount;
+      quotedAmount = freshQuote.quotedAmount;
     }
 
     // Route toward the merchant's actual settlement asset/chain — not a
@@ -202,6 +206,7 @@ export class CheckoutService {
       ...(instructions.providerRef ? { railRef: instructions.providerRef } : {}),
       depositAddress: instructions.depositAddress,
       expectedAmount: instructions.exactAmount.toString(),
+      ...(freshQuote ? { quotedAmount: freshQuote.quotedAmount, rate: freshQuote.rate } : {}),
     });
 
     await this.jobs.scheduleRateLockExpiry(invoice.id, new Date(invoice.expiresAt));

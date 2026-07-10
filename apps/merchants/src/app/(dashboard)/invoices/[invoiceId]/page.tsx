@@ -260,6 +260,18 @@ export default function InvoiceDetailPage() {
   );
 }
 
+/** Stand-in for a crypto amount that does not exist yet, rather than a bare 0. */
+function NotQuotedYet() {
+  return (
+    <span
+      className="cursor-help font-normal text-navy-300"
+      title="The rate is locked when the customer first opens the payment link, so there is no crypto amount yet."
+    >
+      —
+    </span>
+  );
+}
+
 // ── History ───────────────────────────────────────────────────────
 function HistoryTab({
   invoice,
@@ -275,11 +287,17 @@ function HistoryTab({
   const [showFilter, setShowFilter] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  // A merchant-created invoice carries no crypto quote until the customer first
+  // opens the payment link — that is when the rate is fetched and locked. Until
+  // then `quotedAmount` is 0, and printing "0 USDT" reads as "worth nothing".
+  const quoted = Number.parseFloat(invoice.quotedAmount || "0") > 0;
   const amountSent = session
     ? `${fromBaseUnits(session.instructions.exactAmount)} ${invoice.payAsset}`
-    : `${trimCrypto(invoice.quotedAmount)} ${invoice.payAsset}`;
+    : quoted
+      ? `${trimCrypto(invoice.quotedAmount)} ${invoice.payAsset}`
+      : null;
   // Expected settlement (nominal quote) — always slightly below what's sent.
-  const amountReceived = `${trimCrypto(invoice.quotedAmount)} ${invoice.payAsset}`;
+  const amountReceived = quoted ? `${trimCrypto(invoice.quotedAmount)} ${invoice.payAsset}` : null;
   const statusUpdated = status?.updatedAt ?? invoice.createdAt;
   const cfg = INVOICE_STATE_CONFIG[invoice.state] ?? { variant: "default", label: invoice.state };
   const statusColor = STATUS_TEXT_COLOR[cfg.variant] ?? "text-navy-500";
@@ -376,8 +394,12 @@ function HistoryTab({
               <>
                 <tr className="border-b border-navy-50">
                   <td className="py-4 pr-4 font-mono text-xs text-navy-400">{invoice.id}</td>
-                  <td className="py-4 pr-4 font-semibold text-navy-950">{amountSent}</td>
-                  <td className="py-4 pr-4 font-semibold text-navy-950">{amountReceived}</td>
+                  <td className="py-4 pr-4 font-semibold text-navy-950">
+                    {amountSent ?? <NotQuotedYet />}
+                  </td>
+                  <td className="py-4 pr-4 font-semibold text-navy-950">
+                    {amountReceived ?? <NotQuotedYet />}
+                  </td>
                   <td className="py-4 pr-4 text-navy-500">{formatDateTime(invoice.createdAt)}</td>
                   <td className="py-4 pr-4 text-navy-500">{formatDateTime(statusUpdated)}</td>
                   <td className={cn("py-4 pr-4 font-medium", statusColor)}>{cfg.label}</td>

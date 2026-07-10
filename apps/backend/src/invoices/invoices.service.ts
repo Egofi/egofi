@@ -82,6 +82,9 @@ export class InvoicesService {
       railRef?: string;
       depositAddress?: string;
       expectedAmount?: string;
+      /** The locked quote, supplied when a lazily-issued invoice is priced. */
+      quotedAmount?: string;
+      rate?: string;
     },
   ): Promise<InvoiceDto> {
     const invoice = await this.findOrThrow(invoiceId);
@@ -108,6 +111,14 @@ export class InvoicesService {
           ...(extras?.expectedAmount
             ? { expectedAmount: new Decimal(extras.expectedAmount).toFixed() }
             : {}),
+          // Persist the quote the customer was actually shown. Without this the
+          // invoice keeps quotedAmount/rate = 0 for its whole life, so the
+          // merchant sees "0 USDT" and nothing can be reconciled against the
+          // rate we honoured.
+          ...(extras?.quotedAmount
+            ? { quotedAmount: new Decimal(extras.quotedAmount).toFixed() }
+            : {}),
+          ...(extras?.rate ? { rate: new Decimal(extras.rate).toFixed() } : {}),
         },
       });
 
