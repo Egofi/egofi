@@ -31,6 +31,7 @@ model Merchant {
   kybDocuments        KybDocument[]
   refreshTokens       RefreshToken[]
   subscriptionPlans   SubscriptionPlan[]
+  subscriptions       Subscription[]
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 }
@@ -118,16 +119,19 @@ model Invoice {
   expectedAmount  Decimal?       @db.Decimal(36, 18)
   notifyEmail     String?
   metadata        Json?
+  subscriptionId  String?
   events          PaymentEvent[]
   ledgerEntries   LedgerEntry[]
   expiresAt       DateTime
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   merchant        Merchant       @relation(fields: [merchantId], references: [id])
+  subscription    Subscription?  @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
 
   @@index([merchantId])
   @@index([state])
   @@index([depositAddress, payAsset, payChain])
+  @@index([subscriptionId])
 }
 
 enum InvoiceState {
@@ -321,11 +325,46 @@ model SubscriptionPlan {
   successUrl     String?
   failedUrl      String?
   partialUrl     String?
+  active         Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   merchant       Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  subscriptions  Subscription[]
 
   @@index([merchantId])
+}
+
+// ─── Subscriptions ─────────────────────────────────────────────────────────
+// A customer's live subscription to a plan. The recurring-billing job issues
+// one invoice per period; `nextBillingAt` is the scheduling cursor.
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  planId             String
+  merchantId         String
+  customerEmail      String
+  payAsset           String
+  payChain           String
+  status             SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  nextBillingAt      DateTime
+  canceledAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  plan               SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  merchant           Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  invoices           Invoice[]
+
+  @@index([planId])
+  @@index([merchantId])
+  @@index([status, nextBillingAt])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
 }
 
 // ─── Recurring policy ──────────────────────────────────────────────────────

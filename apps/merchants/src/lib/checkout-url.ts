@@ -10,3 +10,8 @@ export function checkoutBase(): string {
 export function checkoutUrl(invoiceId: string): string {
   return `${checkoutBase()}/pay/${invoiceId}`;
 }
+
+/** Public hosted page where a customer subscribes to a plan. */
+export function subscribeUrl(planId: string): string {
+  return `${checkoutBase()}/subscribe/${planId}`;
+}

@@ -8,6 +8,7 @@ export const QUEUES = {
   RATE_LOCK_EXPIRY: "rate-lock-expiry",
   COOLDOWN_RELEASE: "cooldown-release",
   PROVIDER_HEALTH: "provider-health",
+  SUBSCRIPTION_BILLING: "subscription-billing",
   RECONCILIATION: "reconciliation",
 } as const;
 

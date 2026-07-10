@@ -7,6 +7,7 @@ import type {
   FeePolicy,
   IntegrationSettingsDto,
   InvoiceDto,
+  InvoiceEventDto,
   InvoiceStatusDto,
   KybDocumentDto,
   KybDocumentType,
@@ -14,9 +15,14 @@ import type {
   KybReviewItem,
   MerchantProfile,
   NotifySubscriptionDto,
+  PublicPlanDto,
+  SubscribeDto,
+  SubscribeResultDto,
+  SubscriptionDto,
   SubscriptionPlanDto,
   UpdateProfileDto,
   UpdateSettlementDto,
+  UpdateSubscriptionPlanDto,
 } from "@egofi/types";
 
 export interface EgofiClientOptions {
@@ -208,6 +214,7 @@ export class EgofiClient {
       );
     },
     get: (id: string) => this.request<InvoiceDto>("GET", `/invoices/${id}`),
+    events: (id: string) => this.request<InvoiceEventDto[]>("GET", `/invoices/${id}/events`),
   };
 
   // Subscription plans (merchant)
@@ -220,7 +227,25 @@ export class EgofiClient {
         `/subscriptions${search ? `?search=${encodeURIComponent(search)}` : ""}`,
       ),
     get: (id: string) => this.request<SubscriptionPlanDto>("GET", `/subscriptions/${id}`),
+    update: (id: string, payload: UpdateSubscriptionPlanDto) =>
+      this.request<SubscriptionPlanDto>("PATCH", `/subscriptions/${id}`, payload),
     delete: (id: string) => this.request<{ ok: boolean }>("DELETE", `/subscriptions/${id}`),
+
+    /** Customers subscribed to one plan. */
+    listSubscribers: (planId: string) =>
+      this.request<{ data: SubscriptionDto[]; total: number }>(
+        "GET",
+        `/subscriptions/${planId}/subscribers`,
+      ),
+    cancelSubscriber: (subscriptionId: string) =>
+      this.request<SubscriptionDto>("POST", `/subscriptions/subscribers/${subscriptionId}/cancel`),
+  };
+
+  /** Public, unauthenticated — backs the hosted subscribe page. */
+  readonly publicPlans = {
+    get: (planId: string) => this.request<PublicPlanDto>("GET", `/public/plans/${planId}`),
+    subscribe: (planId: string, payload: SubscribeDto) =>
+      this.request<SubscribeResultDto>("POST", `/public/plans/${planId}/subscribe`, payload),
   };
 
   // Merchant settings

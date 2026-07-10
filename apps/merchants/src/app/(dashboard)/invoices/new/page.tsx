@@ -2,7 +2,7 @@
 
 import type { InvoiceDto } from "@egofi/types";
 import { Button } from "@egofi/ui";
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { CurrencySelect } from "../../../../lib/CurrencySelect";
 import { OrderDetails } from "../../../../lib/OrderDetails";
 import { api } from "../../../../lib/api";
@@ -83,6 +83,20 @@ export default function NewInvoicePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<InvoiceDto | null>(null);
+  // null while we're still asking; false means Settings → Settlement is empty.
+  const [hasSettlementAddress, setHasSettlementAddress] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("egofi_token");
+    if (!token) return;
+    api.setAuthToken(token);
+    void api.auth
+      .me()
+      .then((m) =>
+        setHasSettlementAddress(Object.values(m.settlementAddresses ?? {}).some(Boolean)),
+      )
+      .catch(() => setHasSettlementAddress(null));
+  }, []);
 
   const currency = useMemo(
     () => PAY_CURRENCIES.find((c) => c.id === currencyId) ?? PAY_CURRENCIES[0]!,
@@ -131,6 +145,9 @@ export default function NewInvoicePage() {
         payChain: currency.chain,
         ttlSeconds,
         ...(refundAddress ? { refundAddress } : {}),
+        // Giving the customer's address here subscribes them to status emails,
+        // not just to the metadata blob.
+        ...(customerEmail.trim() ? { notifyEmail: customerEmail.trim() } : {}),
         metadata,
       });
       setCreated(invoice);
@@ -178,6 +195,24 @@ export default function NewInvoicePage() {
             <span className="sr-only">Close</span>
           </a>
         </div>
+
+        {hasSettlementAddress === false && (
+          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-semibold text-amber-900">
+              Add a settlement address before you can accept payments
+            </p>
+            <p className="mt-1 text-sm text-amber-800">
+              We need somewhere to send the money. Without it, anyone opening your payment link
+              would hit a dead end.
+            </p>
+            <a
+              href="/settings/settlement"
+              className="mt-2.5 inline-block text-sm font-semibold text-amber-900 underline underline-offset-2 hover:text-amber-950"
+            >
+              Go to Settings → Settlement
+            </a>
+          </div>
+        )}
 
         <div className="mt-6 space-y-5">
           {/* Pay currency */}
@@ -378,7 +413,13 @@ export default function NewInvoicePage() {
           </p>
         </div>
 
-        <Button type="submit" loading={loading} size="lg" className="mt-6 w-full">
+        <Button
+          type="submit"
+          loading={loading}
+          disabled={hasSettlementAddress === false}
+          size="lg"
+          className="mt-6 w-full"
+        >
           Confirm
         </Button>
       </form>

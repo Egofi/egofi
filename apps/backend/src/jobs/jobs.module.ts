@@ -6,6 +6,7 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InvoicesModule } from "../invoices/invoices.module";
 import { RailsModule } from "../rails/rails.module";
+import { SubscriptionsModule } from "../subscriptions/subscriptions.module";
 import { WebhooksModule } from "../webhooks/webhooks.module";
 import { JobsService } from "./jobs.service";
 import { ConfirmationWatchProcessor } from "./processors/confirmation-watch.processor";
@@ -15,6 +16,7 @@ import { MerchantWebhookProcessor } from "./processors/merchant-webhook.processo
 import { OutboxDispatchProcessor } from "./processors/outbox-dispatch.processor";
 import { ProviderHealthProcessor } from "./processors/provider-health.processor";
 import { RateLockExpiryProcessor } from "./processors/rate-lock-expiry.processor";
+import { SubscriptionBillingProcessor } from "./processors/subscription-billing.processor";
 import { SwapStatusPollProcessor } from "./processors/swap-status-poll.processor";
 import { QUEUES } from "./queues";
 
@@ -50,6 +52,7 @@ const ALL_QUEUES = Object.values(QUEUES);
     InvoicesModule,
     WebhooksModule,
     RailsModule,
+    SubscriptionsModule,
   ],
   providers: [
     JobsService,
@@ -61,6 +64,7 @@ const ALL_QUEUES = Object.values(QUEUES);
     MerchantWebhookProcessor,
     RateLockExpiryProcessor,
     ProviderHealthProcessor,
+    SubscriptionBillingProcessor,
   ],
   exports: [JobsService, BullModule],
 })

@@ -1,7 +1,17 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiHeader, ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { Merchant } from "@prisma/client";
-import { IsInt, IsNumberString, IsObject, IsOptional, IsString, Max, Min } from "class-validator";
+import {
+  IsEmail,
+  IsInt,
+  IsNumberString,
+  IsObject,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from "class-validator";
 import { CurrentMerchant } from "../auth/decorators/current-merchant.decorator";
 import { MerchantAuthGuard } from "../auth/guards/merchant-auth.guard";
 import { InvoicesService } from "./invoices.service";
@@ -29,6 +39,12 @@ class CreateInvoiceBodyDto {
   @Max(86_400) // 24 hours
   @IsOptional()
   ttlSeconds?: number;
+
+  /** Send the payer a receipt / reminders for this invoice. */
+  @IsEmail()
+  @MaxLength(320)
+  @IsOptional()
+  notifyEmail?: string;
 
   @IsObject()
   @IsOptional()
@@ -71,7 +87,14 @@ export class InvoicesController {
 
   @Get(":id")
   @ApiOperation({ summary: "Get invoice by ID" })
-  get(@CurrentMerchant() _merchant: Merchant, @Param("id") id: string) {
-    return this.invoices.get(id);
+  get(@CurrentMerchant() merchant: Merchant, @Param("id") id: string) {
+    // Scoped: a merchant must never be able to read another merchant's invoice.
+    return this.invoices.getForMerchant(merchant.id, id);
+  }
+
+  @Get(":id/events")
+  @ApiOperation({ summary: "Get an invoice's payment timeline" })
+  events(@CurrentMerchant() merchant: Merchant, @Param("id") id: string) {
+    return this.invoices.listEvents(merchant.id, id);
   }
 }

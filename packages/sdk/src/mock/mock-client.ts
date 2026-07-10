@@ -6,14 +6,26 @@ import type {
   CreateSubscriptionPlanDto,
   FeePolicy,
   InvoiceDto,
+  InvoiceEventDto,
   InvoiceStatusDto,
   KybDocumentDto,
   KybOverview,
   MerchantProfile,
+  PublicPlanDto,
+  SubscribeDto,
+  SubscribeResultDto,
+  SubscriptionDto,
   SubscriptionPlanDto,
   UpdateSettlementDto,
+  UpdateSubscriptionPlanDto,
 } from "@egofi/types";
-import { InvoiceState, KybDocumentStatus, type KybDocumentType, KybStatus } from "@egofi/types";
+import {
+  InvoiceState,
+  KybDocumentStatus,
+  type KybDocumentType,
+  KybStatus,
+  SubscriptionStatus,
+} from "@egofi/types";
 import {
   MOCK_API_KEYS,
   MOCK_CHECKOUT_TIMINGS,
@@ -37,6 +49,7 @@ const apiKeys = [...MOCK_API_KEYS];
 let mockMerchants = [...MOCK_MERCHANTS_LIST];
 let mockIpnSecret: string | null = null;
 const mockSubscriptionPlans: SubscriptionPlanDto[] = [];
+const mockSubscriptions: SubscriptionDto[] = [];
 let subscriptionCounter = 0;
 const mockKybDocuments: KybDocumentDto[] = [];
 let mockKybStatus: KybStatus = KybStatus.Pending;
@@ -144,6 +157,7 @@ export class MockEgofiClient {
         railRef: null,
         state: InvoiceState.AwaitingPayment,
         refundAddress: dto.refundAddress ?? null,
+        subscriptionId: null,
         expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
         createdAt: new Date().toISOString(),
       };
@@ -175,6 +189,52 @@ export class MockEgofiClient {
       if (!invoice) throw new Error(`Invoice ${id} not found`);
       return invoice;
     },
+
+    events: async (id: string): Promise<InvoiceEventDto[]> => {
+      await delay(250);
+      const state = getMockCheckoutState(id);
+      const base = Date.now() - 20 * 60_000;
+      const timeline: InvoiceEventDto[] = [
+        {
+          id: `evt_${id}_1`,
+          type: "state.issue",
+          rail: "DIRECT_TRANSFER",
+          txHash: null,
+          leg: null,
+          amount: null,
+          asset: null,
+          chain: null,
+          ts: new Date(base).toISOString(),
+        },
+      ];
+      if (state !== InvoiceState.AwaitingPayment) {
+        timeline.push({
+          id: `evt_${id}_2`,
+          type: "DEPOSIT_DETECTED",
+          rail: "DIRECT_TRANSFER",
+          txHash: "0xmocktxhash1234567890abcdef",
+          leg: "deposit",
+          amount: "25.03",
+          asset: "USDT",
+          chain: "TRON",
+          ts: new Date(base + 5 * 60_000).toISOString(),
+        });
+      }
+      if (state === InvoiceState.PaidConfirmed) {
+        timeline.push({
+          id: `evt_${id}_3`,
+          type: "state.confirm",
+          rail: "DIRECT_TRANSFER",
+          txHash: "TRmockpayouttx1234567890abcdef",
+          leg: "payout",
+          amount: "25.03",
+          asset: "USDT",
+          chain: "TRON",
+          ts: new Date(base + 9 * 60_000).toISOString(),
+        });
+      }
+      return timeline;
+    },
   };
 
   readonly subscriptions = {
@@ -193,6 +253,7 @@ export class MockEgofiClient {
         successUrl: payload.successUrl?.trim() || null,
         failedUrl: payload.failedUrl?.trim() || null,
         partialUrl: payload.partialUrl?.trim() || null,
+        active: true,
         createdAt: now,
         updatedAt: now,
       };
@@ -218,11 +279,82 @@ export class MockEgofiClient {
       return plan;
     },
 
+    update: async (
+      id: string,
+      payload: UpdateSubscriptionPlanDto,
+    ): Promise<SubscriptionPlanDto> => {
+      await delay(400);
+      const plan = mockSubscriptionPlans.find((p) => p.id === id);
+      if (!plan) throw new Error(`Subscription plan ${id} not found`);
+      Object.assign(plan, payload, { updatedAt: new Date().toISOString() });
+      return plan;
+    },
+
     delete: async (id: string): Promise<{ ok: boolean }> => {
       await delay(300);
       const idx = mockSubscriptionPlans.findIndex((p) => p.id === id);
       if (idx !== -1) mockSubscriptionPlans.splice(idx, 1);
       return { ok: true };
+    },
+
+    listSubscribers: async (
+      planId: string,
+    ): Promise<{ data: SubscriptionDto[]; total: number }> => {
+      await delay(300);
+      const data = mockSubscriptions.filter((s) => s.planId === planId);
+      return { data: [...data], total: data.length };
+    },
+
+    cancelSubscriber: async (subscriptionId: string): Promise<SubscriptionDto> => {
+      await delay(350);
+      const sub = mockSubscriptions.find((s) => s.id === subscriptionId);
+      if (!sub) throw new Error(`Subscription ${subscriptionId} not found`);
+      sub.status = SubscriptionStatus.Canceled;
+      sub.canceledAt = new Date().toISOString();
+      return sub;
+    },
+  };
+
+  readonly publicPlans = {
+    get: async (planId: string): Promise<PublicPlanDto> => {
+      await delay(250);
+      const plan = mockSubscriptionPlans.find((p) => p.id === planId);
+      if (!plan) throw new Error(`Subscription plan ${planId} not found`);
+      return {
+        id: plan.id,
+        title: plan.title,
+        periodDuration: plan.periodDuration,
+        periodUnit: plan.periodUnit,
+        costPerPeriod: plan.costPerPeriod,
+        currency: plan.currency,
+        active: plan.active,
+        merchantBusiness: currentMerchant.business,
+      };
+    },
+
+    subscribe: async (planId: string, payload: SubscribeDto): Promise<SubscribeResultDto> => {
+      await delay(700);
+      const now = new Date();
+      const periodEnd = new Date(now.getTime() + 30 * 24 * 3600_000);
+      const sub: SubscriptionDto = {
+        id: `subr_mock_${Date.now()}`,
+        planId,
+        merchantId: currentMerchant.id,
+        customerEmail: payload.customerEmail.toLowerCase(),
+        payAsset: payload.payAsset,
+        payChain: payload.payChain,
+        status: SubscriptionStatus.Active,
+        currentPeriodStart: now.toISOString(),
+        currentPeriodEnd: periodEnd.toISOString(),
+        nextBillingAt: periodEnd.toISOString(),
+        canceledAt: null,
+        createdAt: now.toISOString(),
+        invoiceCount: 1,
+      };
+      mockSubscriptions.unshift(sub);
+      const id = `inv_mock_${String(++invoiceCounter).padStart(3, "0")}`;
+      MOCK_CHECKOUT_TIMINGS[id] = Date.now();
+      return { subscription: sub, invoiceId: id };
     },
   };
 

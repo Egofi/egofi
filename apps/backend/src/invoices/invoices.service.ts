@@ -1,4 +1,4 @@
-import type { CreateInvoiceDto, InvoiceDto } from "@egofi/types";
+import type { CreateInvoiceDto, InvoiceDto, InvoiceEventDto } from "@egofi/types";
 import { InvoiceState, WebhookEvent } from "@egofi/types";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { Prisma, InvoiceState as PrismaInvoiceState } from "@prisma/client";
@@ -32,6 +32,22 @@ export class InvoicesService {
       throw new BadRequestException("Invoice amount must be greater than zero");
     }
 
+    // Fail here rather than when the customer opens the checkout page: without
+    // a payout address there is nowhere for the deposit to land, and a broken
+    // hosted page is the worst place to discover that. Which address is needed
+    // depends on the rail chosen at issue time, so only the "none at all" case
+    // is decidable here — the rails reject a missing per-chain address.
+    const merchant = await this.prisma.merchant.findUniqueOrThrow({
+      where: { id: dto.merchantId },
+      select: { settlementAddresses: true },
+    });
+    const addresses = (merchant.settlementAddresses ?? {}) as Record<string, string>;
+    if (!Object.values(addresses).some((a) => typeof a === "string" && a.length > 0)) {
+      throw new BadRequestException(
+        "No settlement address is configured. Add one under Settings → Settlement before accepting payments.",
+      );
+    }
+
     const ttl = dto.ttlSeconds ?? DEFAULT_TTL_SECONDS;
     const expiresAt = new Date(Date.now() + ttl * 1_000);
     const rateLockedUntil = new Date(Date.now() + Math.min(ttl, 15 * 60) * 1_000);
@@ -49,6 +65,7 @@ export class InvoicesService {
         rail: "PENDING",
         state: InvoiceState.Draft,
         refundAddress: dto.refundAddress ?? null,
+        notifyEmail: dto.notifyEmail?.trim().toLowerCase() || null,
         ...(dto.metadata ? { metadata: dto.metadata as Prisma.InputJsonValue } : {}),
         expiresAt,
       },
@@ -124,8 +141,39 @@ export class InvoicesService {
     return this.toDto(updated);
   }
 
+  /** Unscoped read — for internal/public flows (checkout) that have no merchant context. */
   async get(id: string): Promise<InvoiceDto> {
     return this.toDto(await this.findOrThrow(id));
+  }
+
+  /**
+   * Tenant-scoped read. Merchant-facing endpoints MUST use this so one merchant
+   * can never read another's invoice by guessing an id.
+   */
+  async getForMerchant(merchantId: string, id: string): Promise<InvoiceDto> {
+    const invoice = await this.prisma.invoice.findFirst({ where: { id, merchantId } });
+    if (!invoice) throw new NotFoundException(`Invoice ${id} not found`);
+    return this.toDto(invoice);
+  }
+
+  /** Append-only payment timeline for one invoice, oldest first. */
+  async listEvents(merchantId: string, invoiceId: string): Promise<InvoiceEventDto[]> {
+    await this.getForMerchant(merchantId, invoiceId); // scope + 404 check
+    const events = await this.prisma.paymentEvent.findMany({
+      where: { invoiceId },
+      orderBy: { ts: "asc" },
+    });
+    return events.map((e) => ({
+      id: e.id,
+      type: e.type,
+      rail: e.rail,
+      txHash: e.txHash,
+      leg: e.leg,
+      amount: e.amount?.toString() ?? null,
+      asset: e.asset,
+      chain: e.chain,
+      ts: e.ts.toISOString(),
+    }));
   }
 
   async list(merchantId: string, page = 1, limit = 20, state?: string) {
@@ -193,6 +241,7 @@ export class InvoicesService {
     railRef: string | null;
     state: string;
     refundAddress: string | null;
+    subscriptionId: string | null;
     expiresAt: Date;
     createdAt: Date;
   }): InvoiceDto {
@@ -210,6 +259,7 @@ export class InvoicesService {
       railRef: invoice.railRef,
       state: invoice.state as InvoiceState,
       refundAddress: invoice.refundAddress,
+      subscriptionId: invoice.subscriptionId,
       expiresAt: invoice.expiresAt.toISOString(),
       createdAt: invoice.createdAt.toISOString(),
     };

@@ -24,6 +24,8 @@ export class JobsService implements OnModuleInit {
     private readonly cooldownReleaseQueue: Queue,
     @InjectQueue(QUEUES.PROVIDER_HEALTH)
     private readonly providerHealthQueue: Queue,
+    @InjectQueue(QUEUES.SUBSCRIPTION_BILLING)
+    private readonly subscriptionBillingQueue: Queue,
   ) {}
 
   /**
@@ -47,6 +49,11 @@ export class JobsService implements OnModuleInit {
       "provider-health-tick",
       { pattern: "0 * * * *" }, // hourly
       { name: "rollup" },
+    );
+    await this.subscriptionBillingQueue.upsertJobScheduler(
+      "subscription-billing-tick",
+      { pattern: "5 * * * *" }, // hourly, offset from the provider-health rollup
+      { name: "bill" },
     );
   }
 

@@ -1,7 +1,12 @@
 "use client";
 
-import type { CheckoutSessionDto, InvoiceDto, InvoiceStatusDto } from "@egofi/types";
-import { InvoiceState } from "@egofi/types";
+import type {
+  CheckoutSessionDto,
+  InvoiceDto,
+  InvoiceEventDto,
+  InvoiceStatusDto,
+} from "@egofi/types";
+import { CHAIN_CONFIGS, type Chain, InvoiceState } from "@egofi/types";
 import { Spinner, cn } from "@egofi/ui";
 import Decimal from "decimal.js";
 import { useParams } from "next/navigation";
@@ -17,6 +22,7 @@ import {
   buttonSnippet,
   widgetSnippet,
 } from "../../../../lib/embeds";
+import { describeEvent } from "../../../../lib/invoice-events";
 import { INVOICE_STATE_CONFIG, InvoiceStateBadge } from "../../../../lib/invoice-state";
 
 const POLL_INTERVAL_MS = 6_000;
@@ -36,13 +42,21 @@ const STATUS_TEXT_COLOR: Record<string, string> = {
   default: "text-navy-400",
 };
 
-type Tab = "history" | "link" | "widget" | "button";
+type Tab = "history" | "timeline" | "link" | "widget" | "button";
 const TABS: { id: Tab; label: string }[] = [
   { id: "history", label: "History" },
+  { id: "timeline", label: "Timeline" },
   { id: "link", label: "Link" },
   { id: "widget", label: "Widget" },
   { id: "button", label: "Button" },
 ];
+
+function explorerTxUrl(chain: string, hash: string): string | null {
+  const cfg = CHAIN_CONFIGS[chain as Chain];
+  if (!cfg) return null;
+  const path = chain.toUpperCase() === "TRON" ? `/#/transaction/${hash}` : `/tx/${hash}`;
+  return `${cfg.explorerBaseUrl}${path}`;
+}
 
 function trimCrypto(v: string): string {
   return new Decimal(v || "0").toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
@@ -160,7 +174,14 @@ export default function InvoiceDetailPage() {
           <span className="sr-only">Back to payments</span>
         </a>
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wider text-navy-400">Invoice</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-navy-400">Invoice</p>
+            {invoice.subscriptionId && (
+              <span className="rounded-full bg-info-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-info-700 ring-1 ring-inset ring-info-200">
+                Recurring
+              </span>
+            )}
+          </div>
           <h1 className="truncate font-mono text-lg font-bold text-navy-950 sm:text-xl">
             {invoice.id}
           </h1>
@@ -231,6 +252,7 @@ export default function InvoiceDetailPage() {
       </div>
 
       {tab === "history" && <HistoryTab invoice={invoice} session={session} status={status} />}
+      {tab === "timeline" && <TimelineTab invoiceId={invoice.id} live={isLive} />}
       {tab === "link" && <LinkTab invoiceId={invoice.id} />}
       {tab === "widget" && <WidgetTab invoiceId={invoice.id} />}
       {tab === "button" && <ButtonTab invoiceId={invoice.id} />}
@@ -436,6 +458,106 @@ function DetailItem({
           {copy && <CopyButton text={copy} label={label} className="px-1 py-0.5" />}
         </span>
       </dd>
+    </div>
+  );
+}
+
+// ── Timeline ──────────────────────────────────────────────────────
+function TimelineTab({ invoiceId, live }: { invoiceId: string; live: boolean }) {
+  const [events, setEvents] = useState<InvoiceEventDto[] | null>(null);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const run = async () => {
+      try {
+        setEvents(await api.invoices.events(invoiceId));
+      } catch {
+        setEvents([]);
+      }
+      if (live) timer = setTimeout(run, POLL_INTERVAL_MS);
+    };
+    void run();
+    return () => clearTimeout(timer);
+  }, [invoiceId, live]);
+
+  if (events === null) {
+    return (
+      <div className="flex justify-center rounded-2xl border border-navy-100 bg-white py-16">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="rounded-2xl border border-navy-100 bg-white p-12 text-center">
+        <p className="font-medium text-navy-800">Nothing has happened yet</p>
+        <p className="mt-1 text-sm text-navy-500">
+          Events appear here as the deposit is detected, converted, and confirmed.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-navy-100 bg-white p-5 sm:p-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-navy-500">
+          Every state change and on-chain leg, in the order it happened.
+        </p>
+        {live && (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-navy-400">
+            <span className="size-1.5 rounded-full bg-success-500 animate-pulse" />
+            Live
+          </span>
+        )}
+      </div>
+
+      <ol className="mt-6 space-y-0">
+        {events.map((ev, i) => {
+          const meta = describeEvent(ev.type);
+          const isLast = i === events.length - 1;
+          const explorer = ev.txHash && ev.chain ? explorerTxUrl(ev.chain, ev.txHash) : null;
+          return (
+            <li key={ev.id} className="relative flex gap-4 pb-6 last:pb-0">
+              {!isLast && (
+                <span className="absolute left-[5px] top-3 h-full w-px bg-navy-100" aria-hidden />
+              )}
+              <span className={cn("relative mt-1.5 size-2.5 shrink-0 rounded-full", meta.dot)} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <p className="font-semibold text-navy-950">{meta.label}</p>
+                  <time className="shrink-0 text-xs text-navy-400">{formatDateTime(ev.ts)}</time>
+                </div>
+                {meta.detail && <p className="mt-0.5 text-sm text-navy-500">{meta.detail}</p>}
+
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-navy-400">
+                  {ev.amount && ev.asset && (
+                    <span className="font-medium tabular-nums text-navy-600">
+                      {trimCrypto(ev.amount)} {ev.asset}
+                    </span>
+                  )}
+                  {ev.leg && <span>leg: {ev.leg.toLowerCase()}</span>}
+                  {ev.rail && <span>{ev.rail.replace(/_/g, " ").toLowerCase()}</span>}
+                  {ev.txHash &&
+                    (explorer ? (
+                      <a
+                        href={explorer}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-primary hover:underline"
+                      >
+                        {ev.txHash.slice(0, 10)}…{ev.txHash.slice(-6)} ↗
+                      </a>
+                    ) : (
+                      <span className="font-mono">{ev.txHash.slice(0, 16)}…</span>
+                    ))}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

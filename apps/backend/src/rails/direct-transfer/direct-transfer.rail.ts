@@ -1,8 +1,9 @@
 import { RailStatus, RailType } from "@egofi/types";
-import { Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../core/prisma.service";
 import type { Invoice, PaymentInstructions, RailEvent, RouteQuery } from "../rail.interface";
 import type { SettlementRail } from "../rail.interface";
+import { resolveSettlementAddress, settlementAddressLabel } from "../settlement-address";
 import { AmountPoolService } from "./amount-pool.service";
 import { PaymentUriService } from "./payment-uri.service";
 
@@ -95,20 +96,14 @@ export class DirectTransferRail implements SettlementRail {
   }
 
   private resolveAddress(addresses: Record<string, string>, chain: string): string {
-    const evmChains = ["ETHEREUM", "BSC", "POLYGON", "BASE"];
-    if (evmChains.includes(chain.toUpperCase())) {
-      if (!addresses["evm"]) throw new Error("Merchant has no EVM address configured");
-      return addresses["evm"];
+    const address = resolveSettlementAddress(addresses, chain);
+    if (!address) {
+      // A BadRequest, not a 500: nothing is broken, the merchant simply hasn't
+      // told us where to send the money yet.
+      throw new BadRequestException(
+        `This merchant has not configured a ${settlementAddressLabel(chain)} settlement address, so ${chain} payments cannot be accepted.`,
+      );
     }
-    const mapping: Record<string, string> = {
-      TRON: "tron",
-      SOLANA: "solana",
-      BITCOIN: "bitcoin",
-    };
-    const key = mapping[chain.toUpperCase()];
-    if (!key || !addresses[key]) {
-      throw new Error(`Merchant has no ${chain} address configured`);
-    }
-    return addresses[key];
+    return address;
   }
 }

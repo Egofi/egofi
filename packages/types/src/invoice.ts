@@ -8,6 +8,8 @@ export interface CreateInvoiceDto {
   payChain: string;
   refundAddress?: string;
   ttlSeconds?: number;
+  /** Emailed a receipt / payment reminders for this invoice. */
+  notifyEmail?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -32,6 +34,8 @@ export interface InvoiceDto {
   railRef: string | null;
   state: InvoiceState;
   refundAddress: string | null;
+  /** Set when this invoice was auto-issued by a recurring subscription. */
+  subscriptionId: string | null;
   expiresAt: string;
   createdAt: string;
 }
@@ -67,6 +71,19 @@ export interface CheckoutSessionDto {
     networkLabel?: string;
     providerRef?: string;
   };
+}
+
+/** One entry in an invoice's append-only payment timeline. */
+export interface InvoiceEventDto {
+  id: string;
+  type: string;
+  rail: string;
+  txHash: string | null;
+  leg: string | null;
+  amount: string | null;
+  asset: string | null;
+  chain: string | null;
+  ts: string;
 }
 
 export interface InvoiceStatusDto {

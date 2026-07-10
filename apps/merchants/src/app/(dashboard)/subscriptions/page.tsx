@@ -2,11 +2,13 @@
 
 import type { SubscriptionPlanDto } from "@egofi/types";
 import { SubscriptionPeriodUnit } from "@egofi/types";
-import { Button, Spinner, cn } from "@egofi/ui";
+import { Badge, Button, Spinner, cn } from "@egofi/ui";
+import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { CopyButton } from "../../../lib/CopyButton";
 import { api } from "../../../lib/api";
 import { loginRedirect } from "../../../lib/auth";
+import { subscribeUrl } from "../../../lib/checkout-url";
 
 const PERIOD_UNITS: { value: SubscriptionPeriodUnit; label: string; singular: string }[] = [
   { value: SubscriptionPeriodUnit.Day, label: "Day(s)", singular: "Day" },
@@ -43,6 +45,7 @@ const fieldCls =
   "w-full border border-navy-200 bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10";
 
 export default function SubscriptionsPage() {
+  const router = useRouter();
   const [plans, setPlans] = useState<SubscriptionPlanDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -76,8 +79,13 @@ export default function SubscriptionsPage() {
 
   const remove = async (id: string) => {
     if (!confirm("Delete this subscription plan? This can't be undone.")) return;
-    await api.subscriptions.delete(id);
-    setPlans((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await api.subscriptions.delete(id);
+      setPlans((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      // The API refuses to delete a plan that still has active subscribers.
+      alert(err instanceof Error ? err.message : "Could not delete the plan");
+    }
   };
 
   return (
@@ -118,13 +126,13 @@ export default function SubscriptionsPage() {
       {/* Table */}
       <div className="overflow-hidden border border-navy-100 bg-white shadow-card">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[840px] text-sm">
             <thead>
               <tr className="border-b border-navy-100 text-left text-xs font-medium uppercase tracking-wide text-navy-400">
-                <th className="px-6 py-4 font-medium">Subscription ID</th>
                 <th className="px-6 py-4 font-medium">Name</th>
                 <th className="px-6 py-4 font-medium">Cost per period</th>
                 <th className="px-6 py-4 font-medium">Period</th>
+                <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Created at</th>
                 <th className="px-6 py-4" />
               </tr>
@@ -148,37 +156,65 @@ export default function SubscriptionsPage() {
                 </tr>
               ) : (
                 rows.map((p) => (
-                  <tr key={p.id} className="group transition-colors hover:bg-navy-50/50">
+                  <tr
+                    key={p.id}
+                    onClick={() => router.push(`/subscriptions/${p.id}`)}
+                    className="group cursor-pointer transition-colors hover:bg-navy-50/50"
+                  >
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1">
-                        <span className="font-mono text-xs text-navy-600">{p.id}</span>
-                        <CopyButton text={p.id} label="subscription ID" className="px-1 py-0.5" />
-                      </span>
+                      <a
+                        href={`/subscriptions/${p.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-medium text-navy-900 hover:text-primary"
+                      >
+                        {p.title}
+                      </a>
+                      <p className="mt-0.5 font-mono text-[11px] text-navy-400">{p.id}</p>
                     </td>
-                    <td className="px-6 py-4 font-medium text-navy-900">{p.title}</td>
                     <td className="px-6 py-4 tabular-nums text-navy-800">
                       {p.costPerPeriod} <span className="text-navy-400">{p.currency}</span>
                     </td>
                     <td className="px-6 py-4 text-navy-700">
                       {periodLabel(p.periodDuration, p.periodUnit)}
                     </td>
+                    <td className="px-6 py-4">
+                      <Badge variant={p.active ? "success" : "default"} dot>
+                        {p.active ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
                     <td className="px-6 py-4 text-navy-500">{formatDate(p.createdAt)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => remove(p.id)}
-                        aria-label="Delete plan"
-                        title="Delete plan"
-                        className="flex size-8 items-center justify-center rounded-lg text-navy-400 opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover:opacity-100"
+                    <td className="px-6 py-4">
+                      <div
+                        className="flex items-center justify-end gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
                       >
-                        <svg viewBox="0 0 16 16" fill="currentColor" className="size-4" aria-hidden>
-                          <path
-                            fillRule="evenodd"
-                            d="M6.5 1.75a.25.25 0 0 1 .25-.25h2.5a.25.25 0 0 1 .25.25V3h-3V1.75zM11 3V1.75A1.75 1.75 0 0 0 9.25 0h-2.5A1.75 1.75 0 0 0 5 1.75V3H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.75 1.75 0 0 0 5.6 14.25h4.8a1.75 1.75 0 0 0 1.735-1.6L12.95 4.5h.3a.75.75 0 0 0 0-1.5H11z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
+                        <CopyButton
+                          text={subscribeUrl(p.id)}
+                          label="subscribe link"
+                          className="px-1.5 py-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => remove(p.id)}
+                          aria-label="Delete plan"
+                          title="Delete plan"
+                          className="flex size-8 items-center justify-center rounded-lg text-navy-400 opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 focus-visible:opacity-100 group-hover:opacity-100"
+                        >
+                          <svg
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            className="size-4"
+                            aria-hidden
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M6.5 1.75a.25.25 0 0 1 .25-.25h2.5a.25.25 0 0 1 .25.25V3h-3V1.75zM11 3V1.75A1.75 1.75 0 0 0 9.25 0h-2.5A1.75 1.75 0 0 0 5 1.75V3H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.75 1.75 0 0 0 5.6 14.25h4.8a1.75 1.75 0 0 0 1.735-1.6L12.95 4.5h.3a.75.75 0 0 0 0-1.5H11z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -194,6 +230,8 @@ export default function SubscriptionsPage() {
           onCreated={(plan) => {
             setPlans((prev) => [plan, ...prev]);
             setModalOpen(false);
+            // Land on the detail page — that's where the shareable link lives.
+            router.push(`/subscriptions/${plan.id}`);
           }}
         />
       )}
