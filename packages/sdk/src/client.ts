@@ -66,9 +66,26 @@ export class EgofiClient {
   /**
    * Called whenever a request comes back 401 Unauthorized — i.e. the session
    * is missing or expired. Apps set this to clear local auth and redirect to
-   * login. Not fired in the SDK itself beyond invoking the callback.
+   * login. When it is set, a 401 does NOT reject the request promise (see
+   * `handleUnauthorized`), so the handler MUST navigate away or otherwise tear
+   * down the current view.
    */
   onUnauthorized?: () => void;
+
+  /**
+   * A 401 means the session is gone. If the app registered a handler (the
+   * dashboards do, to redirect to /login), invoke it and then suspend the
+   * request forever: the app is unloading, so resolving or rejecting would only
+   * flash a spurious error in the UI it is already leaving. With no handler
+   * (e.g. the login page), reject so the caller can surface "bad credentials".
+   */
+  private handleUnauthorized<T>(code: string, message: string): Promise<T> {
+    if (this.onUnauthorized) {
+      this.onUnauthorized();
+      return new Promise<T>(() => {}); // never settles; the page is navigating away
+    }
+    return Promise.reject(new EgofiApiError(401, code, message));
+  }
 
   constructor(options: EgofiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
@@ -122,7 +139,7 @@ export class EgofiClient {
       } catch {
         // ignore parse failure
       }
-      if (response.status === 401) this.onUnauthorized?.();
+      if (response.status === 401) return this.handleUnauthorized<T>(code, message);
       throw new EgofiApiError(response.status, code, message);
     }
 
@@ -159,7 +176,7 @@ export class EgofiClient {
       } catch {
         // ignore parse failure
       }
-      if (response.status === 401) this.onUnauthorized?.();
+      if (response.status === 401) return this.handleUnauthorized<T>(code, message);
       throw new EgofiApiError(response.status, code, message);
     }
     if (response.status === 204) return undefined as T;
