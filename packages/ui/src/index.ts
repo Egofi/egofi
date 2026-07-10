@@ -15,6 +15,9 @@ export { Skeleton } from "./components/Skeleton";
 export { Input } from "./components/Input";
 export type { InputProps } from "./components/Input";
 
+export { Logo } from "./components/Logo";
+export type { LogoProps } from "./components/Logo";
+
 export { cn } from "./lib/cn";
 
 export { MockModeBanner } from "./components/MockModeBanner";

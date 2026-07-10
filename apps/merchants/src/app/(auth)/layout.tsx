@@ -1,3 +1,5 @@
+import { Logo } from "@egofi/ui";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[5fr_7fr]">
@@ -57,10 +59,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <main className="flex items-center justify-center bg-white px-4 py-12 sm:px-8">
         <div className="w-full max-w-md animate-fade-in-up">
           {/* Mobile logo */}
-          <a href="/" className="mb-10 block text-center lg:hidden">
-            <span className="text-2xl font-bold tracking-tight text-navy-950">
-              egofi<span className="text-primary">.</span>
-            </span>
+          <a href="/" className="mb-10 flex justify-center lg:hidden">
+            <Logo size={64} />
           </a>
           {children}
         </div>

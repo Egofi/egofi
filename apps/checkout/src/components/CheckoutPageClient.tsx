@@ -3,6 +3,7 @@
 import { createApiClient } from "@egofi/sdk";
 import type { CheckoutSessionDto, InvoiceStatusDto } from "@egofi/types";
 import { CHAIN_CONFIGS, type Chain, InvoiceState } from "@egofi/types";
+import { Logo } from "@egofi/ui";
 import Decimal from "decimal.js";
 import { useCallback, useEffect, useState } from "react";
 import { CollapsibleSection } from "./CollapsibleSection";
@@ -300,9 +301,7 @@ export function CheckoutPageClient({
         {/* Top bar */}
         {!embedded && (
           <div className="mb-5 flex w-full max-w-4xl items-center justify-between gap-4">
-            <span className="text-lg font-bold tracking-tight text-navy-950">
-              egofi<span className="text-primary">.</span>
-            </span>
+            <Logo size={40} />
             <LanguageSwitcher />
           </div>
         )}

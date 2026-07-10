@@ -1,9 +1,9 @@
+import { Logo } from "@egofi/ui";
+
 export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
-      <span className="text-3xl font-bold tracking-tight text-navy-950">
-        egofi<span className="text-primary">.</span>
-      </span>
+      <Logo size={88} />
       <div className="max-w-sm text-center">
         <h1 className="text-lg font-semibold text-navy-900">Nothing to pay here — yet.</h1>
         <p className="mt-2 text-sm leading-relaxed text-navy-500">

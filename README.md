@@ -265,6 +265,7 @@ Backend (`apps/backend/.env`) — see `apps/backend/.env.example` for the full l
 | `CLOUDINARY_*` | Private KYB document storage |
 
 Frontends read `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CHECKOUT_URL`, and `NEXT_PUBLIC_API_MODE` (`dev` | `mock` | `production`).
+Set `NEXT_PUBLIC_SITE_URL` to each app's public origin in production so the Open Graph share card resolves to an absolute URL.
 
 ---
 

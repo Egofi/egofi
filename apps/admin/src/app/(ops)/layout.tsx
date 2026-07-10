@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@egofi/ui";
+import { Logo, cn } from "@egofi/ui";
 import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
@@ -104,11 +104,8 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col md:pl-60">
         {/* Mobile topbar */}
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-navy-100 bg-white/90 px-4 backdrop-blur md:hidden">
-          <a
-            href="/merchants"
-            className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-navy-950"
-          >
-            egofi<span className="text-primary">.</span>
+          <a href="/merchants" className="flex items-center gap-2">
+            <Logo size={36} />
             <span className="rounded bg-navy-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-navy-500">
               Ops
             </span>
