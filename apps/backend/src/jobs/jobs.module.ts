@@ -29,7 +29,11 @@ const ALL_QUEUES = Object.values(QUEUES);
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        connection: { url: config.getOrThrow<string>("REDIS_URL") },
+        connection: {
+          url: config.getOrThrow<string>("REDIS_URL"),
+          // Back off instead of reconnecting every ~50ms while Redis is down.
+          retryStrategy: (attempt: number) => Math.min(attempt * 200, 5_000),
+        },
         defaultJobOptions: {
           attempts: 5,
           backoff: { type: "exponential", delay: 2_000 },

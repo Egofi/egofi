@@ -1,6 +1,7 @@
 import { OnWorkerEvent, WorkerHost } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
 import type { Job } from "bullmq";
+import { ErrorThrottle, isTransportError } from "../shared/connection-error";
 
 /**
  * Error handling every worker gets by inheritance, not by discipline: every
@@ -11,6 +12,9 @@ import type { Job } from "bullmq";
  */
 export abstract class BaseProcessor extends WorkerHost {
   protected readonly log = new Logger(this.constructor.name);
+  // Shared across every processor: when Redis goes away it goes away for all of
+  // them at once, so one line per window is the whole story.
+  private static readonly connectionErrors = new ErrorThrottle();
 
   @OnWorkerEvent("failed")
   onFailed(job: Job | undefined, error: Error): void {
@@ -40,8 +44,19 @@ export abstract class BaseProcessor extends WorkerHost {
 
   @OnWorkerEvent("error")
   onWorkerError(error: Error): void {
-    // Worker-level errors (Redis connection loss, etc.) — not tied to a job.
-    this.log.error({ err: error }, "worker error");
+    // Worker-level errors are not tied to a job. A lost Redis connection raises
+    // one per reconnect attempt per worker, which drowns out everything else, so
+    // collapse those; anything unexpected is still logged in full.
+    if (!isTransportError(error)) {
+      this.log.error({ err: error }, "worker error");
+      return;
+    }
+    const report = BaseProcessor.connectionErrors.next();
+    if (!report) return;
+    this.log.warn(
+      { code: error.code, reason: error.message, ...(report.suppressed ? report : {}) },
+      "workers lost their Redis connection — retrying",
+    );
   }
 
   @OnWorkerEvent("stalled")

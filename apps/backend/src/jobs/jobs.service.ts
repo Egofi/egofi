@@ -1,6 +1,8 @@
-import { InjectQueue } from "@nestjs/bullmq";
-import { Injectable, type OnModuleInit } from "@nestjs/common";
+import { InjectQueue, getQueueToken } from "@nestjs/bullmq";
+import { Injectable, Logger, type OnModuleInit } from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
 import type { Queue } from "bullmq";
+import { ErrorThrottle, isTransportError } from "../shared/connection-error";
 import { QUEUES } from "./queues";
 
 @Injectable()
@@ -26,7 +28,45 @@ export class JobsService implements OnModuleInit {
     private readonly providerHealthQueue: Queue,
     @InjectQueue(QUEUES.SUBSCRIPTION_BILLING)
     private readonly subscriptionBillingQueue: Queue,
+    private readonly moduleRef: ModuleRef,
   ) {}
+
+  private readonly logger = new Logger(JobsService.name);
+  /** One window for all queues: a Redis outage takes every queue down together. */
+  private readonly queueErrors = new ErrorThrottle();
+
+  /**
+   * Resolved by token rather than from the injected fields above, so a queue
+   * added to QUEUES later cannot silently miss its error listener.
+   */
+  private get allQueues(): Queue[] {
+    return Object.values(QUEUES).map((name) =>
+      this.moduleRef.get<Queue>(getQueueToken(name), { strict: false }),
+    );
+  }
+
+  /**
+   * BullMQ re-emits every connection error on the Queue. Emitting "error" with
+   * no listener throws, and BullMQ swallows that by dumping the raw stack to
+   * console.error — one per reconnect attempt, per queue. Listening lets us
+   * collapse them into a single throttled line.
+   */
+  private watchForConnectionErrors(): void {
+    for (const queue of this.allQueues) {
+      queue.on("error", (error: Error) => {
+        if (!isTransportError(error)) {
+          this.logger.error({ err: error, queue: queue.name }, "queue error");
+          return;
+        }
+        const report = this.queueErrors.next();
+        if (!report) return;
+        this.logger.warn(
+          { code: error.code, reason: error.message, ...(report.suppressed ? report : {}) },
+          "queues lost their Redis connection — retrying",
+        );
+      });
+    }
+  }
 
   /**
    * Repeatable schedules (§8): outbox delivery every few seconds, the
@@ -35,6 +75,7 @@ export class JobsService implements OnModuleInit {
    * idempotent — re-registering on boot upserts, never duplicates.
    */
   async onModuleInit(): Promise<void> {
+    this.watchForConnectionErrors();
     await this.outboxDispatchQueue.upsertJobScheduler(
       "outbox-dispatch-tick",
       { every: 5_000 },

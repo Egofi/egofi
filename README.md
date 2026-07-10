@@ -95,11 +95,15 @@ Then edit `apps/backend/.env` so the connection strings match the Docker host po
 
 ```env
 # Runtime role — unprivileged, row-level security applies to it.
-DATABASE_URL=postgresql://egofi_app:egofi_app_dev@localhost:5433/egofi
+DATABASE_URL=postgresql://egofi_app:egofi_app_dev@127.0.0.1:5433/egofi
 # Owner role — used only by `prisma migrate`.
-DIRECT_DATABASE_URL=postgresql://egofi:egofi_dev@localhost:5433/egofi
-REDIS_URL=redis://localhost:6380
+DIRECT_DATABASE_URL=postgresql://egofi:egofi_dev@127.0.0.1:5433/egofi
+REDIS_URL=redis://127.0.0.1:6380
 ```
+
+Address the containers as `127.0.0.1`, not `localhost`. Compose binds them to the
+IPv4 loopback only, and `localhost` can resolve to `::1` first — Node falls back
+to IPv4, but Prisma's query engine does not.
 
 Set the secrets you care about (`JWT_SECRET`, `WEBHOOK_SIGNING_SECRET`, `ADMIN_JWT_SECRET`, and any provider keys). See [Environment variables](#environment-variables).
 
