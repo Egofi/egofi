@@ -30,7 +30,9 @@ services:
       - redisdata:/data
 
   backend:
-    image: egofi-backend:latest
+    # Built and pushed by CI (.github/workflows/ci.yml → deploy-backend), pulled
+    # here. Overridable with BACKEND_IMAGE for local/manual runs.
+    image: ${BACKEND_IMAGE:-ghcr.io/egofi/egofi-backend:latest}
     restart: unless-stopped
     # Single .env holds both the container's runtime config and the values
     # Compose interpolates below (e.g. PG_OWNER_PASSWORD).
