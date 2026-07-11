@@ -27,6 +27,7 @@ model Merchant {
   settlementAddresses Json // sanctions-screened at onboarding (§14)
   xpub                String?
   xpubMode            Boolean         @default(false)
+  xpubIndex           Int             @default(0) // next BIP44 receive index for xpub-derived addresses
   webhookUrl          String?
   webhookSecret       String? // HMAC key for outbound signing, encrypted at rest
   feeOverride         Json?

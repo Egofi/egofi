@@ -7,6 +7,7 @@ import type { Prisma } from "@prisma/client";
 import { ComplianceService } from "../compliance/compliance.service";
 import { CryptoService } from "../core/crypto.service";
 import { PrismaService } from "../core/prisma.service";
+import { XpubDerivationService } from "../rails/direct-transfer/xpub-derivation.service";
 import { merchantProfileSelect, toMerchantProfile } from "./merchant.presenter";
 
 @Injectable()
@@ -35,6 +36,16 @@ export class MerchantsService {
         if (typeof address === "string" && address.length > 0) {
           await this.compliance.assertAddressClear(address, chain, "settlement");
         }
+      }
+    }
+
+    // Reject an unparseable xpub up front — otherwise xpub mode would silently
+    // fall back to the static address at payment time and confuse the merchant.
+    if (dto.xpub) {
+      if (!XpubDerivationService.isValidXpub(dto.xpub)) {
+        throw new BadRequestException(
+          "That extended public key (xpub) is not valid. Paste the account-level xpub from your wallet.",
+        );
       }
     }
 

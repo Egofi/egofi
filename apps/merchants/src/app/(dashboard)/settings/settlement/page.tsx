@@ -38,6 +38,7 @@ export default function SettlementPage() {
   });
   const [webhookUrl, setWebhookUrl] = useState("");
   const [xpubMode, setXpubMode] = useState(false);
+  const [xpub, setXpub] = useState("");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -60,15 +61,25 @@ export default function SettlementPage() {
       });
       setWebhookUrl(p.webhookUrl ?? "");
       setXpubMode(p.xpubMode);
+      setXpub(p.xpub ?? "");
     });
   }, []);
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
+    if (xpubMode && !xpub.trim()) {
+      setError("Pro mode needs your account xpub — paste it below or turn the mode off.");
+      return;
+    }
     setLoading(true);
     try {
-      await api.merchant.updateSettlement({ settlementAddresses: addresses, webhookUrl, xpubMode });
+      await api.merchant.updateSettlement({
+        settlementAddresses: addresses,
+        webhookUrl,
+        xpubMode,
+        xpub: xpub.trim(),
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -133,21 +144,37 @@ export default function SettlementPage() {
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-navy-100 bg-navy-50/40 p-4">
-            <input
-              type="checkbox"
-              checked={xpubMode}
-              onChange={(e) => setXpubMode(e.target.checked)}
-              className="mt-0.5 size-4 rounded border-navy-300 accent-[#1D4ED8]"
-            />
-            <span className="text-sm leading-relaxed text-navy-700">
-              <strong className="font-semibold text-navy-900">
-                Pro mode — fresh address per invoice (xpub).
-              </strong>{" "}
-              Eliminates amount-fingerprinting entirely. Recommended for Bitcoin, where
-              multi-address wallets handle it natively.
-            </span>
-          </label>
+          <div className="rounded-xl border border-navy-100 bg-navy-50/40 p-4">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={xpubMode}
+                onChange={(e) => setXpubMode(e.target.checked)}
+                className="mt-0.5 size-4 rounded border-navy-300 accent-[#1D4ED8]"
+              />
+              <span className="text-sm leading-relaxed text-navy-700">
+                <strong className="font-semibold text-navy-900">
+                  Pro mode — a fresh address for every invoice.
+                </strong>{" "}
+                We derive each deposit address from your extended public key (xpub), so no two
+                payment links share an address. Works on Ethereum, BSC, Polygon, Base and Tron —
+                other chains keep using the fixed address above.
+              </span>
+            </label>
+
+            {xpubMode && (
+              <div className="mt-4 border-t border-navy-100 pt-4">
+                <Input
+                  label="Account xpub"
+                  placeholder="xpub6…"
+                  value={xpub}
+                  onChange={(e) => setXpub(e.target.value)}
+                  className="font-mono"
+                  hint="The account-level extended PUBLIC key from your wallet (e.g. m/44'/60'/0' for EVM, m/44'/195'/0' for Tron). We only ever see the public key — never your private keys or seed."
+                />
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

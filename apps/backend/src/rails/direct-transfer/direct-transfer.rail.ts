@@ -6,6 +6,7 @@ import type { SettlementRail } from "../rail.interface";
 import { resolveSettlementAddress, settlementAddressLabel } from "../settlement-address";
 import { AmountPoolService } from "./amount-pool.service";
 import { PaymentUriService } from "./payment-uri.service";
+import { XpubDerivationService } from "./xpub-derivation.service";
 
 const COOLDOWN_MULTIPLIER = 2;
 
@@ -18,6 +19,7 @@ export class DirectTransferRail implements SettlementRail {
     private readonly pool: AmountPoolService,
     private readonly uris: PaymentUriService,
     private readonly prisma: PrismaService,
+    private readonly xpub: XpubDerivationService,
   ) {}
 
   supports(_query: RouteQuery): boolean {
@@ -32,7 +34,7 @@ export class DirectTransferRail implements SettlementRail {
     });
 
     const addresses = merchant.settlementAddresses as Record<string, string>;
-    const depositAddress = this.resolveAddress(addresses, invoice.payChain);
+    const depositAddress = await this.resolveDepositAddress(merchant, invoice.payChain, addresses);
 
     const windowMs = invoice.expiresAt.getTime() - Date.now();
     const cooldownMs = windowMs * COOLDOWN_MULTIPLIER;
@@ -93,6 +95,44 @@ export class DirectTransferRail implements SettlementRail {
       asset: event.asset,
       chain: "UNKNOWN",
     };
+  }
+
+  /**
+   * The address the customer pays. With xpub mode on (and a chain we can derive
+   * for), each invoice gets its own address derived at the next BIP44 index —
+   * the merchant controls the key for all of them. Otherwise, and as a fallback
+   * if derivation ever fails, we use the merchant's static settlement address
+   * (deposits disambiguated by exact amount).
+   */
+  private async resolveDepositAddress(
+    merchant: { id: string; xpub: string | null; xpubMode: boolean },
+    chain: string,
+    addresses: Record<string, string>,
+  ): Promise<string> {
+    const canDerive =
+      merchant.xpubMode &&
+      merchant.xpub &&
+      XpubDerivationService.supports(chain) &&
+      XpubDerivationService.isValidXpub(merchant.xpub);
+
+    if (canDerive && merchant.xpub) {
+      try {
+        // Atomically claim the next index so concurrent invoices never collide.
+        const { xpubIndex } = await this.prisma.merchant.update({
+          where: { id: merchant.id },
+          data: { xpubIndex: { increment: 1 } },
+          select: { xpubIndex: true },
+        });
+        return this.xpub.deriveAddress(merchant.xpub, chain, xpubIndex - 1);
+      } catch (err) {
+        // Availability over uniqueness: a derivation error must not block payment.
+        this.logger.error(
+          { err, merchantId: merchant.id, chain },
+          "xpub derivation failed; falling back to the static settlement address",
+        );
+      }
+    }
+    return this.resolveAddress(addresses, chain);
   }
 
   private resolveAddress(addresses: Record<string, string>, chain: string): string {
