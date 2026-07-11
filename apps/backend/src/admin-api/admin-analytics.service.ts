@@ -34,6 +34,7 @@ export class AdminAnalyticsService {
       outboxPending,
       outboxDead,
       webhooksFailing,
+      kybPending,
     ] = await Promise.all([
       this.prisma.$queryRaw<{ status: string; n: bigint }[]>`
         SELECT status, count(*)::bigint AS n FROM "Merchant" GROUP BY status`,
@@ -64,6 +65,7 @@ export class AdminAnalyticsService {
       this.prisma.outboxEvent.count({ where: { status: "pending" } }),
       this.prisma.outboxEvent.count({ where: { status: "dead" } }),
       this.prisma.webhookDelivery.count({ where: { status: "FAILED" } }),
+      this.prisma.merchant.count({ where: { kybStatus: "UNDER_REVIEW" } }),
     ]);
 
     const mCount = (s: string) => Number(merchantRows.find((r) => r.status === s)?.n ?? 0);
@@ -103,6 +105,7 @@ export class AdminAnalyticsService {
         outboxPending,
         outboxDead,
         webhooksFailing,
+        kybPending,
       },
       generatedAt: new Date().toISOString(),
     };

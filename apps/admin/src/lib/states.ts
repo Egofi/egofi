@@ -27,3 +27,31 @@ export const MERCHANT_STATUS: Record<string, { variant: BadgeVariant; label: str
   SUSPENDED: { variant: "danger", label: "Suspended" },
   REJECTED: { variant: "default", label: "Rejected" },
 };
+
+export const KYB_STATUS: Record<string, { variant: BadgeVariant; label: string }> = {
+  PENDING: { variant: "default", label: "Not started" },
+  UNDER_REVIEW: { variant: "warning", label: "Under review" },
+  VERIFIED: { variant: "success", label: "Verified" },
+  REJECTED: { variant: "danger", label: "Rejected" },
+};
+
+export const DOC_TYPE_LABEL: Record<string, string> = {
+  BUSINESS_REGISTRATION: "Business registration",
+  TAX_ID: "Tax ID",
+  DIRECTOR_ID: "Director ID",
+  PROOF_OF_ADDRESS: "Proof of address",
+  BANK_STATEMENT: "Bank statement",
+  OTHER: "Other",
+};
+
+export const DOC_STATUS: Record<string, { variant: BadgeVariant; label: string }> = {
+  PENDING: { variant: "default", label: "Pending" },
+  APPROVED: { variant: "success", label: "Approved" },
+  REJECTED: { variant: "danger", label: "Rejected" },
+};
+
+export const KYB_TIERS = [
+  { tier: 0, label: "Tier 0 — Starter" },
+  { tier: 1, label: "Tier 1 — Verified Business" },
+  { tier: 2, label: "Tier 2 — Enhanced" },
+];

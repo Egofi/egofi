@@ -122,7 +122,7 @@ export class AdminOpsService {
     const m = await this.prisma.merchant.findUnique({ where: { id } });
     if (!m) throw new NotFoundException(`Merchant ${id} not found`);
 
-    const [invoices, paidInvoices, settledRow, activeSubscribers, apiKeys, recent] =
+    const [invoices, paidInvoices, settledRow, activeSubscribers, apiKeys, recent, docs] =
       await Promise.all([
         this.prisma.invoice.count({ where: { merchantId: id } }),
         this.prisma.invoice.count({ where: { merchantId: id, state: "PAID_CONFIRMED" } }),
@@ -138,6 +138,10 @@ export class AdminOpsService {
           take: 10,
           include: { merchant: { select: { business: true } } },
         }),
+        this.prisma.kybDocument.findMany({
+          where: { merchantId: id },
+          orderBy: { uploadedAt: "desc" },
+        }),
       ]);
 
     return {
@@ -149,6 +153,19 @@ export class AdminOpsService {
       kybTier: m.kybTier,
       settlementAsset: m.settlementAsset,
       createdAt: m.createdAt.toISOString(),
+      submittedAt: m.kybSubmittedAt?.toISOString() ?? null,
+      reviewNote: m.kybReviewNote,
+      documents: docs.map((d) => ({
+        id: d.id,
+        type: d.type as AdminMerchantDetail["documents"][number]["type"],
+        status: d.status as AdminMerchantDetail["documents"][number]["status"],
+        originalFilename: d.originalFilename,
+        mimeType: d.mimeType,
+        sizeBytes: d.sizeBytes,
+        uploadedAt: d.uploadedAt.toISOString(),
+        reviewedAt: d.reviewedAt?.toISOString() ?? null,
+        reviewNote: d.reviewNote,
+      })),
       stats: {
         invoices,
         paidInvoices,

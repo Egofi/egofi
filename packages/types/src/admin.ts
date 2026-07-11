@@ -2,6 +2,8 @@
 // These back the operator back-office, which runs without a merchant context
 // (RLS is permissive there) and can therefore see every tenant.
 
+import type { KybDocumentDto } from "./kyb.js";
+
 // ─── Analytics ──────────────────────────────────────────────────────────────
 
 /** Headline KPIs for the ops dashboard. Amounts are USD-equivalent strings. */
@@ -22,6 +24,7 @@ export interface AdminOverviewDto {
     outboxPending: number;
     outboxDead: number;
     webhooksFailing: number;
+    kybPending: number;
   };
   generatedAt: string;
 }
@@ -97,6 +100,10 @@ export interface AdminMerchantDetail {
   kybTier: number;
   settlementAsset: string;
   createdAt: string;
+  /** KYB review context, so an operator can vet a merchant in one place. */
+  submittedAt: string | null;
+  reviewNote: string | null;
+  documents: KybDocumentDto[];
   stats: {
     invoices: number;
     paidInvoices: number;

@@ -570,7 +570,13 @@ export class MockEgofiClient {
         invoices: { total: 240, paid: 180, awaiting: 40, failed: 12, expired: 8 },
         subscriptions: { activeSubscribers: 34, plans: 6, mrrUsd: "4200.00" },
         volume: { settledUsd: "128400.00", inflightUsd: "9800.00", conversionRate: 0.9 },
-        operations: { unmatchedOpen: 1, outboxPending: 0, outboxDead: 0, webhooksFailing: 0 },
+        operations: {
+          unmatchedOpen: 1,
+          outboxPending: 0,
+          outboxDead: 0,
+          webhooksFailing: 0,
+          kybPending: 2,
+        },
         generatedAt: new Date().toISOString(),
       };
     },
@@ -634,6 +640,9 @@ export class MockEgofiClient {
         kybTier: 1,
         settlementAsset: "USDT",
         createdAt: new Date().toISOString(),
+        submittedAt: new Date().toISOString(),
+        reviewNote: null,
+        documents: [],
         stats: {
           invoices: 90,
           paidInvoices: 80,

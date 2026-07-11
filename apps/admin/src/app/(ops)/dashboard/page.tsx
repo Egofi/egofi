@@ -115,6 +115,14 @@ export default function DashboardPage() {
                   : "success"
               }
             />
+            <a href="/compliance" className="contents">
+              <StatTile
+                label="KYB review"
+                value={overview.operations.kybPending.toLocaleString()}
+                sub="merchants awaiting review"
+                tone={overview.operations.kybPending > 0 ? "warning" : "default"}
+              />
+            </a>
           </div>
 
           {/* Time series */}

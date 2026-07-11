@@ -4,9 +4,10 @@ import type { AdminMerchantDetail } from "@egofi/types";
 import { Badge, Button, Spinner } from "@egofi/ui";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DocumentList } from "../../../../components/DocumentList";
 import { StatTile } from "../../../../components/charts";
 import { api, requireAdmin } from "../../../../lib/api";
-import { MERCHANT_STATUS, invoiceState } from "../../../../lib/states";
+import { KYB_STATUS, KYB_TIERS, MERCHANT_STATUS, invoiceState } from "../../../../lib/states";
 
 const usd = (v: string) => `$${Number(v).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
@@ -15,6 +16,7 @@ export default function MerchantDetailPage() {
   const [m, setM] = useState<AdminMerchantDetail | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [kybTier, setKybTier] = useState(1);
 
   const load = () => {
     if (!requireAdmin()) return;
@@ -34,6 +36,23 @@ export default function MerchantDetailPage() {
         const reason = window.prompt("Reason for suspension?");
         if (!reason) return;
         await api.admin.suspendMerchant(id, reason);
+      }
+      load();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const kybAct = async (decision: "approve" | "reject") => {
+    setBusy(true);
+    try {
+      if (decision === "approve") {
+        const note = window.prompt("Optional approval note (audit log):") ?? undefined;
+        await api.admin.approveKyb(id, kybTier, note || undefined);
+      } else {
+        const note = window.prompt("Reason for rejection (shown to the merchant):");
+        if (!note || note.trim().length < 3) return;
+        await api.admin.rejectKyb(id, note.trim());
       }
       load();
     } finally {
@@ -113,6 +132,66 @@ export default function MerchantDetailPage() {
         <StatTile label="Subscribers" value={m.stats.activeSubscribers.toLocaleString()} />
         <StatTile label="API keys" value={m.stats.apiKeys.toLocaleString()} />
       </div>
+
+      {/* KYB / compliance */}
+      <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold text-navy-950">KYB & documents</h2>
+            <Badge
+              variant={(KYB_STATUS[m.kybStatus] ?? { variant: "default" as const }).variant}
+              dot
+            >
+              {(KYB_STATUS[m.kybStatus] ?? { label: m.kybStatus }).label}
+            </Badge>
+          </div>
+          <p className="text-sm text-navy-500">
+            Tier {m.kybTier}
+            {m.submittedAt ? ` · submitted ${new Date(m.submittedAt).toLocaleDateString()}` : ""}
+          </p>
+        </div>
+
+        {m.reviewNote && (
+          <p className="mt-3 rounded-lg bg-navy-50 p-3 text-sm text-navy-600">
+            <span className="font-medium text-navy-800">Review note:</span> {m.reviewNote}
+          </p>
+        )}
+
+        <div className="mt-4">
+          <DocumentList documents={m.documents} />
+        </div>
+
+        {m.kybStatus === "UNDER_REVIEW" && (
+          <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-navy-50 pt-4">
+            <label className="mr-auto flex items-center gap-2 text-sm text-navy-600">
+              Approve at
+              <select
+                value={kybTier}
+                onChange={(e) => setKybTier(Number(e.target.value))}
+                className="rounded-lg border border-navy-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-primary-500"
+              >
+                {KYB_TIERS.map((t) => (
+                  <option key={t.tier} value={t.tier}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={busy}
+              onClick={() => kybAct("reject")}
+              className="text-danger-600"
+            >
+              Reject KYB
+            </Button>
+            <Button size="sm" loading={busy} onClick={() => kybAct("approve")}>
+              Approve KYB
+            </Button>
+          </div>
+        )}
+      </section>
 
       <section className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-navy-100">
         <div className="border-b border-navy-100 px-5 py-4">
