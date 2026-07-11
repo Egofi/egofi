@@ -1,4 +1,16 @@
 import type {
+  AdminBreakdownDto,
+  AdminInterval,
+  AdminInvoiceDetail,
+  AdminInvoiceListItem,
+  AdminMerchantDetail,
+  AdminMetric,
+  AdminOpsHealthDto,
+  AdminOverviewDto,
+  AdminPagedResult,
+  AdminSubscriptionRow,
+  AdminTimeseriesDto,
+  AuditLogEntry,
   CheckoutSessionDto,
   CreateInvoiceDto,
   CreateInvoicePayload,
@@ -20,6 +32,7 @@ import type {
   SubscribeResultDto,
   SubscriptionDto,
   SubscriptionPlanDto,
+  UnmatchedPaymentDto,
   UpdateProfileDto,
   UpdateSettlementDto,
   UpdateSubscriptionPlanDto,
@@ -345,5 +358,82 @@ export class EgofiClient {
       }),
     rejectKyb: (merchantId: string, note: string) =>
       this.request<void>("POST", `/admin/kyb/merchants/${merchantId}/reject`, { note }),
+
+    // Analytics
+    overview: () => this.request<AdminOverviewDto>("GET", "/admin/analytics/overview"),
+    timeseries: (params: {
+      metric: AdminMetric;
+      interval?: AdminInterval;
+      from?: string;
+      to?: string;
+    }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return this.request<AdminTimeseriesDto>("GET", `/admin/analytics/timeseries?${qs}`);
+    },
+    breakdown: () => this.request<AdminBreakdownDto>("GET", "/admin/analytics/breakdown"),
+
+    // Cross-tenant reads
+    listInvoices: (params?: {
+      state?: string;
+      merchantId?: string;
+      chain?: string;
+      page?: number;
+      limit?: number;
+    }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return this.request<AdminPagedResult<AdminInvoiceListItem>>(
+        "GET",
+        `/admin/invoices${qs ? `?${qs}` : ""}`,
+      );
+    },
+    getInvoice: (id: string) => this.request<AdminInvoiceDetail>("GET", `/admin/invoices/${id}`),
+    merchantDetail: (id: string) =>
+      this.request<AdminMerchantDetail>("GET", `/admin/merchants/${id}/detail`),
+    reactivateMerchant: (id: string) =>
+      this.request<MerchantProfile>("POST", `/admin/merchants/${id}/reactivate`),
+    listSubscriptions: (params?: { page?: number; limit?: number }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return this.request<AdminPagedResult<AdminSubscriptionRow>>(
+        "GET",
+        `/admin/subscriptions${qs ? `?${qs}` : ""}`,
+      );
+    },
+
+    // Operations
+    opsHealth: () => this.request<AdminOpsHealthDto>("GET", "/admin/ops/health"),
+    listUnmatched: (status?: string) =>
+      this.request<UnmatchedPaymentDto[]>(
+        "GET",
+        `/admin/ops/unmatched${status ? `?status=${status}` : ""}`,
+      ),
+    resolveUnmatched: (id: string, status: "resolved" | "returned") =>
+      this.request<UnmatchedPaymentDto>("POST", `/admin/ops/unmatched/${id}/resolve`, { status }),
+    retryOutbox: (id: string) =>
+      this.request<{ ok: boolean }>("POST", `/admin/ops/outbox/${id}/retry`),
+
+    // Audit log
+    auditLog: (params?: { page?: number; limit?: number; targetType?: string }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return this.request<AdminPagedResult<AuditLogEntry>>(
+        "GET",
+        `/admin/audit-log${qs ? `?${qs}` : ""}`,
+      );
+    },
   };
 }

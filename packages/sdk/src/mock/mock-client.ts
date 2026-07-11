@@ -561,6 +561,145 @@ export class MockEgofiClient {
     rejectKyb: async (_merchantId: string, _note: string) => {
       await delay(400);
     },
+
+    // Analytics / ops (mock stubs — the ops console normally runs in dev mode)
+    overview: async () => {
+      await delay(200);
+      return {
+        merchants: { total: 12, active: 8, pending: 3, suspended: 1 },
+        invoices: { total: 240, paid: 180, awaiting: 40, failed: 12, expired: 8 },
+        subscriptions: { activeSubscribers: 34, plans: 6, mrrUsd: "4200.00" },
+        volume: { settledUsd: "128400.00", inflightUsd: "9800.00", conversionRate: 0.9 },
+        operations: { unmatchedOpen: 1, outboxPending: 0, outboxDead: 0, webhooksFailing: 0 },
+        generatedAt: new Date().toISOString(),
+      };
+    },
+    timeseries: async (params: { metric: string }) => {
+      await delay(150);
+      const points = Array.from({ length: 30 }, (_, i) => ({
+        t: new Date(Date.now() - (29 - i) * 86_400_000).toISOString(),
+        value: Math.round(20 + 15 * Math.sin(i / 3) + i),
+      }));
+      return { metric: params.metric as never, interval: "day" as const, points };
+    },
+    breakdown: async () => {
+      await delay(150);
+      return {
+        byState: [
+          { key: "PAID_CONFIRMED", label: "Paid", count: 180, valueUsd: "128400.00" },
+          { key: "AWAITING_PAYMENT", label: "Awaiting Payment", count: 40, valueUsd: "9800.00" },
+        ],
+        byChain: [{ key: "TRON", label: "TRON", count: 240, valueUsd: "128400.00" }],
+        topMerchants: [
+          { merchantId: "mock_m1", business: "Acme Corp", count: 90, valueUsd: "64000.00" },
+        ],
+      };
+    },
+    listInvoices: async () => {
+      await delay(200);
+      return { data: [], total: 0 };
+    },
+    getInvoice: async (id: string) => {
+      await delay(200);
+      return {
+        id,
+        merchantId: "mock_m1",
+        merchantBusiness: "Acme Corp",
+        displayAmount: "100.00",
+        displayCurrency: "USD",
+        payAsset: "USDT",
+        payChain: "TRON",
+        state: "PAID_CONFIRMED",
+        rail: "DIRECT_TRANSFER",
+        subscriptionId: null,
+        createdAt: new Date().toISOString(),
+        quotedAmount: "100.05",
+        rate: "0.9995",
+        depositAddress: "TMock…",
+        refundAddress: null,
+        notifyEmail: null,
+        expiresAt: new Date().toISOString(),
+        events: [],
+        ledger: [],
+      };
+    },
+    merchantDetail: async (id: string) => {
+      await delay(200);
+      return {
+        id,
+        business: "Acme Corp",
+        email: "ops@acme.test",
+        status: "ACTIVE",
+        kybStatus: "VERIFIED",
+        kybTier: 1,
+        settlementAsset: "USDT",
+        createdAt: new Date().toISOString(),
+        stats: {
+          invoices: 90,
+          paidInvoices: 80,
+          settledUsd: "64000.00",
+          activeSubscribers: 12,
+          apiKeys: 2,
+        },
+        recentInvoices: [],
+      };
+    },
+    reactivateMerchant: async (id: string): Promise<MerchantProfile> => {
+      await delay(300);
+      mockMerchants = mockMerchants.map((m) =>
+        m.id === id ? { ...m, status: "ACTIVE" as never } : m,
+      );
+      const merchant = mockMerchants.find((m) => m.id === id);
+      if (!merchant) throw new Error(`Merchant ${id} not found`);
+      return merchant;
+    },
+    listSubscriptions: async () => {
+      await delay(200);
+      return { data: [], total: 0 };
+    },
+    opsHealth: async () => {
+      await delay(200);
+      return {
+        outbox: { pending: 0, dead: 0, oldestPendingAgeSec: null },
+        webhooks: { delivered: 320, failing: 0, recentFailures: [] },
+        providers: [
+          {
+            provider: "changenow",
+            successRate: 0.98,
+            freezeRate: 0.01,
+            medianSettleMs: 42000,
+            sampleSize: 120,
+            at: new Date().toISOString(),
+          },
+        ],
+        unmatched: { open: 1 },
+      };
+    },
+    listUnmatched: async () => {
+      await delay(200);
+      return [];
+    },
+    resolveUnmatched: async (id: string, status: "resolved" | "returned") => {
+      await delay(300);
+      return {
+        id,
+        address: "TMock…",
+        asset: "USDT",
+        chain: "TRON",
+        amount: "50.00",
+        txHash: "0xmock",
+        status,
+        createdAt: new Date().toISOString(),
+      };
+    },
+    retryOutbox: async (_id: string) => {
+      await delay(200);
+      return { ok: true };
+    },
+    auditLog: async () => {
+      await delay(200);
+      return { data: [], total: 0 };
+    },
   };
 
   // Matching EgofiClient API — no-op in mock mode

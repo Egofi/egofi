@@ -1,12 +1,10 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { MerchantProfile } from "@egofi/types";
 import { Badge, Button, Card, Spinner, cn } from "@egofi/ui";
 import type { BadgeVariant } from "@egofi/ui";
 import { useEffect, useState } from "react";
-
-const api = createApiClient();
+import { api, requireAdmin } from "../../../lib/api";
 
 const FILTERS = [
   { value: undefined, label: "All" },
@@ -30,14 +28,9 @@ export default function MerchantsPage() {
   const [actingOn, setActingOn] = useState<string | null>(null);
 
   const load = async (status?: string) => {
+    if (!requireAdmin()) return;
     setLoading(true);
     try {
-      const token = localStorage.getItem("egofi_admin_token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
-      api.setAuthToken(token);
       const res = await api.admin.listMerchants(status ? { status } : undefined);
       setMerchants(res.data);
       setTotal(res.total);
@@ -136,7 +129,12 @@ export default function MerchantsPage() {
                   return (
                     <tr key={m.id} className="transition-colors hover:bg-navy-50/50">
                       <td className="px-6 py-4">
-                        <p className="font-semibold text-navy-950">{m.business}</p>
+                        <a
+                          href={`/merchants/${m.id}`}
+                          className="font-semibold text-navy-950 hover:text-primary"
+                        >
+                          {m.business}
+                        </a>
                         <p className="font-mono text-xs text-navy-400">{m.id.slice(0, 12)}…</p>
                       </td>
                       <td className="px-6 py-4 text-navy-600">{m.email}</td>

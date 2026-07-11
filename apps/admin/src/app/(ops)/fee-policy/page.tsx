@@ -1,13 +1,11 @@
 "use client";
 
-import { createApiClient } from "@egofi/sdk";
 import type { FeePolicy } from "@egofi/types";
 import { FeeMechanismStatus } from "@egofi/types";
 import { Badge, Card, CardContent, CardHeader, CardTitle, Spinner } from "@egofi/ui";
 import type { BadgeVariant } from "@egofi/ui";
 import { useEffect, useState } from "react";
-
-const api = createApiClient();
+import { api, requireAdmin } from "../../../lib/api";
 
 const STATUS_BADGE: Record<string, { variant: BadgeVariant; label: string }> = {
   [FeeMechanismStatus.Active]: { variant: "success", label: "Active" },
@@ -20,12 +18,7 @@ export default function FeePolicyPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("egofi_admin_token");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-    api.setAuthToken(token);
+    if (!requireAdmin()) return;
     void api.admin.getFeePolicy().then((p) => {
       setPolicy(p);
       setLoading(false);

@@ -8,3 +8,4 @@ export * from "./webhook.js";
 export * from "./fee.js";
 export * from "./swap.js";
 export * from "./chain.js";
+export * from "./admin.js";

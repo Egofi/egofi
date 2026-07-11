@@ -114,6 +114,29 @@ export class AdminApiService {
     return toMerchantProfile(updated);
   }
 
+  async reactivateMerchant(id: string, actor: AdminPrincipal, ip?: string) {
+    const before = await this.prisma.merchant.findUniqueOrThrow({
+      where: { id },
+      select: { status: true },
+    });
+    const updated = await this.prisma.merchant.update({
+      where: { id },
+      data: { status: "ACTIVE" },
+      select: merchantProfileSelect,
+    });
+    await this.audit.record({
+      actorId: actor.id,
+      actorEmail: actor.email,
+      action: "merchant.reactivate",
+      targetType: "merchant",
+      targetId: id,
+      before: { status: before.status },
+      after: { status: "ACTIVE" },
+      ip,
+    });
+    return toMerchantProfile(updated);
+  }
+
   async getFeePolicy(): Promise<FeePolicy> {
     const row = await this.prisma.feePolicy.upsert({
       where: { id: "global" },
