@@ -1,0 +1,57 @@
+# Production stack for a single host. The backend image is built elsewhere and
+# loaded (see deploy notes); Postgres and Redis run as local containers. Only
+# the backend port is published, bound to loopback — nginx terminates TLS and
+# proxies to it. Secrets come from .env.production (never committed).
+name: egofi
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: egofi
+      POSTGRES_PASSWORD: ${PG_OWNER_PASSWORD}
+      POSTGRES_DB: egofi
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Keep shared_buffers modest — this box has ~1GB RAM.
+    command: ["postgres", "-c", "shared_buffers=96MB", "-c", "max_connections=50"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U egofi"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction", "--save", "60", "1"]
+    volumes:
+      - redisdata:/data
+
+  backend:
+    image: egofi-backend:latest
+    restart: unless-stopped
+    # Single .env holds both the container's runtime config and the values
+    # Compose interpolates below (e.g. PG_OWNER_PASSWORD).
+    env_file: .env
+    # Loopback only — nginx is the public entrypoint.
+    ports:
+      - "127.0.0.1:3000:3000"
+    # 127.0.0.1, not localhost: inside Alpine `localhost` resolves to ::1 first,
+    # but the app listens on IPv4, so a localhost probe is refused.
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  pgdata:
+  redisdata:
