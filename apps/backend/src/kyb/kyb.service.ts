@@ -194,9 +194,18 @@ export class KybService {
   // ── Admin review ────────────────────────────────────────────────
 
   async listPending(): Promise<KybReviewItem[]> {
+    // Show anyone with documents awaiting a decision — merchants who formally
+    // submitted (UNDER_REVIEW) *and* those who uploaded papers but never clicked
+    // submit (PENDING with documents). Both are things an operator needs to see;
+    // approve/reject work regardless of the merchant's current status. Submitted
+    // merchants sort first (they have a submission date); uploaded-not-submitted
+    // fall to the end.
     const merchants = await this.prisma.merchant.findMany({
-      where: { kybStatus: KybStatus.UnderReview },
-      orderBy: { kybSubmittedAt: "asc" },
+      where: {
+        kybStatus: { in: [KybStatus.UnderReview, KybStatus.Pending] },
+        kybDocuments: { some: {} },
+      },
+      orderBy: { kybSubmittedAt: { sort: "asc", nulls: "last" } },
       select: {
         id: true,
         business: true,

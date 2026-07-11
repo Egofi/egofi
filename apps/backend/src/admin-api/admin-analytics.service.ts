@@ -65,7 +65,13 @@ export class AdminAnalyticsService {
       this.prisma.outboxEvent.count({ where: { status: "pending" } }),
       this.prisma.outboxEvent.count({ where: { status: "dead" } }),
       this.prisma.webhookDelivery.count({ where: { status: "FAILED" } }),
-      this.prisma.merchant.count({ where: { kybStatus: "UNDER_REVIEW" } }),
+      // Matches the review queue: submitted OR uploaded-but-not-submitted.
+      this.prisma.merchant.count({
+        where: {
+          kybStatus: { in: ["UNDER_REVIEW", "PENDING"] },
+          kybDocuments: { some: {} },
+        },
+      }),
     ]);
 
     const mCount = (s: string) => Number(merchantRows.find((r) => r.status === s)?.n ?? 0);

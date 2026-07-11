@@ -81,15 +81,21 @@ export default function CompliancePage() {
                     >
                       {m.business}
                     </a>
-                    <Badge variant="warning" dot>
-                      Under review
-                    </Badge>
+                    {m.status === "UNDER_REVIEW" ? (
+                      <Badge variant="warning" dot>
+                        Under review
+                      </Badge>
+                    ) : (
+                      <Badge variant="info" dot>
+                        Uploaded · not submitted
+                      </Badge>
+                    )}
                   </div>
                   <p className="mt-0.5 text-sm text-navy-500">
                     {m.email} · currently tier {m.currentTier}
                     {m.submittedAt
                       ? ` · submitted ${new Date(m.submittedAt).toLocaleDateString()}`
-                      : ""}
+                      : " · awaiting merchant submission"}
                   </p>
                 </div>
               </div>
