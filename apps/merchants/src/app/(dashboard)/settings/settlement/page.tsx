@@ -69,7 +69,7 @@ export default function SettlementPage() {
     e.preventDefault();
     setError("");
     if (xpubMode && !xpub.trim()) {
-      setError("Pro mode needs your account xpub — paste it below or turn the mode off.");
+      setError("Fresh-address mode needs your account xpub — paste it below or turn it off.");
       return;
     }
     setLoading(true);
@@ -108,6 +108,11 @@ export default function SettlementPage() {
             One address per network covers every token on that network. We convert incoming payments
             and pay out to the matching address.
           </p>
+          <p className="mt-2 text-sm text-navy-500">
+            This is all you need. Paste an ordinary wallet address — MetaMask, Trust, Binance, any
+            wallet works. We tell payments apart automatically by giving each invoice a unique
+            amount, so no special setup is required.
+          </p>
           <div className="mt-5 space-y-5">
             {ADDRESS_FIELDS.map((field) => (
               <Input
@@ -124,27 +129,44 @@ export default function SettlementPage() {
         </CardContent>
       </Card>
 
-      {/* Webhook + pro mode combined */}
+      {/* Webhook notifications */}
       <Card>
-        <CardContent className="space-y-6 p-6">
-          <div>
-            <h2 className="text-base font-semibold text-navy-950">Webhook notifications</h2>
-            <p className="mt-1 text-sm text-navy-500">
-              We POST an HMAC-signed event here whenever an invoice's status changes.
-            </p>
-            <div className="mt-4">
-              <Input
-                label="Webhook URL"
-                type="url"
-                placeholder="https://your-site.com/webhooks/egofi"
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                hint="Verify the signature before trusting any delivery."
-              />
-            </div>
+        <CardContent className="p-6">
+          <h2 className="text-base font-semibold text-navy-950">Webhook notifications</h2>
+          <p className="mt-1 text-sm text-navy-500">
+            We POST an HMAC-signed event here whenever an invoice's status changes.
+          </p>
+          <div className="mt-4">
+            <Input
+              label="Webhook URL"
+              type="url"
+              placeholder="https://your-site.com/webhooks/egofi"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              hint="Verify the signature before trusting any delivery."
+            />
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="rounded-xl border border-navy-100 bg-navy-50/40 p-4">
+      {/* Advanced — fresh address per invoice (optional) */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-base font-semibold text-navy-950">Fresh address per invoice</h2>
+            <span className="rounded-md bg-navy-100 px-2 py-0.5 text-xs font-medium text-navy-600">
+              Advanced · optional
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-navy-500">
+            You don't need this. We already keep every payment separate by giving each invoice its
+            own amount. Turn it on only if you want each payment link to use a brand-new on-chain
+            address for extra privacy. It requires an account{" "}
+            <span className="font-mono">xpub</span> from an HD or hardware wallet — most merchants
+            can skip it.
+          </p>
+
+          <div className="mt-4 rounded-xl border border-navy-100 bg-navy-50/40 p-4">
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
@@ -154,11 +176,10 @@ export default function SettlementPage() {
               />
               <span className="text-sm leading-relaxed text-navy-700">
                 <strong className="font-semibold text-navy-900">
-                  Pro mode — a fresh address for every invoice.
+                  Derive a new address from my xpub.
                 </strong>{" "}
-                We derive each deposit address from your extended public key (xpub), so no two
-                payment links share an address. Works on Ethereum, BSC, Polygon, Base and Tron —
-                other chains keep using the fixed address above.
+                Works on Ethereum, BSC, Polygon, Base and Tron — other chains keep using the fixed
+                address above.
               </span>
             </label>
 
