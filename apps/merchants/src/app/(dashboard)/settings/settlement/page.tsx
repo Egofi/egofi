@@ -3,6 +3,7 @@
 import type { MerchantProfile } from "@egofi/types";
 import { Button, Card, CardContent, Input, Skeleton } from "@egofi/ui";
 import { type FormEvent, useEffect, useState } from "react";
+import { XpubGuide } from "../../../../components/XpubGuide";
 import { api } from "../../../../lib/api";
 import { loginRedirect } from "../../../../lib/auth";
 
@@ -193,6 +194,7 @@ export default function SettlementPage() {
                   className="font-mono"
                   hint="The account-level extended PUBLIC key from your wallet (e.g. m/44'/60'/0' for EVM, m/44'/195'/0' for Tron). We only ever see the public key — never your private keys or seed."
                 />
+                <XpubGuide />
               </div>
             )}
           </div>
