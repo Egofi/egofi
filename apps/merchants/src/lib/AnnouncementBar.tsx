@@ -32,7 +32,7 @@ export function AnnouncementBar() {
   if (!visible) return null;
 
   return (
-    <div className="relative flex items-center justify-center gap-2 bg-brand-gradient px-10 py-2 text-center text-sm text-white">
+    <div className="on-dark relative flex items-center justify-center gap-2 bg-brand-gradient px-10 py-2 text-center text-sm text-white">
       <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/15">
         <svg viewBox="0 0 16 16" fill="currentColor" className="size-3 text-accent" aria-hidden>
           <path d="M8 1.5a.75.75 0 0 1 .67.415l1.7 3.445 3.802.553a.75.75 0 0 1 .416 1.279l-2.75 2.681.649 3.785a.75.75 0 0 1-1.088.79L8 12.938l-3.4 1.787a.75.75 0 0 1-1.088-.79l.649-3.785-2.75-2.68a.75.75 0 0 1 .416-1.28l3.801-.553 1.7-3.445A.75.75 0 0 1 8 1.5z" />

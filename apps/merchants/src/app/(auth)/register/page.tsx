@@ -94,7 +94,7 @@ export default function RegisterPage() {
             id="settlement-asset"
             value={settlementAsset}
             onChange={(e) => setSettlementAsset(e.target.value)}
-            className="w-full appearance-none rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 outline-none transition-all duration-150 hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
+            className="w-full appearance-none rounded-lg border border-navy-200 bg-surface px-3.5 py-2.5 text-sm text-navy-900 outline-none transition-all duration-150 hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
           >
             {SETTLEMENT_ASSETS.map((a) => (
               <option key={a.value} value={a.value}>

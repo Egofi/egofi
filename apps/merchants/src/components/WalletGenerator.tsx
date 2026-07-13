@@ -136,9 +136,9 @@ export function WalletGenerator({ onComplete, onClose }: WalletGeneratorProps) {
       open
       aria-modal="true"
       aria-label="Create a receiving wallet"
-      className="fixed inset-0 z-50 m-0 flex h-full w-full max-w-none items-end justify-center border-0 bg-navy-950/50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 m-0 flex h-full w-full max-w-none items-end justify-center border-0 bg-black/50 p-0 sm:items-center sm:p-4"
     >
-      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl">
+      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-surface p-6 shadow-xl sm:rounded-2xl">
         {step === "intro" && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-navy-950">Create a receiving wallet</h3>
@@ -185,7 +185,7 @@ export function WalletGenerator({ onComplete, onClose }: WalletGeneratorProps) {
                 {words.map((w, i) => (
                   <div
                     key={`${i}-${w}`}
-                    className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 font-mono text-sm text-navy-900"
+                    className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2 font-mono text-sm text-navy-900"
                   >
                     <span className="w-5 shrink-0 text-right text-xs text-navy-400">{i + 1}</span>
                     {w}
@@ -289,7 +289,7 @@ export function WalletGenerator({ onComplete, onClose }: WalletGeneratorProps) {
                           className={`rounded-lg border px-2 py-2 font-mono text-sm transition ${
                             selected
                               ? "border-[#1D4ED8] bg-[#1D4ED8]/10 text-navy-900"
-                              : "border-navy-200 bg-white text-navy-700 hover:border-navy-300"
+                              : "border-navy-200 bg-surface text-navy-700 hover:border-navy-300"
                           }`}
                         >
                           {opt}

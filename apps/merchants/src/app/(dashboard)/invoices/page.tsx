@@ -102,7 +102,7 @@ export default function InvoicesPage() {
 
       {/* Toolbar: filters + search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-1 overflow-x-auto rounded-xl border border-navy-200 bg-white p-1 shadow-xs">
+        <div className="flex flex-wrap gap-1 overflow-x-auto rounded-xl border border-navy-200 bg-surface p-1 shadow-xs">
           {FILTERS.map((f) => {
             const active = filter === f.value;
             return (
@@ -115,7 +115,9 @@ export default function InvoicesPage() {
                 }}
                 className={cn(
                   "whitespace-nowrap rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
-                  active ? "bg-navy-950 text-white shadow-sm" : "text-navy-500 hover:text-navy-800",
+                  active
+                    ? "on-dark bg-navy-950 text-white shadow-sm"
+                    : "text-navy-500 hover:text-navy-800",
                 )}
                 aria-pressed={active}
               >
@@ -124,7 +126,7 @@ export default function InvoicesPage() {
             );
           })}
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-navy-200 bg-white px-3.5 py-2.5 sm:w-64 sm:shrink-0 focus-within:border-primary-500">
+        <div className="flex items-center gap-2 rounded-xl border border-navy-200 bg-surface px-3.5 py-2.5 sm:w-64 sm:shrink-0 focus-within:border-primary-500">
           <svg viewBox="0 0 20 20" fill="currentColor" className="size-4 text-navy-400" aria-hidden>
             <path
               fillRule="evenodd"
@@ -149,7 +151,7 @@ export default function InvoicesPage() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-card md:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-navy-100 bg-surface shadow-card md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-navy-100 text-left text-xs font-medium uppercase tracking-wide text-navy-400">
@@ -244,7 +246,7 @@ export default function InvoicesPage() {
               <a
                 key={inv.id}
                 href={`/invoices/${inv.id}`}
-                className="block rounded-2xl border border-navy-100 bg-white p-4 shadow-card transition-colors active:bg-navy-50/50"
+                className="block rounded-2xl border border-navy-100 bg-surface p-4 shadow-card transition-colors active:bg-navy-50/50"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-lg font-bold tabular-nums text-navy-950">
@@ -341,7 +343,7 @@ function RowAction({
 
 function SkeletonList() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-card">
+    <div className="overflow-hidden rounded-2xl border border-navy-100 bg-surface shadow-card">
       <div className="divide-y divide-navy-50">
         {Array.from({ length: 6 }).map((_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
@@ -360,7 +362,7 @@ function SkeletonList() {
 
 function EmptyState({ filtered }: { filtered: boolean }) {
   return (
-    <div className="rounded-2xl border border-navy-100 bg-white px-6 py-16 text-center shadow-card">
+    <div className="rounded-2xl border border-navy-100 bg-surface px-6 py-16 text-center shadow-card">
       <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-navy-50">
         <svg
           viewBox="0 0 24 24"

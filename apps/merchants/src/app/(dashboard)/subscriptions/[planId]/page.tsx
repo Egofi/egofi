@@ -260,7 +260,7 @@ export default function PlanDetailPage() {
                   id="currency"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="h-[42px] rounded-lg border border-navy-200 bg-white px-3 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
+                  className="h-[42px] rounded-lg border border-navy-200 bg-surface px-3 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
                 >
                   {CURRENCIES.map((c) => (
                     <option key={c} value={c}>
@@ -288,7 +288,7 @@ export default function PlanDetailPage() {
                   id="unit"
                   value={unit}
                   onChange={(e) => setUnit(e.target.value as SubscriptionPeriodUnit)}
-                  className="h-[42px] rounded-lg border border-navy-200 bg-white px-3 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
+                  className="h-[42px] rounded-lg border border-navy-200 bg-surface px-3 text-sm text-navy-900 outline-none transition-all hover:border-navy-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
                 >
                   {PERIOD_UNIT_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>

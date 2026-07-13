@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnnouncementBar } from "../../lib/AnnouncementBar";
 import { LanguageSwitcher } from "../../lib/LanguageSwitcher";
+import { ThemeToggle } from "../../lib/ThemeToggle";
 import { api } from "../../lib/api";
 import { loginRedirect } from "../../lib/auth";
 
@@ -272,7 +273,7 @@ function UserMenu({
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-success text-xs font-bold text-navy-950">
+        <span className="flex size-8 items-center justify-center rounded-lg on-dark bg-gradient-to-br from-accent to-success text-xs font-bold text-navy-950">
           {merchant ? initials(merchant.business) : "…"}
         </span>
         <span className="hidden max-w-[9rem] truncate text-sm font-medium text-navy-800 sm:block">
@@ -295,13 +296,13 @@ function UserMenu({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-64 origin-top-right overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-xl animate-scale-in"
+          className="absolute right-0 top-full z-50 mt-2 w-64 origin-top-right overflow-hidden rounded-2xl border border-navy-100 bg-surface shadow-xl animate-scale-in"
         >
           <div className="border-b border-navy-100 bg-navy-50/50 p-4">
             <p className="truncate text-sm font-semibold text-navy-950">{merchant?.business}</p>
             <p className="truncate text-xs text-navy-500">{merchant?.email}</p>
             <div className="mt-2 flex items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-[11px] font-medium text-navy-600 ring-1 ring-inset ring-navy-200">
+              <span className="inline-flex items-center gap-1 rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium text-navy-600 ring-1 ring-inset ring-navy-200">
                 Tier {merchant?.kybTier ?? 0}
               </span>
               <span
@@ -505,7 +506,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-brand-gradient md:flex">
+      <aside className="on-dark fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-brand-gradient md:flex">
         <div className="pointer-events-none absolute inset-0 bg-grid-navy bg-[size:32px_32px] opacity-30" />
         <div className="relative flex h-full flex-col">{SidebarBody}</div>
       </aside>
@@ -514,10 +515,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="absolute inset-0 bg-navy-950/60 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col bg-brand-gradient animate-slide-in-right">
+          <aside className="on-dark absolute inset-y-0 left-0 flex w-72 flex-col bg-brand-gradient animate-slide-in-right">
             {SidebarBody}
           </aside>
         </div>
@@ -526,7 +527,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main column */}
       <div className="flex min-h-screen min-w-0 flex-col md:pl-64">
         <AnnouncementBar />
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100/70 bg-white/80 px-4 backdrop-blur-md sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100/70 bg-surface/80 px-4 backdrop-blur-md sm:px-6">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -544,6 +545,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <h1 className="text-sm font-semibold text-navy-900">{pageTitle(pathname)}</h1>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <VerifyChip merchant={merchant} />
+            <ThemeToggle />
             <LanguageSwitcher />
             <span className="hidden h-6 w-px bg-navy-100 sm:block" />
             <UserMenu merchant={merchant} onSignOut={signOut} />

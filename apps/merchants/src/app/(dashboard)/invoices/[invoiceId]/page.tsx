@@ -143,7 +143,7 @@ export default function InvoiceDetailPage() {
         <a href="/invoices" className="text-sm font-medium text-navy-400 hover:text-navy-700">
           ← Invoices
         </a>
-        <div className="mt-4 rounded-2xl border border-navy-100 bg-white p-12 text-center">
+        <div className="mt-4 rounded-2xl border border-navy-100 bg-surface p-12 text-center">
           <p className="font-medium text-navy-800">Invoice not found</p>
           <p className="mt-1 text-sm text-navy-500">
             It may have been removed, or the link is incorrect.
@@ -162,7 +162,7 @@ export default function InvoiceDetailPage() {
         <a
           href="/invoices"
           aria-label="Back to payments"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-card transition-colors hover:bg-navy-50"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-primary shadow-card transition-colors hover:bg-navy-50"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
             <path
@@ -189,7 +189,7 @@ export default function InvoiceDetailPage() {
       </header>
 
       {/* Summary band */}
-      <div className="overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-card">
+      <div className="overflow-hidden rounded-2xl border border-navy-100 bg-surface shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-4 p-5 sm:p-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-navy-400">Price</p>
@@ -307,14 +307,14 @@ function HistoryTab({
     (statusFilter === "ALL" || invoice.state === statusFilter);
 
   return (
-    <div className="rounded-2xl border border-navy-100 bg-white p-5 sm:p-6">
+    <div className="rounded-2xl border border-navy-100 bg-surface p-5 sm:p-6">
       <p className="text-sm text-navy-500">
         This history includes transactions from all your payment tools.
       </p>
 
       {/* Search + filter */}
       <div className="mt-4 flex items-center gap-2">
-        <div className="flex flex-1 items-center gap-2 rounded-xl border border-navy-200 bg-white px-3.5 py-2.5 focus-within:border-primary-500">
+        <div className="flex flex-1 items-center gap-2 rounded-xl border border-navy-200 bg-surface px-3.5 py-2.5 focus-within:border-primary-500">
           <svg viewBox="0 0 20 20" fill="currentColor" className="size-4 text-navy-400" aria-hidden>
             <path
               fillRule="evenodd"
@@ -347,7 +347,7 @@ function HistoryTab({
             </svg>
           </button>
           {showFilter && (
-            <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-navy-100 bg-white p-1 shadow-xl">
+            <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-navy-100 bg-surface p-1 shadow-xl">
               {["ALL", ...Object.keys(INVOICE_STATE_CONFIG)].slice(0, 8).map((s) => (
                 <button
                   key={s}
@@ -504,7 +504,7 @@ function TimelineTab({ invoiceId, live }: { invoiceId: string; live: boolean }) 
 
   if (events === null) {
     return (
-      <div className="flex justify-center rounded-2xl border border-navy-100 bg-white py-16">
+      <div className="flex justify-center rounded-2xl border border-navy-100 bg-surface py-16">
         <Spinner size="lg" />
       </div>
     );
@@ -512,7 +512,7 @@ function TimelineTab({ invoiceId, live }: { invoiceId: string; live: boolean }) 
 
   if (events.length === 0) {
     return (
-      <div className="rounded-2xl border border-navy-100 bg-white p-12 text-center">
+      <div className="rounded-2xl border border-navy-100 bg-surface p-12 text-center">
         <p className="font-medium text-navy-800">Nothing has happened yet</p>
         <p className="mt-1 text-sm text-navy-500">
           Events appear here as the deposit is detected, converted, and confirmed.
@@ -522,7 +522,7 @@ function TimelineTab({ invoiceId, live }: { invoiceId: string; live: boolean }) 
   }
 
   return (
-    <div className="rounded-2xl border border-navy-100 bg-white p-5 sm:p-6">
+    <div className="rounded-2xl border border-navy-100 bg-surface p-5 sm:p-6">
       <div className="flex items-center justify-between">
         <p className="text-sm text-navy-500">
           Every state change and on-chain leg, in the order it happened.
@@ -588,7 +588,7 @@ function TimelineTab({ invoiceId, live }: { invoiceId: string; live: boolean }) 
 function LinkTab({ invoiceId }: { invoiceId: string }) {
   const url = checkoutUrl(invoiceId);
   return (
-    <div className="rounded-2xl border border-navy-100 bg-white p-5 sm:p-6">
+    <div className="rounded-2xl border border-navy-100 bg-surface p-5 sm:p-6">
       <p className="text-sm text-navy-500">Share it to customers to start collecting payments.</p>
       <div className="mt-3 flex items-center gap-2 rounded-xl bg-navy-50/70 px-4 py-3">
         <a
@@ -609,7 +609,7 @@ function LinkTab({ invoiceId }: { invoiceId: string }) {
 function WidgetTab({ invoiceId }: { invoiceId: string }) {
   const url = `${checkoutUrl(invoiceId)}?source=widget`;
   return (
-    <div className="rounded-2xl border border-navy-100 bg-white p-5 sm:p-6">
+    <div className="rounded-2xl border border-navy-100 bg-surface p-5 sm:p-6">
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <div>
           <p className="text-sm text-navy-500">
@@ -626,7 +626,7 @@ function WidgetTab({ invoiceId }: { invoiceId: string }) {
         {/* Live preview in a browser-chrome frame */}
         <div className="flex justify-center">
           <div className="w-full max-w-[420px] overflow-hidden rounded-2xl border border-navy-200 bg-navy-50 shadow-card">
-            <div className="flex items-center gap-1.5 border-b border-navy-100 bg-white px-3 py-2">
+            <div className="flex items-center gap-1.5 border-b border-navy-100 bg-surface px-3 py-2">
               <span className="size-2.5 rounded-full bg-danger-300" />
               <span className="size-2.5 rounded-full bg-amber-300" />
               <span className="size-2.5 rounded-full bg-success-300" />
@@ -635,7 +635,7 @@ function WidgetTab({ invoiceId }: { invoiceId: string }) {
             <iframe
               src={url}
               title="egofi checkout widget"
-              className="block h-[560px] w-full bg-white"
+              className="block h-[560px] w-full bg-surface"
             />
           </div>
         </div>
@@ -650,7 +650,7 @@ function ButtonTab({ invoiceId }: { invoiceId: string }) {
   const href = `${checkoutUrl(invoiceId)}?source=button`;
 
   return (
-    <div className="rounded-2xl border border-navy-100 bg-white p-5 sm:p-6">
+    <div className="rounded-2xl border border-navy-100 bg-surface p-5 sm:p-6">
       <div>
         <p className="text-sm font-medium text-navy-600">1. Choose button option</p>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">

@@ -15,7 +15,7 @@ export const Card: React.FC<CardProps> = ({
 }) => (
   <div
     className={cn(
-      "rounded-2xl border border-navy-100/80 bg-white shadow-card",
+      "rounded-2xl border border-navy-100/80 bg-surface shadow-card",
       interactive &&
         "cursor-pointer transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-navy-200 hover:shadow-card-hover",
       className,

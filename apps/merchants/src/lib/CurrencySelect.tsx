@@ -84,7 +84,7 @@ export function CurrencySelect({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 rounded-xl border border-navy-200 bg-white px-4 py-3 text-left transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-navy-200 bg-surface px-4 py-3 text-left transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
       >
         {selected ? <Row c={selected} /> : <span className="text-navy-400">Select a currency</span>}
         <svg
@@ -102,7 +102,7 @@ export function CurrencySelect({
       </button>
 
       {open && (
-        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-xl animate-scale-in">
+        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-navy-100 bg-surface shadow-xl animate-scale-in">
           <div className="border-b border-navy-50 p-2">
             <div className="flex items-center gap-2 rounded-lg bg-navy-50 px-3 py-2">
               <svg

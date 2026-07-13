@@ -16,20 +16,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // The navy scale is CSS-variable-driven so it can flip for dark mode:
+        // the ramp is *inverted* under `.dark` (see each app's globals.css), which
+        // turns text-navy-900 light, border-navy-100 into a subtle dark hairline,
+        // bg-navy-50 into a dark surface, etc. — with no per-element dark: classes.
+        // Light values are identical to the previous hex palette (zero regression).
         navy: {
-          DEFAULT: "#071C3D",
-          50: "#F1F5FA",
-          100: "#E1E9F3",
-          200: "#C3D3E7",
-          300: "#93AECF",
-          400: "#5B80B0",
-          500: "#375D92",
-          600: "#254475",
-          700: "#18325C",
-          800: "#0E2449",
-          900: "#071C3D",
-          950: "#040F26",
+          DEFAULT: "rgb(var(--navy-900) / <alpha-value>)",
+          50: "rgb(var(--navy-50) / <alpha-value>)",
+          100: "rgb(var(--navy-100) / <alpha-value>)",
+          200: "rgb(var(--navy-200) / <alpha-value>)",
+          300: "rgb(var(--navy-300) / <alpha-value>)",
+          400: "rgb(var(--navy-400) / <alpha-value>)",
+          500: "rgb(var(--navy-500) / <alpha-value>)",
+          600: "rgb(var(--navy-600) / <alpha-value>)",
+          700: "rgb(var(--navy-700) / <alpha-value>)",
+          800: "rgb(var(--navy-800) / <alpha-value>)",
+          900: "rgb(var(--navy-900) / <alpha-value>)",
+          950: "rgb(var(--navy-950) / <alpha-value>)",
         },
+        // Elevation surfaces (were literal `bg-white`) and the page canvas.
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        "surface-raised": "rgb(var(--surface-raised) / <alpha-value>)",
+        canvas: "rgb(var(--canvas) / <alpha-value>)",
         primary: { ...colors.blue, DEFAULT: "#1D4ED8" },
         info: { ...colors.sky, DEFAULT: "#0EA5E9" },
         accent: { ...colors.lime, DEFAULT: "#A3E635" },

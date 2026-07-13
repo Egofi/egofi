@@ -72,7 +72,7 @@ export default function ProfilePage() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-success text-xl font-bold text-navy-950 shadow-sm">
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl on-dark bg-gradient-to-br from-accent to-success text-xl font-bold text-navy-950 shadow-sm">
               {initials(merchant.business)}
             </div>
             <div className="min-w-0">

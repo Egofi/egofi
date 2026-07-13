@@ -4,7 +4,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="grid min-h-screen lg:grid-cols-[5fr_7fr]">
       {/* Brand panel */}
-      <aside className="relative hidden overflow-hidden bg-brand-gradient lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <aside className="on-dark relative hidden overflow-hidden bg-brand-gradient lg:flex lg:flex-col lg:justify-between lg:p-12">
         {/* Layered atmosphere: mesh glow + faint grid */}
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-brand-mesh" />
         <div
@@ -56,7 +56,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </aside>
 
       {/* Form panel */}
-      <main className="flex items-center justify-center bg-white px-4 py-12 sm:px-8">
+      <main className="flex items-center justify-center bg-surface px-4 py-12 sm:px-8">
         <div className="w-full max-w-md animate-fade-in-up">
           {/* Mobile logo */}
           <a href="/" className="mb-10 flex justify-center lg:hidden">

@@ -43,9 +43,9 @@ export function XpubGuide() {
       </button>
 
       {open && (
-        <div className="mt-3 space-y-4 rounded-xl border border-navy-100 bg-white p-4">
+        <div className="mt-3 space-y-4 rounded-xl border border-navy-100 bg-surface p-4">
           {/* Video walkthrough — the primary teaching tool once recorded. */}
-          <div className="overflow-hidden rounded-lg bg-navy-950/95">
+          <div className="overflow-hidden rounded-lg bg-black/95">
             {XPUB_VIDEO_URL ? (
               <div className="relative aspect-video">
                 {isFileVideo ? (

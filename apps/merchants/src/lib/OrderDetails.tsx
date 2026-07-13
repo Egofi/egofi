@@ -100,7 +100,7 @@ export function OrderDetails({
   const status = STATUS_META[state] ?? STATUS_META[InvoiceState.AwaitingPayment]!;
 
   return (
-    <div className="animate-fade-in-up rounded-3xl border border-navy-100 bg-white p-6 shadow-lg sm:p-8">
+    <div className="animate-fade-in-up rounded-3xl border border-navy-100 bg-surface p-6 shadow-lg sm:p-8">
       <div className="flex items-start justify-between">
         <h1 className="text-xl font-bold tracking-tight text-navy-950">Order details</h1>
         <a
@@ -165,7 +165,7 @@ export function OrderDetails({
               </div>
             </div>
 
-            <div className="mx-auto shrink-0 rounded-xl border border-navy-100 bg-white p-2 shadow-card sm:mx-0">
+            <div className="mx-auto shrink-0 rounded-xl border border-navy-100 bg-surface p-2 shadow-card sm:mx-0">
               {/* QR carries the bare wallet address — no URI prefix. */}
               <QRCodeCanvas value={session.instructions.depositAddress} size={148} />
             </div>
@@ -282,11 +282,11 @@ function EmbedPanel({
   return (
     <div className="mt-4 space-y-3 rounded-2xl border border-navy-100 bg-navy-50/40 p-4 animate-fade-in">
       <p className="text-xs text-navy-500">{hint}</p>
-      <div className="flex items-center justify-center rounded-xl border border-navy-100 bg-white p-4">
+      <div className="flex items-center justify-center rounded-xl border border-navy-100 bg-surface p-4">
         {preview}
       </div>
       <div className="relative">
-        <pre className="max-h-40 overflow-auto rounded-xl bg-navy-950 p-3 pr-16 text-[11px] leading-relaxed text-navy-100">
+        <pre className="on-dark max-h-40 overflow-auto rounded-xl bg-navy-950 p-3 pr-16 text-[11px] leading-relaxed text-navy-100">
           <code className="whitespace-pre-wrap break-all">{snippet}</code>
         </pre>
         <div className="absolute right-2 top-2">

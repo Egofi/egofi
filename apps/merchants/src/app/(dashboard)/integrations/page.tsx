@@ -49,7 +49,7 @@ function IntegrationCard({
   );
 
   const base =
-    "flex items-center gap-5 border border-navy-100 bg-white p-5 shadow-card transition-all sm:p-6";
+    "flex items-center gap-5 border border-navy-100 bg-surface p-5 shadow-card transition-all sm:p-6";
   if (soon || !href) {
     return <div className={cn(base, "cursor-default opacity-80")}>{inner}</div>;
   }
@@ -82,7 +82,7 @@ function RowCard({
         <p className="mt-1 text-sm text-navy-500">{description}</p>
       </div>
       {!soon && (
-        <span className="flex size-8 shrink-0 items-center justify-center border border-navy-100 bg-white text-primary">
+        <span className="flex size-8 shrink-0 items-center justify-center border border-navy-100 bg-surface text-primary">
           <svg viewBox="0 0 20 20" fill="currentColor" className="size-5" aria-hidden>
             <path
               fillRule="evenodd"
@@ -95,7 +95,7 @@ function RowCard({
     </>
   );
   const base =
-    "flex items-center justify-between gap-4 border border-navy-100 bg-white p-5 shadow-card transition-all sm:p-6";
+    "flex items-center justify-between gap-4 border border-navy-100 bg-surface p-5 shadow-card transition-all sm:p-6";
   if (soon || !href) {
     return <div className={cn(base, "cursor-default opacity-80")}>{inner}</div>;
   }

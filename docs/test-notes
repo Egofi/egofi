@@ -1,0 +1,15 @@
+AFter creating a subscription and opening the link, I was asked to add an email and select network, then proceed to the paymnt page, which still asks for my email again.
+
+The UX should auto populate the email field in the checkout page
+-----------------
+
+The merchant settings and profile page is in edit mode by default, Please it should not be so
+-----------------
+
+Note: It will be a great UX for the qrcode scan to open up bybit, binance, trustwallet, metamask, phantom, and other wallts they might have in their phone while puting the wallet address in their clipboard for instant pasting..
+-----------------
+
+when the Subscription link expires I keeps saying bad request when I try to spin it up again by going back to the subscription link and filling the email, select token/network and proceeding to click the subscribe and pay for period, but using another emial goes through
+-----------------
+
+Even tho the subscription payment was initiated but was never paid the users are marked as active, and the recuring revenue is displayed without status, 

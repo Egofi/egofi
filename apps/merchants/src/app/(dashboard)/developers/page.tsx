@@ -15,7 +15,7 @@ type ApiKey = { id: string; name: string; createdAt: string };
 /** Terminal-style code block with a chrome bar, language label, and copy. */
 function CodeBlock({ code, lang }: { code: string; lang: string }) {
   return (
-    <div className="overflow-hidden border border-navy-800 bg-navy-950 shadow-card">
+    <div className="on-dark overflow-hidden border border-navy-800 bg-navy-950 shadow-card">
       <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-3 py-1.5">
         <span className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-danger-400/70" />
@@ -61,7 +61,7 @@ function Section({
 
 function Panel({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("border border-navy-100 bg-white shadow-card", className)}>{children}</div>
+    <div className={cn("border border-navy-100 bg-surface shadow-card", className)}>{children}</div>
   );
 }
 
@@ -293,7 +293,7 @@ export default function DevelopersPage() {
         <div className="flex flex-wrap items-center gap-2">
           {FLOW_STEPS.map((step, i) => (
             <div key={step} className="flex items-center gap-2">
-              <span className="flex items-center gap-2 border border-navy-100 bg-white px-3 py-1.5 text-xs font-medium text-navy-700 shadow-xs">
+              <span className="flex items-center gap-2 border border-navy-100 bg-surface px-3 py-1.5 text-xs font-medium text-navy-700 shadow-xs">
                 <span className="flex size-4 items-center justify-center bg-primary text-[10px] font-bold text-white">
                   {i + 1}
                 </span>
@@ -358,7 +358,7 @@ export default function DevelopersPage() {
                 <p className="mt-0.5 text-sm text-lime-800">
                   Key <strong>{revealed.name}</strong>. Store it in your server's secret manager.
                 </p>
-                <div className="mt-3 flex items-center gap-2 border border-lime-300 bg-white p-2.5">
+                <div className="mt-3 flex items-center gap-2 border border-lime-300 bg-surface p-2.5">
                   <code className="min-w-0 flex-1 truncate font-mono text-sm text-navy-900">
                     {revealed.key}
                   </code>
@@ -554,7 +554,7 @@ function QuickstartStep({
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2.5">
-        <span className="flex size-6 shrink-0 items-center justify-center bg-navy-950 text-xs font-bold text-white">
+        <span className="on-dark flex size-6 shrink-0 items-center justify-center bg-navy-950 text-xs font-bold text-white">
           {n}
         </span>
         <p className="text-sm font-semibold text-navy-800">{title}</p>

@@ -42,7 +42,7 @@ function formatDate(iso: string): string {
 }
 
 const fieldCls =
-  "w-full border border-navy-200 bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10";
+  "w-full border border-navy-200 bg-surface px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10";
 
 export default function SubscriptionsPage() {
   const router = useRouter();
@@ -106,7 +106,7 @@ export default function SubscriptionsPage() {
         <Button size="lg" onClick={() => setModalOpen(true)}>
           Create subscription plan
         </Button>
-        <div className="flex items-center gap-2 border border-navy-200 bg-white px-3.5 py-2.5 sm:w-80 focus-within:border-primary-500">
+        <div className="flex items-center gap-2 border border-navy-200 bg-surface px-3.5 py-2.5 sm:w-80 focus-within:border-primary-500">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -124,7 +124,7 @@ export default function SubscriptionsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden border border-navy-100 bg-white shadow-card">
+      <div className="overflow-hidden border border-navy-100 bg-surface shadow-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[840px] text-sm">
             <thead>
@@ -292,11 +292,11 @@ function CreatePlanModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-navy-950/50 p-4 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:items-center">
       <div className="absolute inset-0" onClick={onClose} aria-hidden />
       <form
         onSubmit={submit}
-        className="relative z-10 my-8 w-full max-w-lg border border-navy-100 bg-white p-6 shadow-xl animate-scale-in sm:p-8"
+        className="relative z-10 my-8 w-full max-w-lg border border-navy-100 bg-surface p-6 shadow-xl animate-scale-in sm:p-8"
       >
         <div className="flex items-start justify-between">
           <h2 className="text-xl font-bold tracking-tight text-navy-950">

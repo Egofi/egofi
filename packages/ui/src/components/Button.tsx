@@ -15,13 +15,13 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     "bg-primary text-white shadow-sm shadow-primary-900/20 hover:bg-primary-700 hover:shadow-md hover:shadow-primary-900/25 active:bg-primary-800 focus-visible:ring-primary-500/50",
   secondary:
-    "bg-white text-navy-800 ring-1 ring-inset ring-navy-200 shadow-xs hover:bg-navy-50 hover:ring-navy-300 active:bg-navy-100 focus-visible:ring-navy-400/50",
+    "bg-surface text-navy-800 ring-1 ring-inset ring-navy-200 shadow-xs hover:bg-navy-50 hover:ring-navy-300 active:bg-navy-100 focus-visible:ring-navy-400/50",
   ghost:
     "text-navy-600 hover:bg-navy-100/70 hover:text-navy-900 active:bg-navy-200/60 focus-visible:ring-navy-400/40",
   danger:
     "bg-danger-500 text-white shadow-sm shadow-danger-900/20 hover:bg-danger-600 hover:shadow-md active:bg-danger-700 focus-visible:ring-danger-400/50",
   accent:
-    "bg-accent text-navy-950 font-semibold shadow-sm shadow-lime-900/20 hover:bg-accent-300 hover:shadow-glow active:bg-accent-500 focus-visible:ring-accent-400/60",
+    "on-dark bg-accent text-navy-950 font-semibold shadow-sm shadow-lime-900/20 hover:bg-accent-300 hover:shadow-glow active:bg-accent-500 focus-visible:ring-accent-400/60",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

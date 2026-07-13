@@ -71,7 +71,7 @@ export function DocumentSlot({
     <div
       className={cn(
         "flex items-center gap-4 rounded-xl border p-4 transition-colors",
-        done ? "border-navy-200 bg-white" : "border-dashed border-navy-200 bg-navy-50/30",
+        done ? "border-navy-200 bg-surface" : "border-dashed border-navy-200 bg-navy-50/30",
       )}
     >
       {/* Status dot / icon */}

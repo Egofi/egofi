@@ -180,7 +180,7 @@ export default function NewInvoicePage() {
     <div className="mx-auto max-w-lg p-4 sm:p-6 lg:p-10">
       <form
         onSubmit={handleSubmit}
-        className="animate-fade-in-up rounded-3xl border border-navy-100 bg-white p-6 shadow-lg sm:p-8"
+        className="animate-fade-in-up rounded-3xl border border-navy-100 bg-surface p-6 shadow-lg sm:p-8"
       >
         <div className="flex items-start justify-between">
           <h1 className="text-xl font-bold tracking-tight text-navy-950">Create payment link</h1>
@@ -226,7 +226,7 @@ export default function NewInvoicePage() {
             <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-navy-500">
               Price
             </label>
-            <div className="flex items-stretch overflow-hidden rounded-xl border border-navy-200 bg-white transition-colors focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10">
+            <div className="flex items-stretch overflow-hidden rounded-xl border border-navy-200 bg-surface transition-colors focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10">
               <input
                 id="price"
                 type="number"
@@ -279,7 +279,7 @@ export default function NewInvoicePage() {
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               placeholder="Order ID"
-              className="w-full rounded-xl border border-navy-200 bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+              className="w-full rounded-xl border border-navy-200 bg-surface px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
             />
           </div>
 
@@ -295,7 +295,7 @@ export default function NewInvoicePage() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="What is this payment for?"
-                className="w-full rounded-xl border border-navy-200 bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                className="w-full rounded-xl border border-navy-200 bg-surface px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
               />
             </div>
           ) : (
@@ -336,14 +336,14 @@ export default function NewInvoicePage() {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Customer name"
-                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                  className="w-full rounded-xl border border-navy-200 bg-surface px-4 py-2.5 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
                 />
                 <input
                   type="email"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   placeholder="Customer email"
-                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                  className="w-full rounded-xl border border-navy-200 bg-surface px-4 py-2.5 text-sm text-navy-900 placeholder:text-navy-400 transition-colors hover:border-navy-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
                 />
               </div>
             )}
@@ -380,7 +380,7 @@ export default function NewInvoicePage() {
                     id="ttl"
                     value={ttlSeconds}
                     onChange={(e) => setTtlSeconds(Number(e.target.value))}
-                    className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm text-navy-900 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                    className="w-full rounded-xl border border-navy-200 bg-surface px-4 py-2.5 text-sm text-navy-900 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
                   >
                     {TTL_OPTIONS.map((t) => (
                       <option key={t.value} value={t.value}>
@@ -393,7 +393,7 @@ export default function NewInvoicePage() {
                   value={refundAddress}
                   onChange={(e) => setRefundAddress(e.target.value)}
                   placeholder="Refund address (optional)"
-                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 font-mono text-sm text-navy-900 placeholder:font-sans placeholder:text-navy-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+                  className="w-full rounded-xl border border-navy-200 bg-surface px-4 py-2.5 font-mono text-sm text-navy-900 placeholder:font-sans placeholder:text-navy-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
                 />
               </div>
             )}

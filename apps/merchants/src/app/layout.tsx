@@ -39,7 +39,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Set the theme before first paint to avoid a flash. Defaults to the
+            OS preference until the merchant explicitly picks one. */}
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: static, no user input
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('egofi_theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.classList.toggle('dark',d);}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen font-sans">
         {children}
         <MockModeBanner />
