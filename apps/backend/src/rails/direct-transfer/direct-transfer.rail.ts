@@ -105,17 +105,23 @@ export class DirectTransferRail implements SettlementRail {
    * (deposits disambiguated by exact amount).
    */
   private async resolveDepositAddress(
-    merchant: { id: string; xpub: string | null; xpubMode: boolean },
+    merchant: { id: string; xpub: string | null; xpubTron: string | null; xpubMode: boolean },
     chain: string,
     addresses: Record<string, string>,
   ): Promise<string> {
+    // Tron addresses must derive from the Tron account xpub (m/44'/195'/0') so the
+    // merchant's wallet controls them at the standard path; a merchant who only
+    // supplied one xpub falls back to it (legacy Model-A behaviour).
+    const xpubForChain =
+      chain.toUpperCase() === "TRON" ? (merchant.xpubTron ?? merchant.xpub) : merchant.xpub;
+
     const canDerive =
       merchant.xpubMode &&
-      merchant.xpub &&
+      !!xpubForChain &&
       XpubDerivationService.supports(chain) &&
-      XpubDerivationService.isValidXpub(merchant.xpub);
+      XpubDerivationService.isValidXpub(xpubForChain);
 
-    if (canDerive && merchant.xpub) {
+    if (canDerive && xpubForChain) {
       try {
         // Atomically claim the next index so concurrent invoices never collide.
         const { xpubIndex } = await this.prisma.merchant.update({
@@ -123,7 +129,7 @@ export class DirectTransferRail implements SettlementRail {
           data: { xpubIndex: { increment: 1 } },
           select: { xpubIndex: true },
         });
-        return this.xpub.deriveAddress(merchant.xpub, chain, xpubIndex - 1);
+        return this.xpub.deriveAddress(xpubForChain, chain, xpubIndex - 1);
       } catch (err) {
         // Availability over uniqueness: a derivation error must not block payment.
         this.logger.error(

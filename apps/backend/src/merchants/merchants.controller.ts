@@ -30,6 +30,11 @@ class UpdateSettlementBodyDto {
   @MaxLength(512)
   xpub?: string;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(512)
+  xpubTron?: string;
+
   @IsBoolean()
   @IsOptional()
   xpubMode?: boolean;

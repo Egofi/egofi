@@ -24,6 +24,7 @@ export interface MerchantProfile {
   settlementAsset: string;
   settlementAddresses: SettlementAddresses;
   xpub?: string;
+  xpubTron?: string;
   xpubMode: boolean;
   webhookUrl?: string;
   feeOverride?: FeeOverride;
@@ -42,6 +43,7 @@ export interface UpdateSettlementDto {
   settlementAsset?: string;
   settlementAddresses?: SettlementAddresses;
   xpub?: string;
+  xpubTron?: string;
   xpubMode?: boolean;
   webhookUrl?: string;
 }

@@ -314,6 +314,12 @@ importers:
       '@egofi/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@scure/bip32':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@scure/bip39':
+        specifier: ^2.2.0
+        version: 2.2.0
       cryptocurrency-icons:
         specifier: ^0.18.1
         version: 0.18.1

@@ -25,7 +25,8 @@ model Merchant {
   kybReviewNote       String?
   settlementAsset     String          @default("USDT-TRC20")
   settlementAddresses Json // sanctions-screened at onboarding (§14)
-  xpub                String?
+  xpub                String? // EVM account xpub (m/44'/60'/0')
+  xpubTron            String? // Tron account xpub (m/44'/195'/0'); falls back to xpub when unset
   xpubMode            Boolean         @default(false)
   xpubIndex           Int             @default(0) // next BIP44 receive index for xpub-derived addresses
   webhookUrl          String?

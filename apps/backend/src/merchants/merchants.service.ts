@@ -41,12 +41,13 @@ export class MerchantsService {
 
     // Reject an unparseable xpub up front — otherwise xpub mode would silently
     // fall back to the static address at payment time and confuse the merchant.
-    if (dto.xpub) {
-      if (!XpubDerivationService.isValidXpub(dto.xpub)) {
-        throw new BadRequestException(
-          "That extended public key (xpub) is not valid. Paste the account-level xpub from your wallet.",
-        );
-      }
+    if (dto.xpub && !XpubDerivationService.isValidXpub(dto.xpub)) {
+      throw new BadRequestException(
+        "That extended public key (xpub) is not valid. Paste the account-level xpub from your wallet.",
+      );
+    }
+    if (dto.xpubTron && !XpubDerivationService.isValidXpub(dto.xpubTron)) {
+      throw new BadRequestException("The Tron extended public key (xpub) is not valid.");
     }
 
     const webhookUrl =
@@ -60,6 +61,7 @@ export class MerchantsService {
           ? { settlementAddresses: dto.settlementAddresses as Prisma.InputJsonValue }
           : {}),
         ...(dto.xpub !== undefined ? { xpub: dto.xpub || null } : {}),
+        ...(dto.xpubTron !== undefined ? { xpubTron: dto.xpubTron || null } : {}),
         ...(dto.xpubMode !== undefined ? { xpubMode: dto.xpubMode } : {}),
         ...(webhookUrl !== undefined ? { webhookUrl } : {}),
       },
