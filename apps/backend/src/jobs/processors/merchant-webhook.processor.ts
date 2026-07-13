@@ -5,6 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import type { Job } from "bullmq";
 import { CryptoService } from "../../core/crypto.service";
 import { PrismaService } from "../../core/prisma.service";
+import { SsrfError, safeFetch } from "../../shared/ssrf";
 import { BaseProcessor } from "../base.processor";
 import { QUEUES } from "../queues";
 
@@ -53,15 +54,47 @@ export class MerchantWebhookProcessor extends BaseProcessor {
       : this.config.getOrThrow<string>("WEBHOOK_SIGNING_SECRET");
     const signature = createHmac("sha256", secret).update(body).digest("hex");
 
-    const res = await fetch(merchant.webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-egofi-signature": `sha256=${signature}`,
-      },
-      body,
-      signal: AbortSignal.timeout(10_000),
-    });
+    // SSRF guard: validate the destination is public and never follow redirects,
+    // so a merchant URL can't reach loopback, the private LAN, or cloud metadata.
+    let res: Response;
+    try {
+      res = await safeFetch(merchant.webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-egofi-signature": `sha256=${signature}`,
+        },
+        body,
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (err) {
+      const unsafe = err instanceof SsrfError;
+      await this.prisma.webhookDelivery.create({
+        data: {
+          merchantId,
+          invoiceId,
+          event,
+          payload: payload as object,
+          url: merchant.webhookUrl,
+          status: "FAILED",
+          attempts: (job.attemptsMade ?? 0) + 1,
+          deliveredAt: null,
+          lastError: unsafe
+            ? `Blocked: ${err.message}`
+            : `Network error: ${(err as Error).message}`,
+        },
+      });
+      // An unsafe URL will never become safe — don't retry it. Network errors
+      // (timeout, DNS, connection reset) rethrow so BullMQ retries with backoff.
+      if (unsafe) {
+        this.logger.warn(
+          { invoiceId, event, url: merchant.webhookUrl },
+          "Webhook blocked by SSRF guard",
+        );
+        return;
+      }
+      throw err;
+    }
 
     await this.prisma.webhookDelivery.create({
       data: {

@@ -1,5 +1,4 @@
 import { createHash, randomBytes } from "node:crypto";
-import { isIP } from "node:net";
 import type { IntegrationSettingsDto, UpdateProfileDto, UpdateSettlementDto } from "@egofi/types";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -8,6 +7,7 @@ import { ComplianceService } from "../compliance/compliance.service";
 import { CryptoService } from "../core/crypto.service";
 import { PrismaService } from "../core/prisma.service";
 import { XpubDerivationService } from "../rails/direct-transfer/xpub-derivation.service";
+import { isPrivateHostname } from "../shared/ssrf";
 import { merchantProfileSelect, toMerchantProfile } from "./merchant.presenter";
 
 @Injectable()
@@ -160,35 +160,12 @@ export class MerchantsService {
     if (isDeployed && parsed.protocol !== "https:") {
       throw new BadRequestException("Webhook URL must use HTTPS in deployed environments");
     }
-    if (isPrivateHost(parsed.hostname)) {
+    // Literal private-host check at set time; the sender additionally resolves
+    // DNS and refuses redirects at send time (see shared/ssrf.ts).
+    if (isPrivateHostname(parsed.hostname)) {
       throw new BadRequestException("Webhook URL must not target localhost or private networks");
     }
 
     return parsed.toString();
   }
-}
-
-function isPrivateHost(hostname: string): boolean {
-  const host = hostname.toLowerCase().replace(/^\[/, "").replace(/\]$/, "");
-  if (host === "localhost" || host.endsWith(".localhost")) return true;
-
-  const ipVersion = isIP(host);
-  if (ipVersion === 4) {
-    const parts = host.split(".").map((part) => Number(part));
-    const [a = 0, b = 0] = parts;
-    return (
-      a === 0 ||
-      a === 10 ||
-      a === 127 ||
-      (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168)
-    );
-  }
-  if (ipVersion === 6) {
-    return (
-      host === "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80:")
-    );
-  }
-  return false;
 }

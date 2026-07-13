@@ -43,9 +43,10 @@ export class PricingService {
 
     const coinId = ASSET_ID_MAP[asset.toUpperCase()] ?? asset.toLowerCase();
     const vs = currency.toLowerCase();
+    const query = `ids=${encodeURIComponent(coinId)}&vs_currencies=${encodeURIComponent(vs)}`;
 
     try {
-      const res = await fetch(`${COINGECKO_BASE}/simple/price?ids=${coinId}&vs_currencies=${vs}`, {
+      const res = await fetch(`${COINGECKO_BASE}/simple/price?${query}`, {
         signal: AbortSignal.timeout(5_000),
       });
       if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
