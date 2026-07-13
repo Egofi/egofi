@@ -1,10 +1,11 @@
 "use client";
 
-import { Button } from "@egofi/ui";
+import { Button, Input } from "@egofi/ui";
 import { HDKey } from "@scure/bip32";
 import { generateMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { useMemo, useState } from "react";
+import { downloadKeystore, encryptMnemonic } from "../lib/keystore";
 
 /**
  * Model B — egofi creates a receiving wallet for the merchant, entirely in the
@@ -74,6 +75,9 @@ export function WalletGenerator({ onComplete, onClose }: WalletGeneratorProps) {
   const [copied, setCopied] = useState(false);
   const [picks, setPicks] = useState<Record<number, string>>({});
   const [verifyError, setVerifyError] = useState(false);
+  const [backupPassword, setBackupPassword] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
 
   const words = useMemo(() => (mnemonic ? mnemonic.split(" ") : []), [mnemonic]);
   const challenge = useMemo(
@@ -94,6 +98,19 @@ export function WalletGenerator({ onComplete, onClose }: WalletGeneratorProps) {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       /* clipboard blocked — the merchant can still read the words */
+    }
+  };
+
+  const downloadBackup = async () => {
+    if (backupPassword.length < 8) return;
+    setDownloading(true);
+    try {
+      const keystore = await encryptMnemonic(mnemonic, backupPassword, deriveXpubs(mnemonic));
+      downloadKeystore(keystore);
+      setDownloaded(true);
+      setBackupPassword("");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -198,6 +215,42 @@ export function WalletGenerator({ onComplete, onClose }: WalletGeneratorProps) {
               >
                 {copied ? "Copied ✓" : "Copy phrase"}
               </button>
+            )}
+
+            {revealed && (
+              <details className="rounded-xl border border-navy-100 bg-navy-50/40 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-navy-800">
+                  Also save an encrypted backup file (optional)
+                </summary>
+                <p className="mt-2 text-xs leading-relaxed text-navy-500">
+                  Download a password-protected file of this phrase. It's encrypted on your device —
+                  egofi never sees the password or the phrase. Keep the file and password somewhere
+                  safe; you'll need both to restore.
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    type="password"
+                    placeholder="Choose a password (min 8 characters)"
+                    value={backupPassword}
+                    onChange={(e) => setBackupPassword(e.target.value)}
+                    className="sm:flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={downloadBackup}
+                    loading={downloading}
+                    disabled={backupPassword.length < 8}
+                  >
+                    Download
+                  </Button>
+                </div>
+                {downloaded && (
+                  <p className="mt-2 text-xs font-medium text-success-700">
+                    ✓ Encrypted backup downloaded. Store the file and password safely.
+                  </p>
+                )}
+              </details>
             )}
 
             <div className="flex flex-col gap-2 pt-2 sm:flex-row-reverse">
