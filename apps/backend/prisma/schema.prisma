@@ -202,6 +202,7 @@ model UnmatchedPayment {
   amount     Decimal  @db.Decimal(36, 18)
   txHash     String   @unique
   candidates Json? // nearest-invoice suggestions for review
+  reason     String? // why it wasn't credited: no_match | unrecognized_token | unsupported_decimals | tron_reverted
   status     String   @default("open") // open | resolved | returned
   createdAt  DateTime @default(now())
 

@@ -66,6 +66,26 @@ export class ChainService {
     return CHAIN_CONFIGS[chain as Chain]?.confirmationsRequired ?? 12;
   }
 
+  /**
+   * Whether a Tron transaction actually executed successfully. A TRC-20 transfer
+   * can be included in a block yet REVERT (out of energy, failed require, etc.),
+   * so inclusion alone must never be treated as a paid deposit. Returns `null`
+   * when the result can't be determined — callers should not block on that.
+   */
+  async isTronTransactionSuccessful(txHash: string): Promise<boolean | null> {
+    try {
+      const data = await this.tatumFetch<{ ret?: Array<{ contractRet?: string }> }>(
+        `/tron/transaction/${txHash}`,
+      );
+      const result = data.ret?.[0]?.contractRet;
+      if (!result) return null;
+      return result === "SUCCESS";
+    } catch (err) {
+      this.logger.warn({ err, txHash }, "Could not fetch Tron tx execution result");
+      return null;
+    }
+  }
+
   private toTatumChain(chain: string): string {
     const map: Record<string, string> = {
       ETHEREUM: "ETH",

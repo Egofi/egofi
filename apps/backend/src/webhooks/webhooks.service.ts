@@ -1,9 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { InvoiceState, PaymentLeg, RailType } from "@egofi/types";
+import { InvoiceState, PaymentLeg, RailType, normalizeChain, resolveAsset } from "@egofi/types";
+import { Chain } from "@egofi/types";
 import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Decimal from "decimal.js";
 import { z } from "zod";
+import { ChainService } from "../chain/chain.service";
 import { PrismaService } from "../core/prisma.service";
 import { InvoicesService } from "../invoices/invoices.service";
 import { AmountPoolService } from "../rails/direct-transfer/amount-pool.service";
@@ -18,14 +20,18 @@ const TatumWebhookSchema = z.object({
   amount: z.string().optional(),
   address: z.string().optional(),
   counterAddress: z.string().optional(),
+  contractAddress: z.string().optional(),
   chain: z.string().optional(),
   mempool: z.boolean().optional(),
 });
 
-// USDT/USDC on the supported chains use 6 decimals; volatile natives are the
-// secondary case (§6 stablecoin-first). Decimals should ultimately come from
-// chain metadata — never assumed per-token beyond this default.
-const DEFAULT_DECIMALS = 6;
+type TatumEvent = z.infer<typeof TatumWebhookSchema>;
+
+// The credit pipeline (quote → amount pool → payment URI) is uniformly scaled to
+// 6 decimals. Assets whose real decimals differ (e.g. BSC stablecoins, 18) can't
+// be credited at this scale without mis-valuing them, so they are held for review
+// rather than silently mis-scaled.
+const PIPELINE_DECIMALS = 6;
 
 @Injectable()
 export class WebhooksService {
@@ -36,6 +42,7 @@ export class WebhooksService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly amountPool: AmountPoolService,
+    private readonly chain: ChainService,
   ) {}
 
   verifyTatumHmac(rawBody: string, signature: string | undefined): void {
@@ -101,10 +108,35 @@ export class WebhooksService {
       return;
     }
 
-    const asset = event.asset ?? "UNKNOWN";
     const chain = event.chain ?? "UNKNOWN";
+
+    // Fake-token guard: a token that isn't the whitelisted contract for its
+    // chain (anyone can deploy one called "USDT") is never credited.
+    const resolved = resolveAsset(event.chain, event.asset, event.contractAddress);
+    if (!resolved.ok) {
+      await this.recordUnmatched(event, resolved.reason);
+      return;
+    }
+
+    // The pipeline is 6-decimal; anything else (e.g. BSC's 18-decimal USDT)
+    // would be mis-valued at this scale, so hold it rather than mis-credit.
+    if (resolved.decimals !== PIPELINE_DECIMALS) {
+      await this.recordUnmatched(event, "unsupported_decimals");
+      return;
+    }
+
+    // Tron txs can be included in a block yet REVERT — inclusion is not payment.
+    if (normalizeChain(event.chain) === Chain.Tron) {
+      const executed = await this.chain.isTronTransactionSuccessful(event.txId);
+      if (executed === false) {
+        await this.recordUnmatched(event, "tron_reverted");
+        return;
+      }
+    }
+
+    const asset = resolved.symbol;
     const amountBaseUnits = BigInt(
-      new Decimal(event.amount).mul(10 ** DEFAULT_DECIMALS).toFixed(0),
+      new Decimal(event.amount).mul(10 ** resolved.decimals).toFixed(0),
     );
 
     const invoiceId = await this.amountPool.matchDeposit({
@@ -140,22 +172,32 @@ export class WebhooksService {
       chain,
       amountBaseUnits,
     });
+    await this.recordUnmatched(event, "no_match", candidates);
+  }
 
+  /** Capture a deposit we won't credit, with the reason, for ops review. */
+  private async recordUnmatched(
+    event: TatumEvent,
+    reason: string,
+    candidates: Array<{ invoiceId: string; expectedBaseUnits: string }> = [],
+  ): Promise<void> {
+    if (!event.txId || !event.address || !event.amount) return;
     await this.prisma.unmatchedPayment.upsert({
       where: { txHash: event.txId },
-      update: {},
+      update: { reason },
       create: {
         address: event.address,
-        asset,
-        chain,
+        asset: event.asset ?? "UNKNOWN",
+        chain: event.chain ?? "UNKNOWN",
         amount: event.amount,
         txHash: event.txId,
+        reason,
         ...(candidates.length > 0 ? { candidates } : {}),
       },
     });
     this.logger.warn(
-      { txId: event.txId, address: event.address, amount: event.amount, candidates },
-      "deposit matched no invoice — recorded as UnmatchedPayment",
+      { txId: event.txId, address: event.address, amount: event.amount, reason, candidates },
+      "deposit not credited — recorded as UnmatchedPayment",
     );
   }
 
